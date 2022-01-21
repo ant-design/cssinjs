@@ -3,6 +3,7 @@ import type * as CSS from 'csstype';
 import { updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import hash from '@emotion/hash';
 import { compile, serialize, stringify } from 'stylis';
+import CacheEntity from './Cache';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -69,17 +70,33 @@ export const parseStyle = (style: CSSObject, root = true) => {
 // ==                                Register                                ==
 // ============================================================================
 
-const styleMap = new Map<string, string>();
+const styleCache = new CacheEntity<any, string>();
+
+function registerStyle(styleFn: () => CSSObject, path: any[]) {
+  styleCache.update(path, (cached) => {
+    if (cached) {
+      return cached;
+    }
+
+    const styleStr = normalizeStyle(parseStyle(styleFn()));
+    const styleId = hash(styleStr);
+
+    updateCSS(styleStr, styleId);
+
+    return styleStr;
+  });
+}
+
+(window as any).styleCache = styleCache;
 
 /**
  * Register a style to the global style sheet.
  */
-export default function useStyleRegister(style: CSSObject) {
-  const styleStr = React.useMemo(
-    () => normalizeStyle(parseStyle(style)),
-    [style],
-  );
-
-  const styleId = hash(styleStr);
-  updateCSS(styleStr, styleId);
+export default function useStyleRegister(
+  stylePath: any[],
+  styleFn: () => CSSObject,
+) {
+  console.time('useStyleRegister');
+  registerStyle(styleFn, stylePath);
+  console.timeEnd('useStyleRegister');
 }

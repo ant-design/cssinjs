@@ -25,15 +25,27 @@ const Button = ({
   const prefixCls = 'ant-btn';
 
   // 制造样式
-  console.time('makeStyle');
   const token = useToken();
-  const style = customizeGetButtonStyle(prefixCls, token);
 
-  useStyleRegister(style);
+  useStyleRegister([prefixCls, token], () =>
+    customizeGetButtonStyle(prefixCls, token),
+  );
 
   return <button className={prefixCls} {...restProps} />;
 };
 
 export default function App() {
-  return <Button>Button</Button>;
+  console.log('========================= Render =========================');
+
+  const [, forceUpdate] = React.useState({});
+  React.useEffect(() => {
+    forceUpdate({});
+  }, []);
+
+  // return <Button>Button</Button>;
+
+  const btnList = new Array(100)
+    .fill(0)
+    .map((_, index) => <Button key={index}>Button ${index}</Button>);
+  return <>{btnList}</>;
 }
