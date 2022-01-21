@@ -1,4 +1,4 @@
 import Theme, { TokenType } from './Theme';
-import useDerivativeToken from './useTheme';
+import useStyleRegister, { CSSObject } from './useStyleRegister';
 
-export { Theme, TokenType, useDerivativeToken };
+export { Theme, TokenType, CSSObject, useStyleRegister };

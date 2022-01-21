@@ -1,6 +1,8 @@
 import React from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Theme } from '../../../src';
+import { Theme, useStyleRegister, CSSObject } from '../../../src';
+
+export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 
 export interface DesignToken {
   primaryColor: string;
