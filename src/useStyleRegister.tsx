@@ -2,6 +2,7 @@ import * as React from 'react';
 import type * as CSS from 'csstype';
 import { updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import hash from '@emotion/hash';
+import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import CacheEntity from './Cache';
 
@@ -55,7 +56,18 @@ export const parseStyle = (style: CSSObject, root = true) => {
         /[A-Z]/g,
         (match) => `-${match.toLowerCase()}`,
       );
-      styleStr += `${styleName}:${value};`;
+
+      // Auto suffix with px
+      let formatValue = value;
+      if (
+        !unitless[key] &&
+        typeof formatValue === 'number' &&
+        formatValue !== 0
+      ) {
+        formatValue = `${formatValue}px`;
+      }
+
+      styleStr += `${styleName}:${formatValue};`;
     }
   });
 
@@ -72,7 +84,7 @@ export const parseStyle = (style: CSSObject, root = true) => {
 
 const styleCache = new CacheEntity<any, string>();
 
-function registerStyle(styleFn: () => CSSObject, path: any[]) {
+function registerStyle(path: any[], styleFn: () => CSSObject) {
   styleCache.update(path, (cached) => {
     if (cached) {
       return cached;
@@ -96,7 +108,7 @@ export default function useStyleRegister(
   stylePath: any[],
   styleFn: () => CSSObject,
 ) {
-  console.time('useStyleRegister');
-  registerStyle(styleFn, stylePath);
-  console.timeEnd('useStyleRegister');
+  // console.time('useStyleRegister');
+  registerStyle(stylePath, styleFn);
+  // console.timeEnd('useStyleRegister');
 }

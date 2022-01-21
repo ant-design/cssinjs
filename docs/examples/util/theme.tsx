@@ -1,13 +1,16 @@
 import React from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Theme, useStyleRegister, CSSObject } from '../../../src';
+import { Theme, CSSObject } from '../../../src';
 
 export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 
 export interface DesignToken {
   primaryColor: string;
-  borderRadius: number;
   textColor: string;
+
+  borderRadius: number;
+  borderColor: string;
+  borderWidth: number;
 }
 
 export interface DerivativeToken extends DesignToken {
@@ -15,9 +18,11 @@ export interface DerivativeToken extends DesignToken {
 }
 
 const defaultDesignToken: DesignToken = {
-  primaryColor: 'blue',
-  borderRadius: 2,
+  primaryColor: '#1890ff',
   textColor: '#FFFFFF',
+  borderRadius: 2,
+  borderColor: 'black',
+  borderWidth: 1,
 };
 
 // 模拟推导过程
