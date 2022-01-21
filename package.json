@@ -43,12 +43,15 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
-    "classnames": "^2.2.1"
+    "classnames": "^2.2.1",
+    "stylis": "^4.0.13"
   },
   "devDependencies": {
+    "@ctrl/tinycolor": "^3.4.0",
     "@types/classnames": "^2.2.9",
     "@types/react": "^17.0.13",
     "@types/react-dom": "^16.9.0",
+    "@types/stylis": "^4.0.2",
     "@umijs/fabric": "^2.0.8",
     "coveralls": "^3.0.6",
     "cross-env": "^7.0.2",
