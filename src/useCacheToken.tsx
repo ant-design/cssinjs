@@ -1,6 +1,9 @@
 import * as React from 'react';
 import type Theme from './Theme';
 
+/**
+ * Cache theme derivative token as global shared one
+ */
 export default function useCacheToken(
   theme: Theme<any, any>,
   ...tokens: object[]
