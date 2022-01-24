@@ -5,6 +5,7 @@ import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
+import CacheContext from './CacheContext';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -112,6 +113,8 @@ export default function useStyleRegister(
   stylePath: any[],
   styleFn: () => CSSInterpolation,
 ) {
+  const { autoClean } = React.useContext(CacheContext);
+
   useGlobalCache(
     'style',
     stylePath,
@@ -126,8 +129,10 @@ export default function useStyleRegister(
     },
     // Remove cache if no need
     (styleStr) => {
-      const styleId = hash(styleStr);
-      removeCSS(styleId);
+      if (autoClean) {
+        const styleId = hash(styleStr);
+        removeCSS(styleId);
+      }
     },
   );
 }

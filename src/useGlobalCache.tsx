@@ -1,13 +1,6 @@
 import * as React from 'react';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
-import CacheEntity from './Cache';
-
-// Cache record times & real cache
-const globalCache = new CacheEntity<any, [number, any]>();
-
-if (process.env.NODE_ENV !== 'production' && canUseDom) {
-  (window as any)._CssInJsCache = globalCache;
-}
+import CacheContext from './CacheContext';
 
 function useClientCache<KeyType, CacheType>(
   prefix: string,
@@ -15,6 +8,7 @@ function useClientCache<KeyType, CacheType>(
   cacheFn: () => CacheType,
   onCacheRemove?: (cache: CacheType) => void,
 ): CacheType {
+  const { cache: globalCache } = React.useContext(CacheContext);
   const fullPath = [prefix, ...keyPath];
 
   // Create cache
