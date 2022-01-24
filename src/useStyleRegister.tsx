@@ -41,34 +41,55 @@ function normalizeStyle(styleStr: string) {
   return serialize(compile(styleStr), stringify);
 }
 
-export const parseStyle = (style: CSSObject, root = true) => {
+export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
   let styleStr = '';
 
-  Object.keys(style).forEach((key) => {
-    const value = style[key];
-
-    if (typeof value === 'object' && value) {
-      // 当成嵌套对象来出来
-      styleStr += `${key}${parseStyle(value as any, false)}`;
-    } else {
-      // 直接插入
-      const styleName = key.replace(
-        /[A-Z]/g,
-        (match) => `-${match.toLowerCase()}`,
-      );
-
-      // Auto suffix with px
-      let formatValue = value;
-      if (
-        !unitless[key] &&
-        typeof formatValue === 'number' &&
-        formatValue !== 0
-      ) {
-        formatValue = `${formatValue}px`;
+  function flattenList(
+    list: ArrayCSSInterpolation,
+    fullList: CSSObject[] = [],
+  ) {
+    list.forEach((item) => {
+      if (Array.isArray(item)) {
+        flattenList(item, fullList);
+      } else if (item) {
+        fullList.push(item as CSSObject);
       }
+    });
 
-      styleStr += `${styleName}:${formatValue};`;
-    }
+    return fullList;
+  }
+
+  const flattenStyleList = flattenList(
+    Array.isArray(interpolation) ? interpolation : [interpolation],
+  );
+
+  flattenStyleList.forEach((style) => {
+    Object.keys(style).forEach((key) => {
+      const value = style[key];
+
+      if (typeof value === 'object' && value) {
+        // 当成嵌套对象来出来
+        styleStr += `${key}${parseStyle(value as any, false)}`;
+      } else {
+        // 直接插入
+        const styleName = key.replace(
+          /[A-Z]/g,
+          (match) => `-${match.toLowerCase()}`,
+        );
+
+        // Auto suffix with px
+        let formatValue = value;
+        if (
+          !unitless[key] &&
+          typeof formatValue === 'number' &&
+          formatValue !== 0
+        ) {
+          formatValue = `${formatValue}px`;
+        }
+
+        styleStr += `${styleName}:${formatValue};`;
+      }
+    });
   });
 
   if (!root) {
@@ -84,7 +105,7 @@ export const parseStyle = (style: CSSObject, root = true) => {
 
 const styleCache = new CacheEntity<any, string>();
 
-function registerStyle(path: any[], styleFn: () => CSSObject) {
+function registerStyle(path: any[], styleFn: () => CSSInterpolation) {
   styleCache.update(path, (cached) => {
     if (cached) {
       return cached;
@@ -106,7 +127,7 @@ function registerStyle(path: any[], styleFn: () => CSSObject) {
  */
 export default function useStyleRegister(
   stylePath: any[],
-  styleFn: () => CSSObject,
+  styleFn: () => CSSInterpolation,
 ) {
   // console.time('useStyleRegister');
   registerStyle(stylePath, styleFn);

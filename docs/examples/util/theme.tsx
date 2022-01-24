@@ -7,6 +7,9 @@ export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 export interface DesignToken {
   primaryColor: string;
   textColor: string;
+  reverseTextColor: string;
+
+  componentBackgroundColor: string;
 
   borderRadius: number;
   borderColor: string;
@@ -19,7 +22,11 @@ export interface DerivativeToken extends DesignToken {
 
 const defaultDesignToken: DesignToken = {
   primaryColor: '#1890ff',
-  textColor: '#FFFFFF',
+  textColor: '#333333',
+  reverseTextColor: '#FFFFFF',
+
+  componentBackgroundColor: '#FFFFFF',
+
   borderRadius: 2,
   borderColor: 'black',
   borderWidth: 1,

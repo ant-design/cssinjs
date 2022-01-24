@@ -1,43 +1,111 @@
 import React from 'react';
+import classNames from 'classnames';
 import { useToken } from './util/theme';
 import type { DerivativeToken } from './util/theme';
-import { CSSObject, useStyleRegister } from '../../src/';
+import { CSSInterpolation, CSSObject, useStyleRegister } from '../../src/';
 
 // ======================================= Button =======================================
+// 通用框架
+const genSharedButtonStyle = (
+  prefixCls: string,
+  token: DerivativeToken,
+): CSSInterpolation => ({
+  [`.${prefixCls}`]: {
+    borderColor: token.borderColor,
+    borderWidth: token.borderWidth,
+    borderRadius: token.borderRadius,
+  },
+});
+
 // 实心底色样式
 const genSolidButtonStyle = (
   prefixCls: string,
   token: DerivativeToken,
-): CSSObject => ({
-  [`.${prefixCls}`]: {
-    backgroundColor: token.primaryColor,
+  postFn: () => CSSObject,
+): CSSInterpolation => [
+  genSharedButtonStyle(prefixCls, token),
+  {
+    [`.${prefixCls}`]: {
+      ...postFn(),
+    },
+  },
+];
+
+// 默认样式
+const genDefaultButtonStyle = (
+  prefixCls: string,
+  token: DerivativeToken,
+): CSSInterpolation =>
+  genSolidButtonStyle(prefixCls, token, () => ({
+    backgroundColor: token.componentBackgroundColor,
     color: token.textColor,
-    borderColor: token.borderColor,
-    borderWidth: token.borderWidth,
-    borderRadius: token.borderRadius,
+  }));
+
+// 主色样式
+const genPrimaryButtonStyle = (
+  prefixCls: string,
+  token: DerivativeToken,
+): CSSInterpolation =>
+  genSolidButtonStyle(prefixCls, token, () => ({
+    backgroundColor: token.primaryColor,
+    color: token.reverseTextColor,
 
     '&:hover': {
       backgroundColor: token.primaryColorDisabled,
     },
+  }));
+
+// 透明按钮
+const genGhostButtonStyle = (
+  prefixCls: string,
+  token: DerivativeToken,
+): CSSInterpolation => [
+  genSharedButtonStyle(prefixCls, token),
+  {
+    [`.${prefixCls}`]: {
+      backgroundColor: 'transparent',
+      color: token.textColor,
+    },
   },
-});
+];
 
 interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
   type?: 'primary' | 'ghost' | 'dashed' | 'link' | 'text' | 'default';
 }
 
-const Button = ({ className, ...restProps }: ButtonProps) => {
+const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const prefixCls = 'ant-btn';
 
   // 制造样式
   const token = useToken();
 
-  useStyleRegister([prefixCls, token], () =>
-    genSolidButtonStyle(prefixCls, token),
-  );
+  // default 添加默认样式选择器后可以省很多冲突解决问题
+  const defaultCls = `${prefixCls}-default`;
+  const primaryCls = `${prefixCls}-primary`;
+  const ghostCls = `${prefixCls}-ghost`;
 
-  return <button className={prefixCls} {...restProps} />;
+  // 全局注册，内部会做缓存优化
+  useStyleRegister([prefixCls, token], () => [
+    genDefaultButtonStyle(defaultCls, token),
+    genPrimaryButtonStyle(primaryCls, token),
+    genGhostButtonStyle(ghostCls, token),
+  ]);
+
+  const typeCls =
+    (
+      {
+        primary: primaryCls,
+        ghost: ghostCls,
+      } as any
+    )[type as any] || defaultCls;
+
+  return (
+    <button
+      className={classNames(prefixCls, typeCls, className)}
+      {...restProps}
+    />
+  );
 };
 
 // ======================================== Demo ========================================
@@ -47,12 +115,17 @@ export default function App() {
     forceUpdate({});
   }, []);
 
-  // return <Button>Button</Button>;
+  return (
+    <>
+      <Button>Default</Button>
+      <Button type="primary">Primary</Button>
+    </>
+  );
 
-  const btnList = new Array(200).fill(0).map((_, index) => (
-    <Button key={index} style={{ margin: 2 }}>
-      Button ${index}
-    </Button>
-  ));
-  return <>{btnList}</>;
+  // const btnList = new Array(200).fill(0).map((_, index) => (
+  //   <Button key={index} style={{ margin: 2 }}>
+  //     Button ${index}
+  //   </Button>
+  // ));
+  // return <>{btnList}</>;
 }
