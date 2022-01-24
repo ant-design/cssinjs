@@ -1,10 +1,9 @@
 import * as React from 'react';
 import type * as CSS from 'csstype';
-import { updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
-import CacheEntity from './Cache';
 import useGlobalCache from './useGlobalCache';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
@@ -113,16 +112,22 @@ export default function useStyleRegister(
   stylePath: any[],
   styleFn: () => CSSInterpolation,
 ) {
-  useGlobalCache('style', stylePath, (cache) => {
-    if (cache) {
-      return cache;
-    }
+  useGlobalCache(
+    'style',
+    stylePath,
+    // Create cache if needed
+    () => {
+      const styleStr = normalizeStyle(parseStyle(styleFn()));
+      const styleId = hash(styleStr);
 
-    const styleStr = normalizeStyle(parseStyle(styleFn()));
-    const styleId = hash(styleStr);
+      updateCSS(styleStr, styleId);
 
-    updateCSS(styleStr, styleId);
-
-    return styleStr;
-  });
+      return styleStr;
+    },
+    // Remove cache if no need
+    (styleStr) => {
+      const styleId = hash(styleStr);
+      removeCSS(styleId);
+    },
+  );
 }

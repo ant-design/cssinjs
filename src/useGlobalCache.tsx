@@ -2,60 +2,61 @@ import * as React from 'react';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import CacheEntity from './Cache';
 
-const globalCache = new CacheEntity<any, any>();
-const timesCount = new CacheEntity<any, number>();
+// Cache record times & real cache
+const globalCache = new CacheEntity<any, [number, any]>();
 
 if (process.env.NODE_ENV !== 'production' && canUseDom) {
   (window as any)._CssInJsCache = globalCache;
-  (window as any)._CssInJsTimes = timesCount;
 }
 
 function useClientCache<KeyType, CacheType>(
   prefix: string,
   keyPath: KeyType[],
-  cacheFn: (cache: CacheType | null) => CacheType,
-  onCacheRemove?: () => void,
+  cacheFn: () => CacheType,
+  onCacheRemove?: (cache: CacheType) => void,
 ): CacheType {
-  // Create cache
   const fullPath = [prefix, ...keyPath];
-  globalCache.update(fullPath, (cache) => cache || cacheFn(cache));
 
-  // Clean up if removed
+  // Create cache
   const initRef = React.useRef(false);
   if (!initRef.current) {
     initRef.current = true;
-    timesCount.update(fullPath, (cache) => {
-      const nextCount = (cache || 0) + 1;
 
-      return nextCount;
+    globalCache.update(fullPath, (prevCache) => {
+      const [times = 0, cache] = prevCache || [];
+      const mergedCache = cache || cacheFn();
+
+      return [times + 1, mergedCache];
     });
   }
+
+  // Remove if no need anymore
   React.useEffect(
     () => () => {
-      timesCount.update(fullPath, (cache) => {
-        const nextCount = (cache || 0) - 1;
+      globalCache.update(fullPath, (prevCache) => {
+        const [times = 0, cache] = prevCache || [];
+        const nextCount = times - 1;
 
         if (nextCount === 0) {
-          // Also clean up global cache
-          globalCache.update(fullPath, () => null);
+          onCacheRemove?.(cache);
           return null;
         }
 
-        return nextCount;
+        return [times - 1, cache];
       });
     },
     fullPath,
   );
 
-  return globalCache.get(fullPath);
+  return globalCache.get(fullPath)![1];
 }
 
 function useServerCache<KeyType, CacheType>(
   prefix: string,
   keyPath: KeyType[],
-  cacheFn: (cache: CacheType | null) => CacheType,
+  cacheFn: () => CacheType,
 ): CacheType {
-  return cacheFn(null);
+  return cacheFn();
 }
 
 export default canUseDom() ? useClientCache : useServerCache;
