@@ -5,6 +5,7 @@ import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import CacheEntity from './Cache';
+import useGlobalCache from './useGlobalCache';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -105,16 +106,16 @@ export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
 // ==                                Register                                ==
 // ============================================================================
 
-const styleCache = new CacheEntity<any, string>();
-
-// Count for style usage times
-const styleCounts = new CacheEntity<any, number>();
-
-function registerStyle(path: any[], styleFn: () => CSSInterpolation) {
-  styleCache.update(path, (cached) => {
-    console.log('Cache????', cached);
-    if (cached) {
-      return cached;
+/**
+ * Register a style to the global style sheet.
+ */
+export default function useStyleRegister(
+  stylePath: any[],
+  styleFn: () => CSSInterpolation,
+) {
+  useGlobalCache('style', stylePath, (cache) => {
+    if (cache) {
+      return cache;
     }
 
     const styleStr = normalizeStyle(parseStyle(styleFn()));
@@ -124,48 +125,4 @@ function registerStyle(path: any[], styleFn: () => CSSInterpolation) {
 
     return styleStr;
   });
-}
-
-function unregisterStyle(path: any[]) {
-  styleCache.update(path, () => null);
-}
-
-(window as any).styleCache = styleCache;
-(window as any).styleCounts = styleCounts;
-
-/**
- * Register a style to the global style sheet.
- */
-export default function useStyleRegister(
-  stylePath: any[],
-  styleFn: () => CSSInterpolation,
-) {
-  // console.time('useStyleRegister');
-  registerStyle(stylePath, styleFn);
-  // console.timeEnd('useStyleRegister');
-
-  // Unregister style when all refs are unmounted
-  // React.useEffect(() => {
-  //   styleCounts.update(stylePath, (count) => {
-  //     const nextCount = (count || 0) + 1;
-  //     console.log('effect:', nextCount);
-  //     return nextCount;
-  //   });
-
-  //   return () => {
-  //     styleCounts.update(stylePath, (count) => {
-  //       const nextCount = count! - 1;
-
-  //       console.log('nextCount', nextCount);
-  //       if (nextCount === 0) {
-  //         unregisterStyle(stylePath);
-
-  //         // Tell cache to remove key
-  //         return null;
-  //       }
-
-  //       return nextCount;
-  //     });
-  //   };
-  // }, [stylePath]);
 }

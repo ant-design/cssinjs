@@ -114,10 +114,10 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 export default function App() {
   const [show, setShow] = React.useState(true);
 
-  // const [, forceUpdate] = React.useState({});
-  // React.useEffect(() => {
-  //   forceUpdate({});
-  // }, []);
+  const [, forceUpdate] = React.useState({});
+  React.useEffect(() => {
+    forceUpdate({});
+  }, []);
 
   return (
     <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
