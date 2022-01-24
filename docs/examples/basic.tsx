@@ -14,6 +14,8 @@ const genSharedButtonStyle = (
     borderColor: token.borderColor,
     borderWidth: token.borderWidth,
     borderRadius: token.borderRadius,
+
+    cursor: 'pointer',
   },
 });
 
@@ -110,16 +112,28 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 
 // ======================================== Demo ========================================
 export default function App() {
-  const [, forceUpdate] = React.useState({});
-  React.useEffect(() => {
-    forceUpdate({});
-  }, []);
+  const [show, setShow] = React.useState(true);
+
+  // const [, forceUpdate] = React.useState({});
+  // React.useEffect(() => {
+  //   forceUpdate({});
+  // }, []);
 
   return (
-    <>
-      <Button>Default</Button>
-      <Button type="primary">Primary</Button>
-    </>
+    <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
+      <label>
+        <input type="checkbox" checked={show} onChange={() => setShow(!show)} />
+        Show Components
+      </label>
+
+      {show && (
+        <>
+          <Button>Default</Button>
+          <Button type="primary">Primary</Button>
+          <Button type="ghost">Ghost</Button>
+        </>
+      )}
+    </div>
   );
 
   // const btnList = new Array(200).fill(0).map((_, index) => (

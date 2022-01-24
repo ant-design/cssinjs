@@ -1,6 +1,6 @@
 import React from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Theme, CSSObject } from '../../../src';
+import { Theme, CSSObject, useCacheToken } from '../../../src';
 
 export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 
@@ -51,17 +51,7 @@ const DesignTokenContext =
 
 export function useToken() {
   const rootDesignToken = React.useContext(DesignTokenContext);
-  const mergedDesignToken = React.useMemo(
-    () => ({
-      ...defaultDesignToken,
-      ...rootDesignToken,
-    }),
-    [rootDesignToken],
-  );
   const theme = React.useContext(ThemeContext);
 
-  return React.useMemo(
-    () => theme.getDerivativeToken(mergedDesignToken),
-    [theme, mergedDesignToken],
-  );
+  return useCacheToken(theme, defaultDesignToken, rootDesignToken);
 }

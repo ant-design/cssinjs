@@ -12,9 +12,20 @@ class Entity<KeyType, ValueType> {
     return subEntity ? subEntity.get(rest) : null;
   }
 
-  update(keys: KeyType[], valueFn: (origin: ValueType | null) => ValueType) {
+  update(
+    keys: KeyType[],
+    valueFn: (origin: ValueType | null) => ValueType | null,
+    parent: Entity<KeyType, ValueType> | null = null,
+    parentKey: KeyType | null = null,
+  ) {
     if (!keys.length) {
       this.value = valueFn(this.value);
+
+      // null to remove
+      if (this.value === null && parent) {
+        parent.cache.delete(parentKey!);
+      }
+
       return;
     }
 
@@ -23,10 +34,8 @@ class Entity<KeyType, ValueType> {
       this.cache.set(first, new Entity());
     }
 
-    this.cache.get(first)!.update(rest, valueFn);
+    this.cache.get(first)!.update(rest, valueFn, this, first);
   }
-
-  // TODO: delete
 }
 
 export default Entity;
