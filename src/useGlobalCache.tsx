@@ -26,7 +26,6 @@ function useClientCache<KeyType, CacheType>(
     initRef.current = true;
     timesCount.update(fullPath, (cache) => {
       const nextCount = (cache || 0) + 1;
-      console.log('Mount:', nextCount, fullPath);
 
       return nextCount;
     });
@@ -35,9 +34,10 @@ function useClientCache<KeyType, CacheType>(
     () => () => {
       timesCount.update(fullPath, (cache) => {
         const nextCount = (cache || 0) - 1;
-        console.log('Unmount:', nextCount, fullPath);
 
         if (nextCount === 0) {
+          // Also clean up global cache
+          globalCache.update(fullPath, () => null);
           return null;
         }
 
