@@ -15,7 +15,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@@/*": ["src/.umi/*"],
-      "rc-footer": ["src/index.tsx"]
+      "@ant-design/cssinjs": ["src/index.ts"]
     }
   }
 }

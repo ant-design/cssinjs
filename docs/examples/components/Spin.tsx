@@ -9,21 +9,23 @@ import type { CSSInterpolation, CSSObject } from '../../../src/';
 const genSpinStyle = (
   prefixCls: string,
   token: DerivativeToken,
-): CSSInterpolation => ({
-  [`.${prefixCls}`]: {
-    width: 20,
-    height: 20,
-    backgroundColor: token.primaryColor,
+): CSSInterpolation => [
+  {
+    [`.${prefixCls}`]: {
+      width: 20,
+      height: 20,
+      backgroundColor: token.primaryColor,
 
-    animation: `loadingCircle 1s infinite linear`,
-  },
+      animation: `loadingCircle 1s infinite linear`,
+    },
 
-  [`@keyframes loadingCircle`]: {
-    to: {
-      transform: `rotate(360deg)`,
+    [`@keyframes loadingCircle`]: {
+      to: {
+        transform: `rotate(360deg)`,
+      },
     },
   },
-});
+];
 
 interface SpinProps extends React.HTMLAttributes<HTMLDivElement> {}
 
