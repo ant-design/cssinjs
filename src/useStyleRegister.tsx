@@ -6,6 +6,8 @@ import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
 import CacheContext from './CacheContext';
+import { Theme } from '.';
+import { token2key } from './util';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -110,14 +112,16 @@ export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
  * Register a style to the global style sheet.
  */
 export default function useStyleRegister(
-  stylePath: any[],
+  info: { theme: Theme<any, any>; token: object; path: string[] },
   styleFn: () => CSSInterpolation,
 ) {
+  const { theme, token, path } = info;
   const { autoClean } = React.useContext(CacheContext);
+  const fullPath = [theme.id, token2key(token), ...path];
 
   useGlobalCache(
     'style',
-    stylePath,
+    fullPath,
     // Create cache if needed
     () => {
       const styleStr = normalizeStyle(parseStyle(styleFn()));

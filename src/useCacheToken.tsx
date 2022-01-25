@@ -1,5 +1,6 @@
 import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
+import { token2key } from './util';
 
 /**
  * Cache theme derivative token as global shared one
@@ -11,7 +12,9 @@ export default function useCacheToken(
   theme: Theme<any, any>,
   ...tokens: object[]
 ) {
-  const cachedToken = useGlobalCache('token', [theme, ...tokens], () => {
+  const tokenStr = token2key(Object.assign({}, ...tokens));
+
+  const cachedToken = useGlobalCache('token', [theme.id, tokenStr], () => {
     const mergedDesignToken = Object.assign({}, ...tokens);
     return theme.getDerivativeToken(mergedDesignToken);
   });

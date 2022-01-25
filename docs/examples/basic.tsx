@@ -79,8 +79,8 @@ interface ButtonProps
 const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const prefixCls = 'ant-btn';
 
-  // 制造样式
-  const token = useToken();
+  // 【自定义】制造样式
+  const [theme, token] = useToken();
 
   // default 添加默认样式选择器后可以省很多冲突解决问题
   const defaultCls = `${prefixCls}-default`;
@@ -88,7 +88,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const ghostCls = `${prefixCls}-ghost`;
 
   // 全局注册，内部会做缓存优化
-  useStyleRegister([prefixCls, token], () => [
+  useStyleRegister({ theme, token, path: [prefixCls] }, () => [
     genDefaultButtonStyle(defaultCls, token),
     genPrimaryButtonStyle(primaryCls, token),
     genGhostButtonStyle(ghostCls, token),
@@ -114,10 +114,10 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 export default function App() {
   const [show, setShow] = React.useState(true);
 
-  const [, forceUpdate] = React.useState({});
-  React.useEffect(() => {
-    forceUpdate({});
-  }, []);
+  // const [, forceUpdate] = React.useState({});
+  // React.useEffect(() => {
+  //   forceUpdate({});
+  // }, []);
 
   return (
     <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>

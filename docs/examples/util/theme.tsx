@@ -53,5 +53,6 @@ export function useToken() {
   const rootDesignToken = React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 
-  return useCacheToken(theme, defaultDesignToken, rootDesignToken);
+  const token = useCacheToken(theme, defaultDesignToken, rootDesignToken);
+  return [theme, token];
 }
