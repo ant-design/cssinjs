@@ -1,3 +1,4 @@
+import hash from '@emotion/hash';
 import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
 import { token2key } from './util';
@@ -19,9 +20,12 @@ export default function useCacheToken(
     const derivativeToken = theme.getDerivativeToken(mergedDesignToken);
 
     // Optimize for `useStyleRegister` performance
-    derivativeToken._tokenKey = token2key(derivativeToken);
+    const tokenKey = token2key(derivativeToken);
+    derivativeToken._tokenKey = tokenKey;
 
-    return derivativeToken;
+    const hashId = hash(tokenKey);
+
+    return [derivativeToken, hashId];
   });
 
   return cachedToken;

@@ -40,6 +40,11 @@ const genDefaultButtonStyle = (
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.componentBackgroundColor,
     color: token.textColor,
+
+    '&:hover': {
+      borderColor: token.primaryColor,
+      color: token.primaryColor,
+    },
   }));
 
 // 主色样式
@@ -66,6 +71,11 @@ const genGhostButtonStyle = (
     [`.${prefixCls}`]: {
       backgroundColor: 'transparent',
       color: token.textColor,
+
+      '&:hover': {
+        borderColor: token.primaryColor,
+        color: token.primaryColor,
+      },
     },
   },
 ];
@@ -79,7 +89,8 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const prefixCls = 'ant-btn';
 
   // 【自定义】制造样式
-  const [theme, token] = useToken();
+  const [theme, token, hashId] = useToken();
+  console.log(hashId);
 
   // default 添加默认样式选择器后可以省很多冲突解决问题
   const defaultCls = `${prefixCls}-default`;
