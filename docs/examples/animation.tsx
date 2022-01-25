@@ -16,7 +16,7 @@ export default function App() {
 
   return (
     <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
-      {/* <Spin /> */}
+      <Spin />
 
       <DesignTokenContext.Provider value={{ token: orangeTheme, hashed: true }}>
         <Spin />

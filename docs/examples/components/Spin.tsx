@@ -2,13 +2,20 @@ import React from 'react';
 import classNames from 'classnames';
 import { useToken } from './theme';
 import type { DerivativeToken } from './theme';
-import { useStyleRegister } from '../../../src/';
+import { useStyleRegister, Keyframe } from '../../../src/';
 import type { CSSInterpolation, CSSObject } from '../../../src/';
+
+const animation = new Keyframe('loadingCircle', {
+  to: {
+    transform: `rotate(360deg)`,
+  },
+});
 
 // 通用框架
 const genSpinStyle = (
   prefixCls: string,
   token: DerivativeToken,
+  hashId: string,
 ): CSSInterpolation => [
   {
     [`.${prefixCls}`]: {
@@ -16,28 +23,23 @@ const genSpinStyle = (
       height: 20,
       backgroundColor: token.primaryColor,
 
-      animation: `loadingCircle 1s infinite linear`,
-    },
-
-    [`@keyframes loadingCircle`]: {
-      to: {
-        transform: `rotate(360deg)`,
-      },
+      animation: `${animation.getName(hashId)} 1s infinite linear`,
     },
   },
+  animation,
 ];
 
 interface SpinProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const Spin = ({ className, ...restProps }: SpinProps) => {
-  const prefixCls = 'ant-btn';
+  const prefixCls = 'ant-spin';
 
   // 【自定义】制造样式
   const [theme, token, hashId] = useToken();
 
   // 全局注册，内部会做缓存优化
   useStyleRegister({ theme, token, hashId, path: [prefixCls] }, () => [
-    genSpinStyle(prefixCls, token),
+    genSpinStyle(prefixCls, token, hashId),
   ]);
 
   return (

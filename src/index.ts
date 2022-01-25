@@ -6,14 +6,16 @@ import useStyleRegister, {
 import useCacheToken from './useCacheToken';
 import Cache from './Cache';
 import CacheContext from './CacheContext';
+import Keyframe from './Keyframe';
 
 export {
   Theme,
   TokenType,
   CSSObject,
-  CSSInterpolation,
   useStyleRegister,
   useCacheToken,
   Cache,
   CacheContext,
+  Keyframe,
+  CSSInterpolation,
 };

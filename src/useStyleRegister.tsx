@@ -8,6 +8,7 @@ import useGlobalCache from './useGlobalCache';
 import CacheContext from './CacheContext';
 import type { Theme } from '.';
 import { token2key } from './util';
+import type Keyframe from './Keyframe';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -28,7 +29,10 @@ export type InterpolationPrimitive =
   | string
   | CSSObject;
 
-export type CSSInterpolation = InterpolationPrimitive | ArrayCSSInterpolation;
+export type CSSInterpolation =
+  | InterpolationPrimitive
+  | ArrayCSSInterpolation
+  | Keyframe;
 
 export type CSSOthersObject = Record<string, CSSInterpolation>;
 
@@ -73,37 +77,50 @@ export const parseStyle = (
   );
 
   flattenStyleList.forEach((style) => {
-    Object.keys(style).forEach((key) => {
-      const value = style[key];
+    if ((style as any)._keyframe) {
+      // Keyframe
+      const keyframe = style as unknown as Keyframe;
+      styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
+        keyframe.style,
+        hashId,
+        false,
+      )}`;
+    } else {
+      // Normal CSSObject
+      Object.keys(style).forEach((key) => {
+        const value = style[key];
 
-      if (typeof value === 'object' && value) {
-        // 当成嵌套对象来出来
-        const mergedKey = root && hashId ? `.${hashId}${key}` : key;
-        styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
-      } else {
-        // 如果是样式则直接插入
-        const styleName = key.replace(
-          /[A-Z]/g,
-          (match) => `-${match.toLowerCase()}`,
-        );
+        if (typeof value === 'object' && value) {
+          // 当成嵌套对象来处理
+          const mergedKey = root && hashId ? `.${hashId}${key}` : key;
+          styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
+        } else {
+          // 如果是样式则直接插入
+          const styleName = key.replace(
+            /[A-Z]/g,
+            (match) => `-${match.toLowerCase()}`,
+          );
 
-        // Auto suffix with px
-        let formatValue = value;
-        if (
-          !unitless[key] &&
-          typeof formatValue === 'number' &&
-          formatValue !== 0
-        ) {
-          formatValue = `${formatValue}px`;
+          // Auto suffix with px
+          let formatValue = value;
+          if (
+            !unitless[key] &&
+            typeof formatValue === 'number' &&
+            formatValue !== 0
+          ) {
+            formatValue = `${formatValue}px`;
+          }
+
+          styleStr += `${styleName}:${formatValue};`;
         }
-
-        styleStr += `${styleName}:${formatValue};`;
-      }
-    });
+      });
+    }
   });
 
   if (!root) {
     styleStr = `{${styleStr}}`;
+  } else {
+    console.log('>>>', styleStr);
   }
 
   return styleStr;
