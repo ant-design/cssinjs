@@ -6,7 +6,7 @@ import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
 import CacheContext from './CacheContext';
-import { Theme } from '.';
+import type { Theme } from '.';
 import { token2key } from './util';
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
