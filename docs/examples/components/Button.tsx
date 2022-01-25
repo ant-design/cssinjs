@@ -15,6 +15,8 @@ const genSharedButtonStyle = (
     borderRadius: token.borderRadius,
 
     cursor: 'pointer',
+
+    transition: 'background 0.3s',
   },
 });
 
@@ -54,7 +56,7 @@ const genPrimaryButtonStyle = (
 ): CSSInterpolation =>
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.primaryColor,
-    border: `1px solid ${token.primaryColor}`,
+    border: `${token.borderWidth}px solid ${token.primaryColor}`,
     color: token.reverseTextColor,
 
     '&:hover': {
@@ -72,7 +74,7 @@ const genGhostButtonStyle = (
     [`.${prefixCls}`]: {
       backgroundColor: 'transparent',
       color: token.primaryColor,
-      border: `1px solid ${token.primaryColor}`,
+      border: `${token.borderWidth}px solid ${token.primaryColor}`,
 
       '&:hover': {
         borderColor: token.primaryColor,
