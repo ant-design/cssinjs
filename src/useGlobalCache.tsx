@@ -1,8 +1,9 @@
 import * as React from 'react';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import CacheContext from './CacheContext';
+import type { KeyType } from './Cache';
 
-function useClientCache<KeyType, CacheType>(
+function useClientCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
   cacheFn: () => CacheType,
@@ -45,7 +46,7 @@ function useClientCache<KeyType, CacheType>(
   return globalCache.get(fullPath)![1];
 }
 
-function useServerCache<KeyType, CacheType>(
+function useServerCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
   cacheFn: () => CacheType,

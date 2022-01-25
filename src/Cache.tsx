@@ -1,61 +1,25 @@
-class Entity<KeyType, ValueType> {
-  private value: ValueType | null = null;
-  private cache = new Map<KeyType, Entity<KeyType, ValueType>>();
-  private parent: Entity<KeyType, ValueType> | null;
+export type KeyType = string | number;
 
-  constructor(parent: Entity<KeyType, ValueType> | null = null) {
-    this.parent = parent;
-  }
+class Entity<ValueType = any> {
+  private cache = new Map<string, ValueType>();
 
   get(keys: KeyType[]): ValueType | null {
-    if (!keys.length) {
-      return this.value;
-    }
-
-    const [first, ...rest] = keys;
-    const subEntity = this.cache.get(first);
-    return subEntity ? subEntity.get(rest) : null;
+    return this.cache.get(keys.join('%')) || null;
   }
 
   update(
     keys: KeyType[],
     valueFn: (origin: ValueType | null) => ValueType | null,
   ) {
-    if (!keys.length) {
-      this.value = valueFn(this.value);
-      this.flush();
+    const path = keys.join('%');
+    const prevValue = this.cache.get(path)!;
+    const nextValue = valueFn(prevValue);
 
-      return;
+    if (nextValue === null) {
+      this.cache.delete(path);
+    } else {
+      this.cache.set(path, nextValue);
     }
-
-    const [first, ...rest] = keys;
-    if (!this.cache.has(first)) {
-      this.cache.set(first, new Entity(this));
-    }
-
-    this.cache.get(first)!.update(rest, valueFn);
-  }
-
-  isEmpty() {
-    return this.value === null && this.cache.size === 0;
-  }
-
-  // Clean up if current entity do not have value & children
-  private flush() {
-    // Not clean if has content or not have parent
-    if (!this.isEmpty() || !this.parent) {
-      return;
-    }
-
-    // Clean up parent children
-    this.parent.cache.forEach((entity, key) => {
-      if (entity === this) {
-        this.parent!.cache.delete(key);
-      }
-    });
-
-    // Bubble up to parent
-    this.parent.flush();
   }
 }
 

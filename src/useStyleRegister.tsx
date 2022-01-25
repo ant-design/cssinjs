@@ -107,6 +107,10 @@ export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
 // ============================================================================
 // ==                                Register                                ==
 // ============================================================================
+// We takes `theme.id` as part of hash to avoid HMR hit to remove the same style
+function uniqueHash(path: (string | number)[], styleStr: string) {
+  return hash(`${path.join('%')}${styleStr}`);
+}
 
 /**
  * Register a style to the global style sheet.
@@ -116,8 +120,12 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path } = info;
-  const { autoClean } = React.useContext(CacheContext);
-  const fullPath = [theme.id, token._tokenKey || token2key(token), ...path];
+  const { autoClear } = React.useContext(CacheContext);
+  const fullPath = [
+    theme.id,
+    (token._tokenKey as string) || token2key(token),
+    ...path,
+  ];
 
   useGlobalCache(
     'style',
@@ -125,7 +133,7 @@ export default function useStyleRegister(
     // Create cache if needed
     () => {
       const styleStr = normalizeStyle(parseStyle(styleFn()));
-      const styleId = hash(styleStr);
+      const styleId = uniqueHash(fullPath, styleStr);
 
       updateCSS(styleStr, styleId);
 
@@ -133,8 +141,8 @@ export default function useStyleRegister(
     },
     // Remove cache if no need
     (styleStr) => {
-      if (autoClean) {
-        const styleId = hash(styleStr);
+      if (autoClear) {
+        const styleId = uniqueHash(fullPath, styleStr);
         removeCSS(styleId);
       }
     },

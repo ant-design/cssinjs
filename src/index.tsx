@@ -4,6 +4,8 @@ import useStyleRegister, {
   CSSInterpolation,
 } from './useStyleRegister';
 import useCacheToken from './useCacheToken';
+import Cache from './Cache';
+import CacheContext from './CacheContext';
 
 export {
   Theme,
@@ -12,4 +14,6 @@ export {
   CSSInterpolation,
   useStyleRegister,
   useCacheToken,
+  Cache,
+  CacheContext,
 };

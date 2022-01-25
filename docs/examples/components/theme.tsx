@@ -42,7 +42,7 @@ function derivative(designToken: DesignToken): DerivativeToken {
   };
 }
 
-const ThemeContext = React.createContext(
+export const ThemeContext = React.createContext(
   new Theme<DesignToken, DerivativeToken>(derivative),
 );
 
