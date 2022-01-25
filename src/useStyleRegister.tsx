@@ -112,12 +112,12 @@ export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
  * Register a style to the global style sheet.
  */
 export default function useStyleRegister(
-  info: { theme: Theme<any, any>; token: object; path: string[] },
+  info: { theme: Theme<any, any>; token: any; path: string[] },
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path } = info;
   const { autoClean } = React.useContext(CacheContext);
-  const fullPath = [theme.id, token2key(token), ...path];
+  const fullPath = [theme.id, token._tokenKey || token2key(token), ...path];
 
   useGlobalCache(
     'style',
