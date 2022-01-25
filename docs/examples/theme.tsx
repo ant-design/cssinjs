@@ -12,16 +12,16 @@ export default function App() {
       <h3>混合主题</h3>
 
       <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
-        {/* <Button>Default</Button> */}
+        <Button>Default</Button>
         <Button type="primary">Primary</Button>
-        {/* <Button type="ghost">Ghost</Button> */}
+        <Button type="ghost">Ghost</Button>
       </div>
 
-      <DesignTokenContext.Provider value={redTheme}>
+      <DesignTokenContext.Provider value={{ token: redTheme, hashed: true }}>
         <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
-          {/* <Button>Default</Button> */}
+          <Button>Default</Button>
           <Button type="primary">Primary</Button>
-          {/* <Button type="ghost">Ghost</Button> */}
+          <Button type="ghost">Ghost</Button>
         </div>
       </DesignTokenContext.Provider>
     </div>

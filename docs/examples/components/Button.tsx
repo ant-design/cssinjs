@@ -54,6 +54,7 @@ const genPrimaryButtonStyle = (
 ): CSSInterpolation =>
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.primaryColor,
+    border: `1px solid ${token.primaryColor}`,
     color: token.reverseTextColor,
 
     '&:hover': {
@@ -70,7 +71,8 @@ const genGhostButtonStyle = (
   {
     [`.${prefixCls}`]: {
       backgroundColor: 'transparent',
-      color: token.textColor,
+      color: token.primaryColor,
+      border: `1px solid ${token.primaryColor}`,
 
       '&:hover': {
         borderColor: token.primaryColor,
@@ -90,7 +92,6 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 
   // 【自定义】制造样式
   const [theme, token, hashId] = useToken();
-  console.log(hashId);
 
   // default 添加默认样式选择器后可以省很多冲突解决问题
   const defaultCls = `${prefixCls}-default`;
@@ -98,7 +99,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const ghostCls = `${prefixCls}-ghost`;
 
   // 全局注册，内部会做缓存优化
-  useStyleRegister({ theme, token, path: [prefixCls] }, () => [
+  useStyleRegister({ theme, token, hashId, path: [prefixCls] }, () => [
     genDefaultButtonStyle(defaultCls, token),
     genPrimaryButtonStyle(primaryCls, token),
     genGhostButtonStyle(ghostCls, token),
@@ -114,7 +115,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 
   return (
     <button
-      className={classNames(prefixCls, typeCls, className)}
+      className={classNames(prefixCls, typeCls, hashId, className)}
       {...restProps}
     />
   );

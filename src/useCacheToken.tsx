@@ -24,6 +24,7 @@ export default function useCacheToken(
     derivativeToken._tokenKey = tokenKey;
 
     const hashId = hash(tokenKey);
+    derivativeToken._hashId = hashId;
 
     return [derivativeToken, hashId];
   });

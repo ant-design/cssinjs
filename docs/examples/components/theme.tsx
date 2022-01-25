@@ -47,13 +47,22 @@ export const ThemeContext = React.createContext(
   new Theme<DesignToken, DerivativeToken>(derivative),
 );
 
-export const DesignTokenContext =
-  React.createContext<Partial<DesignToken>>(defaultDesignToken);
+export const DesignTokenContext = React.createContext<{
+  token: Partial<DesignToken>;
+  hashed?: boolean;
+}>({
+  token: defaultDesignToken,
+});
 
 export function useToken() {
-  const rootDesignToken = React.useContext(DesignTokenContext);
+  const { token: rootDesignToken, hashed } =
+    React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 
-  const [token, hashId] = useCacheToken(theme, defaultDesignToken, rootDesignToken);
-  return [theme, token, hashId];
+  const [token, hashId] = useCacheToken(
+    theme,
+    defaultDesignToken,
+    rootDesignToken,
+  );
+  return [theme, token, hashed ? hashId : ''];
 }

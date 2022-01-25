@@ -46,7 +46,11 @@ function normalizeStyle(styleStr: string) {
 }
 
 // Parse CSSObject to style content
-export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
+export const parseStyle = (
+  interpolation: CSSInterpolation,
+  hashId?: string,
+  root = true,
+) => {
   let styleStr = '';
 
   function flattenList(
@@ -74,9 +78,10 @@ export const parseStyle = (interpolation: CSSInterpolation, root = true) => {
 
       if (typeof value === 'object' && value) {
         // 当成嵌套对象来出来
-        styleStr += `${key}${parseStyle(value as any, false)}`;
+        const mergedKey = root && hashId ? `.${hashId}${key}` : key;
+        styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
       } else {
-        // 直接插入
+        // 如果是样式则直接插入
         const styleName = key.replace(
           /[A-Z]/g,
           (match) => `-${match.toLowerCase()}`,
@@ -116,23 +121,27 @@ function uniqueHash(path: (string | number)[], styleStr: string) {
  * Register a style to the global style sheet.
  */
 export default function useStyleRegister(
-  info: { theme: Theme<any, any>; token: any; path: string[] },
+  info: {
+    theme: Theme<any, any>;
+    token: any;
+    path: string[];
+    hashId?: string;
+  },
   styleFn: () => CSSInterpolation,
 ) {
-  const { theme, token, path } = info;
+  const { theme, token, path, hashId } = info;
   const { autoClear } = React.useContext(CacheContext);
-  const fullPath = [
-    theme.id,
-    (token._tokenKey as string) || token2key(token),
-    ...path,
-  ];
+  const tokenKey = (token._tokenKey as string) || token2key(token);
+
+  const fullPath = [theme.id, tokenKey, ...path];
 
   useGlobalCache(
     'style',
     fullPath,
     // Create cache if needed
     () => {
-      const styleStr = normalizeStyle(parseStyle(styleFn()));
+      const styleObj = styleFn();
+      const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
       const styleId = uniqueHash(fullPath, styleStr);
 
       updateCSS(styleStr, styleId);
