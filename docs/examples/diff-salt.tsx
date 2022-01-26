@@ -1,7 +1,6 @@
 import { CSSInterpolation, useStyleRegister } from '../../src';
 import classNames from 'classnames';
 import React from 'react';
-import Button from './components/Button';
 import {
   DerivativeToken,
   DesignTokenContext,

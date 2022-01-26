@@ -2,6 +2,7 @@ import * as React from 'react';
 import type * as CSS from 'csstype';
 import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import hash from '@emotion/hash';
+// @ts-ignore
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
