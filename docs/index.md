@@ -1,5 +1,5 @@
 ---
-title: rc-footer
+title: @ant-design/cssinjs
 ---
 
 <embed src="../README.md"></embed>

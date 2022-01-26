@@ -26,4 +26,3 @@ tests
 src
 /index.js
 .*
-assets/**/*.less
