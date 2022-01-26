@@ -119,8 +119,6 @@ export const parseStyle = (
 
   if (!root) {
     styleStr = `{${styleStr}}`;
-  } else {
-    console.log('>>>', styleStr);
   }
 
   return styleStr;
