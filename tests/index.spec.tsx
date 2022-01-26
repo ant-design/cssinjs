@@ -2,9 +2,11 @@ import * as React from 'react';
 import { mount } from 'enzyme';
 import {
   Theme,
+  Cache,
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
+  CacheContext,
 } from '../src';
 
 interface DesignToken {
@@ -62,12 +64,12 @@ describe('csssinjs', () => {
 
     it('useToken', () => {
       // Multiple time only has one style instance
-      mount(
-        <>
+      const wrapper = mount(
+        <div>
           <Box />
           <Box />
           <Box />
-        </>,
+        </div>,
       );
 
       const styles = Array.from(document.head.querySelectorAll('style'));
@@ -75,6 +77,29 @@ describe('csssinjs', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toEqual('.box{background-color:#1890ff;}');
+
+      // Default not remove style
+      wrapper.unmount();
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+    });
+
+    it('remove style when unmount', () => {
+      const Demo = () => (
+        <CacheContext.Provider
+          value={{
+            autoClear: true,
+            cache: new Cache(),
+          }}
+        >
+          <Box />
+        </CacheContext.Provider>
+      );
+
+      const wrapper = mount(<Demo />);
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+
+      wrapper.unmount();
+      expect(document.head.querySelectorAll('style')).toHaveLength(0);
     });
   });
 });
