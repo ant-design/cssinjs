@@ -37,7 +37,8 @@
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "pretty-quick": "pretty-quick",
     "test": "father test",
-    "coverage": "father test --coverage"
+    "coverage": "father test --coverage",
+    "now-build": "npm run docs:build"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
