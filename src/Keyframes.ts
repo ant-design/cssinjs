@@ -10,7 +10,7 @@ class Keyframe {
   }
 
   getName(hashId: string = ''): string {
-    return `${hashId}-${this.name}`;
+    return hashId ? `${hashId}-${this.name}` : this.name;
   }
 
   _keyframe = true;

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type * as CSS from 'csstype';
 import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import hash from '@emotion/hash';
 // @ts-ignore
 import unitless from '@emotion/unitless';
@@ -9,7 +10,9 @@ import useGlobalCache from './useGlobalCache';
 import CacheContext from './CacheContext';
 import type { Theme } from '.';
 import { token2key } from './util';
-import type Keyframe from './Keyframe';
+import type Keyframes from './Keyframes';
+
+const isClientSide = canUseDom();
 
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
@@ -33,7 +36,7 @@ export type InterpolationPrimitive =
 export type CSSInterpolation =
   | InterpolationPrimitive
   | ArrayCSSInterpolation
-  | Keyframe;
+  | Keyframes;
 
 export type CSSOthersObject = Record<string, CSSInterpolation>;
 
@@ -80,7 +83,7 @@ export const parseStyle = (
   flattenStyleList.forEach((style) => {
     if ((style as any)._keyframe) {
       // Keyframe
-      const keyframe = style as unknown as Keyframe;
+      const keyframe = style as unknown as Keyframes;
       styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
         keyframe.style,
         hashId,
@@ -160,13 +163,15 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
       const styleId = uniqueHash(fullPath, styleStr);
 
-      updateCSS(styleStr, styleId);
+      if (isClientSide) {
+        updateCSS(styleStr, styleId);
+      }
 
       return styleStr;
     },
     // Remove cache if no need
     (styleStr) => {
-      if (autoClear) {
+      if (autoClear && isClientSide) {
         const styleId = uniqueHash(fullPath, styleStr);
         removeCSS(styleId);
       }

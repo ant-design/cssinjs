@@ -2,10 +2,10 @@ import React from 'react';
 import classNames from 'classnames';
 import { useToken } from './theme';
 import type { DerivativeToken } from './theme';
-import { useStyleRegister, Keyframe } from '../../../src/';
+import { useStyleRegister, Keyframes } from '../../../src/';
 import type { CSSInterpolation, CSSObject } from '../../../src/';
 
-const animation = new Keyframe('loadingCircle', {
+const animation = new Keyframes('loadingCircle', {
   to: {
     transform: `rotate(360deg)`,
   },

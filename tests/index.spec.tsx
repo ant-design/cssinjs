@@ -26,6 +26,8 @@ const baseToken: DesignToken = {
   primaryColor: '#1890ff',
 };
 
+const theme = new Theme(derivative);
+
 describe('csssinjs', () => {
   beforeEach(() => {
     const styles = Array.from(document.head.querySelectorAll('style'));
@@ -35,8 +37,6 @@ describe('csssinjs', () => {
   });
 
   it('theme', () => {
-    const theme = new Theme(derivative);
-
     expect(theme.getDerivativeToken(baseToken)).toEqual({
       ...baseToken,
       primaryColorDisabled: baseToken.primaryColor,
@@ -44,10 +44,10 @@ describe('csssinjs', () => {
   });
 
   describe('Component', () => {
-    const theme = new Theme(derivative);
-
     const genStyle = (token: DerivativeToken): CSSInterpolation => ({
-      ['.box']: {
+      '.box': {
+        width: 93,
+        lineHeight: 1,
         backgroundColor: token.primaryColor,
       },
     });
@@ -76,7 +76,9 @@ describe('csssinjs', () => {
       expect(styles).toHaveLength(1);
 
       const style = styles[0];
-      expect(style.innerHTML).toEqual('.box{background-color:#1890ff;}');
+      expect(style.innerHTML).toEqual(
+        '.box{width:93px;line-height:1;background-color:#1890ff;}',
+      );
 
       // Default not remove style
       wrapper.unmount();
@@ -101,5 +103,57 @@ describe('csssinjs', () => {
       wrapper.unmount();
       expect(document.head.querySelectorAll('style')).toHaveLength(0);
     });
+  });
+
+  it('nest style', () => {
+    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+      '.parent': {
+        '.child': {
+          background: token.primaryColor,
+
+          '&:hover': {
+            borderColor: token.primaryColor,
+          },
+        },
+      },
+    });
+
+    const Nest = () => {
+      const [token] = useCacheToken(theme, [baseToken]);
+
+      useStyleRegister({ theme, token, path: ['.parent'] }, () => [
+        genStyle(token),
+      ]);
+
+      return null;
+    };
+
+    mount(<Nest />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+
+    const style = styles[0];
+    expect(style.innerHTML).toEqual(
+      '.parent .child{background:#1890ff;}.parent .child:hover{border-color:#1890ff;}',
+    );
+  });
+
+  it('serialize nest object token', () => {
+    const TokenShower = () => {
+      const [token] = useCacheToken(theme, [
+        {
+          nest: {
+            nothing: 1,
+          },
+        },
+      ]);
+      console.log(token);
+
+      return token._tokenKey;
+    };
+
+    const wrapper = mount(<TokenShower />);
+    expect(wrapper.text().includes('nothing1')).toBeTruthy();
   });
 });
