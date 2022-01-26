@@ -51,6 +51,8 @@
   "devDependencies": {
     "@ctrl/tinycolor": "^3.4.0",
     "@types/classnames": "^2.2.9",
+    "@types/enzyme": "^3.10.11",
+    "@types/jest": "^27.4.0",
     "@types/react": "^17.0.13",
     "@types/react-dom": "^16.9.0",
     "@types/stylis": "^4.0.2",
