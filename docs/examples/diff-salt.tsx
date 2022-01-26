@@ -79,10 +79,10 @@ export default function App() {
           columnGap: 8,
         }}
       >
-        <DesignTokenContext.Provider value={{ hashed: true, salt: '123' }}>
+        <DesignTokenContext.Provider value={{ hashed: '123' }}>
           <Box1 />
         </DesignTokenContext.Provider>
-        <DesignTokenContext.Provider value={{ hashed: true, salt: '234' }}>
+        <DesignTokenContext.Provider value={{ hashed: '234' }}>
           <Box2 />
         </DesignTokenContext.Provider>
       </div>
