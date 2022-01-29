@@ -13,17 +13,19 @@ function useClientCache<CacheType>(
   const fullPath = [prefix, ...keyPath];
 
   // Create cache
-  const initRef = React.useRef(false);
-  if (!initRef.current) {
-    initRef.current = true;
+  React.useMemo(
+    () => {
+      globalCache.update(fullPath, (prevCache) => {
+        const [times = 0, cache] = prevCache || [];
+        const mergedCache = cache || cacheFn();
 
-    globalCache.update(fullPath, (prevCache) => {
-      const [times = 0, cache] = prevCache || [];
-      const mergedCache = cache || cacheFn();
-
-      return [times + 1, mergedCache];
-    });
-  }
+        return [times + 1, mergedCache];
+      });
+    },
+    /* eslint-disable react-hooks/exhaustive-deps */
+    [fullPath.join('_')],
+    /* eslint-enable */
+  );
 
   // Remove if no need anymore
   React.useEffect(
