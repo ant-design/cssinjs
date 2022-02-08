@@ -11,6 +11,37 @@ export interface Option {
   salt?: string;
 }
 
+const tokenKeys = new Map<string, number>();
+function recordCleanToken(tokenKey: string) {
+  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) + 1);
+}
+
+// Remove will check current keys first
+function cleanTokenStyle(tokenKey: string) {
+  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
+
+  const tokenKeyList = Array.from(tokenKeys.keys());
+  const cleanableKeyList = tokenKeyList.filter((key) => {
+    const count = tokenKeys.get(key) || 0;
+
+    return count <= 0;
+  });
+
+  if (cleanableKeyList.length < tokenKeyList.length) {
+    cleanableKeyList.forEach((key) => {
+      const styles = document.querySelectorAll(
+        `style[data-token-key="${key}"]`,
+      );
+
+      styles.forEach((style) => {
+        style.parentNode?.removeChild(style);
+      });
+
+      tokenKeys.delete(key);
+    });
+  }
+}
+
 /**
  * Cache theme derivative token as global shared one
  * @param theme Theme entity
@@ -36,11 +67,16 @@ export default function useCacheToken(
       // Optimize for `useStyleRegister` performance
       const tokenKey = `${salt}_${token2key(derivativeToken)}`;
       derivativeToken._tokenKey = tokenKey;
+      recordCleanToken(tokenKey);
 
       const hashId = `css-${hash(tokenKey)}`;
       derivativeToken._hashId = hashId;
 
       return [derivativeToken, hashId];
+    },
+    (cache) => {
+      // Remove token will remove all related style
+      cleanTokenStyle(cache[0]._tokenKey);
     },
   );
 

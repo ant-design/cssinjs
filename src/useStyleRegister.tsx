@@ -164,7 +164,10 @@ export default function useStyleRegister(
       const styleId = uniqueHash(fullPath, styleStr);
 
       if (isClientSide) {
-        updateCSS(styleStr, styleId);
+        const style = updateCSS(styleStr, styleId);
+
+        // Used for `useCacheToken` to remove on batch when token removed
+        style.setAttribute('data-token-key', tokenKey);
       }
 
       return styleStr;
