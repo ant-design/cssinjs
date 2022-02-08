@@ -52,8 +52,8 @@ describe('csssinjs', () => {
       },
     });
 
-    const Box = () => {
-      const [token] = useCacheToken(theme, [baseToken]);
+    const Box = ({ propToken = baseToken }: { propToken?: DesignToken }) => {
+      const [token] = useCacheToken(theme, [propToken]);
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [
         genStyle(token),
@@ -82,6 +82,29 @@ describe('csssinjs', () => {
 
       // Default not remove style
       wrapper.unmount();
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+    });
+
+    // We will not remove style immediately,
+    // but remove when second style patched.
+    it('remove old style to ensure style set only exist one', () => {
+      const wrapper = mount(<Box />);
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+
+      // First change
+      wrapper.setProps({
+        propToken: {
+          primaryColor: 'red',
+        },
+      });
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+
+      // Second change
+      wrapper.setProps({
+        propToken: {
+          primaryColor: 'green',
+        },
+      });
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
     });
 
@@ -148,7 +171,6 @@ describe('csssinjs', () => {
           },
         },
       ]);
-      console.log(token);
 
       return token._tokenKey;
     };
