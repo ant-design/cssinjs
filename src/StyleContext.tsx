@@ -3,7 +3,7 @@ import CacheEntity from './Cache';
 
 const StyleContext = React.createContext<{
   autoClear?: boolean;
-  /** @private Test usage. Do not use in your production */
+  /** @private Test only. Not work in production. */
   insertStyle?: boolean;
   cache: CacheEntity;
 }>({

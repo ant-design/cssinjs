@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { render, unmountComponentAtNode, hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { mount } from 'enzyme';
 import {
@@ -63,6 +64,7 @@ describe('SSR', () => {
   });
 
   it('ssr extract style', () => {
+    // >>> SSR
     const cache = new Cache();
 
     const html = renderToString(
@@ -74,7 +76,53 @@ describe('SSR', () => {
     const style = extractStyle(cache);
 
     expect(html).toEqual('<div class="box"></div>');
-    expect(style).toEqual('<style>.box{background-color:#1890ff;}</style>');
+    expect(style).toEqual(
+      '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+    );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
+
+    // >>> Server Render
+    const root = document.createElement('div');
+    root.id = 'root';
+    document.body.appendChild(root);
+
+    const prepareEnv = () => {
+      document.head.innerHTML = `<style id="otherStyle">html { background: red; }</style>${style}`;
+      root.innerHTML = html;
+
+      expect(document.head.querySelectorAll('style')).toHaveLength(2);
+    };
+
+    // >>> Ensure render will remove style
+    prepareEnv();
+    render(
+      // New cache here to avoid conflict with other test case cache
+      <StyleContext.Provider value={{ cache: new Cache() }}>
+        <Box />
+      </StyleContext.Provider>,
+      root,
+    );
+    // Not remove other style
+    expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
+    expect(document.head.querySelectorAll('style')).toHaveLength(1);
+    unmountComponentAtNode(root);
+
+    // >>> Hydrate
+    prepareEnv();
+    hydrate(
+      <StyleContext.Provider
+        value={{
+          cache,
+          // Force insert style since we hack `canUseDom` to false
+          insertStyle: true,
+        }}
+      >
+        <Box />
+      </StyleContext.Provider>,
+      root,
+    );
+    // Not remove other style
+    expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
+    expect(document.head.querySelectorAll('style')).toHaveLength(2);
   });
 });

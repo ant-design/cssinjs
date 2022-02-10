@@ -164,7 +164,16 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
       const styleId = uniqueHash(fullPath, styleStr);
 
-      if (isClientSide && insertStyle !== false) {
+      let shouldInsertStyle = isClientSide;
+      if (process.env.NODE_ENV !== 'production') {
+        shouldInsertStyle =
+          // Dumi docs usage
+          (isClientSide && insertStyle !== false) ||
+          // Test usage
+          insertStyle === true;
+      }
+
+      if (shouldInsertStyle) {
         const style = updateCSS(styleStr, styleId);
 
         // Used for `useCacheToken` to remove on batch when token removed
