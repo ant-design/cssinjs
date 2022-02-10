@@ -11,7 +11,7 @@ export default class Theme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
 > {
-  public id: number;
+  public id: number | string;
   private derivative: DerivativeFunc<DesignToken, DerivativeToken>;
 
   constructor(derivative: DerivativeFunc<DesignToken, DerivativeToken>) {

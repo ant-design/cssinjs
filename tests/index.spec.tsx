@@ -6,7 +6,7 @@ import {
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
-  CacheContext,
+  StyleContext,
 } from '../src';
 
 interface DesignToken {
@@ -110,14 +110,14 @@ describe('csssinjs', () => {
 
     it('remove style when unmount', () => {
       const Demo = () => (
-        <CacheContext.Provider
+        <StyleContext.Provider
           value={{
             autoClear: true,
             cache: new Cache(),
           }}
         >
           <Box />
-        </CacheContext.Provider>
+        </StyleContext.Provider>
       );
 
       const wrapper = mount(<Demo />);

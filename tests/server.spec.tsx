@@ -1,10 +1,14 @@
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { mount } from 'enzyme';
 import {
   Theme,
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
+  StyleContext,
+  Cache,
+  extractStyle,
 } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
@@ -55,6 +59,22 @@ describe('SSR', () => {
   it('should not use cache', () => {
     mount(<Box />);
 
+    expect(document.head.querySelectorAll('style')).toHaveLength(0);
+  });
+
+  it('ssr extract style', () => {
+    const cache = new Cache();
+
+    const html = renderToString(
+      <StyleContext.Provider value={{ cache }}>
+        <Box />
+      </StyleContext.Provider>,
+    );
+
+    const style = extractStyle(cache);
+
+    expect(html).toEqual('<div class="box"></div>');
+    expect(style).toEqual('<style>.box{background-color:#1890ff;}</style>');
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
   });
 });

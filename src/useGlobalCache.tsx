@@ -1,5 +1,5 @@
 import * as React from 'react';
-import CacheContext from './CacheContext';
+import StyleContext from './StyleContext';
 import type { KeyType } from './Cache';
 
 export default function useClientCache<CacheType>(
@@ -8,7 +8,7 @@ export default function useClientCache<CacheType>(
   cacheFn: () => CacheType,
   onCacheRemove?: (cache: CacheType) => void,
 ): CacheType {
-  const { cache: globalCache } = React.useContext(CacheContext);
+  const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
 
   // Create cache

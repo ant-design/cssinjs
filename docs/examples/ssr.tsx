@@ -1,27 +1,39 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import { CacheContext, Cache } from '../../src';
+import { StyleContext, Cache, extractStyle } from '../../src';
 import Button from './components/Button';
 import Spin from './components/Spin';
+import { DesignTokenContext } from './components/theme';
 
 const Demo = () => (
   <div style={{ display: 'flex', columnGap: 8 }}>
     <Button type="ghost">Button</Button>
     <Spin />
+
+    <DesignTokenContext.Provider
+      value={{ token: { primaryColor: 'red' }, hashed: true }}
+    >
+      <Button type="ghost">Button</Button>
+      <Spin />
+    </DesignTokenContext.Provider>
+    <DesignTokenContext.Provider
+      value={{ token: { primaryColor: 'green' }, hashed: 'v5' }}
+    >
+      <Button type="ghost">Button</Button>
+      <Spin />
+    </DesignTokenContext.Provider>
   </div>
 );
 
-function extractStyle(cache: Cache) {
-  const keys = Array.from(cache.cache.keys());
-  const styleKeys = keys.filter((key) => key.startsWith('style%'));
-
-  const styleValues = styleKeys.map((key) => cache.cache.get(key)![1]);
-
-  return styleValues.join('\n');
-}
-
 const Pre: React.FC = ({ children }) => (
-  <pre style={{ background: '#FFF', padding: 8, whiteSpace: 'pre-wrap' }}>
+  <pre
+    style={{
+      background: '#FFF',
+      padding: 8,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    }}
+  >
     {children}
   </pre>
 );
@@ -31,13 +43,15 @@ export default function App() {
 
   const [ssrHTML, ssrStyle] = React.useMemo(() => {
     const html = renderToString(
-      <CacheContext.Provider
+      <StyleContext.Provider
         value={{
+          // Tell cssinjs not insert dom style. No need in real world
+          insertStyle: false,
           cache: cacheRef.current,
         }}
       >
         <Demo />
-      </CacheContext.Provider>,
+      </StyleContext.Provider>,
     );
 
     const style = extractStyle(cacheRef.current);
@@ -52,7 +66,9 @@ export default function App() {
       <Pre>{ssrStyle}</Pre>
       <Pre>{ssrHTML}</Pre>
 
-      <div dangerouslySetInnerHTML={{ __html: `<div>${ssrHTML}</div>` }} />
+      <div
+        dangerouslySetInnerHTML={{ __html: `${ssrStyle}<div>${ssrHTML}</div>` }}
+      />
     </div>
   );
 }
