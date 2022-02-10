@@ -8,6 +8,7 @@ import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
 import CacheContext from './CacheContext';
+import type Cache from './Cache';
 import type { Theme } from '.';
 import { token2key } from './util';
 import type Keyframes from './Keyframes';
@@ -180,4 +181,21 @@ export default function useStyleRegister(
       }
     },
   );
+}
+
+// ============================================================================
+// ==                                  SSR                                   ==
+// ============================================================================
+export function extractStyle(cache: Cache) {
+  // prefix with `style` is used for `useStyleRegister` to cache style context
+  const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
+    key.startsWith('style%'),
+  );
+
+  let styleText = styleKeys.map((key) => cache.cache.get(key)![1]).join('\n');
+
+  // Wrap with style tag
+  styleText = `<style>${styleText}</style>`;
+
+  return styleText;
 }

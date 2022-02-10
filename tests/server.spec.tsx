@@ -6,6 +6,7 @@ import {
   CSSInterpolation,
   useStyleRegister,
 } from '../src';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 
 interface DesignToken {
