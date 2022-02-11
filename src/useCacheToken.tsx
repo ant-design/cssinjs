@@ -17,11 +17,13 @@ function recordCleanToken(tokenKey: string) {
 }
 
 function removeStyleTags(key: string) {
-  const styles = document.querySelectorAll(`style[data-token-key="${key}"]`);
+  if (typeof document !== 'undefined') {
+    const styles = document.querySelectorAll(`style[data-token-key="${key}"]`);
 
-  styles.forEach((style) => {
-    style.parentNode?.removeChild(style);
-  });
+    styles.forEach((style) => {
+      style.parentNode?.removeChild(style);
+    });
+  }
 }
 
 // Remove will check current keys first
