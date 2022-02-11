@@ -7,7 +7,7 @@ import {
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
-  StyleContext,
+  StyleProvider,
   Cache,
   extractStyle,
 } from '../src';
@@ -68,9 +68,9 @@ describe('SSR', () => {
     const cache = new Cache();
 
     const html = renderToString(
-      <StyleContext.Provider value={{ cache }}>
+      <StyleProvider cache={cache}>
         <Box />
-      </StyleContext.Provider>,
+      </StyleProvider>,
     );
 
     const style = extractStyle(cache);
@@ -97,9 +97,9 @@ describe('SSR', () => {
     prepareEnv();
     render(
       // New cache here to avoid conflict with other test case cache
-      <StyleContext.Provider value={{ cache: new Cache() }}>
+      <StyleProvider cache={new Cache()}>
         <Box />
-      </StyleContext.Provider>,
+      </StyleProvider>,
       root,
     );
     // Not remove other style
@@ -110,15 +110,13 @@ describe('SSR', () => {
     // >>> Hydrate
     prepareEnv();
     hydrate(
-      <StyleContext.Provider
-        value={{
-          cache,
-          // Force insert style since we hack `canUseDom` to false
-          insertStyle: true,
-        }}
+      <StyleProvider
+        cache={cache}
+        // Force insert style since we hack `canUseDom` to false
+        insertStyle
       >
         <Box />
-      </StyleContext.Provider>,
+      </StyleProvider>,
       root,
     );
     // Not remove other style

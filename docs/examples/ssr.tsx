@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import { StyleContext, Cache, extractStyle } from '../../src';
+import { StyleProvider, Cache, extractStyle } from '../../src';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -43,15 +43,13 @@ export default function App() {
 
   const [ssrHTML, ssrStyle] = React.useMemo(() => {
     const html = renderToString(
-      <StyleContext.Provider
-        value={{
-          // Tell cssinjs not insert dom style. No need in real world
-          insertStyle: false,
-          cache: cacheRef.current,
-        }}
+      <StyleProvider
+        // Tell cssinjs not insert dom style. No need in real world
+        insertStyle={false}
+        cache={cacheRef.current}
       >
         <Demo />
-      </StyleContext.Provider>,
+      </StyleProvider>,
     );
 
     const style = extractStyle(cacheRef.current);
