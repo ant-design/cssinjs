@@ -72,20 +72,9 @@ export default function App() {
     return [html, style];
   }, []);
 
-  // 模拟一个空白文档，并且注水
   React.useEffect(() => {
-    console.log('Delay to hydrate...');
-    setTimeout(() => {
-      const styles = document.createElement('div');
-      styles.innerHTML = ssrStyle;
-
-      Array.from(styles.childNodes).forEach((style) => {
-        document.head.appendChild(style);
-      });
-
-      const container = document.getElementById('ssr');
-      hydrate(<Demo />, container);
-    }, 500);
+    const container = document.getElementById('ssr');
+    hydrate(<Demo />, container);
   }, []);
 
   return (
@@ -95,7 +84,10 @@ export default function App() {
       <Pre>{ssrStyle}</Pre>
       <Pre>{ssrHTML}</Pre>
 
-      <div id="ssr" dangerouslySetInnerHTML={{ __html: ssrHTML }} />
+      <div
+        id="ssr"
+        dangerouslySetInnerHTML={{ __html: `${ssrStyle}<div>${ssrHTML}</div>` }}
+      />
     </div>
   );
 }

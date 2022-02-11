@@ -5,6 +5,7 @@ export interface StyleContextProps {
   autoClear?: boolean;
   /** @private Test only. Not work in production. */
   insertStyle?: boolean;
+  /** Only set when you need ssr to extract style on you own */
   cache: CacheEntity;
 }
 
