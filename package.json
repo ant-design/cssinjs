@@ -1,12 +1,10 @@
 {
   "name": "@ant-design/cssinjs",
   "version": "0.0.0-alpha.4",
-  "description": "Pretty Footer react component used in used in ant.design",
+  "description": "Component level cssinjs resolution for antd",
   "keywords": [
     "react",
-    "react-component",
-    "react-footer",
-    "footer",
+    "cssinjs",
     "antd",
     "ant-design"
   ],
@@ -17,13 +15,13 @@
     "lib",
     "dist"
   ],
-  "homepage": "https://react-component.github.io/footer",
+  "homepage": "https://github.com/ant-design/cssinjs",
   "repository": {
     "type": "git",
-    "url": "git@github.com:react-component/footer.git"
+    "url": "git@github.com:ant-design/cssinjs.git"
   },
   "bugs": {
-    "url": "http://github.com/react-component/footer/issues"
+    "url": "http://github.com/ant-design/cssinjs/issues"
   },
   "license": "MIT",
   "scripts": {
