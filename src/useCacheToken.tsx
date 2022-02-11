@@ -16,6 +16,14 @@ function recordCleanToken(tokenKey: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) + 1);
 }
 
+function removeStyleTags(key: string) {
+  const styles = document.querySelectorAll(`style[data-token-key="${key}"]`);
+
+  styles.forEach((style) => {
+    style.parentNode?.removeChild(style);
+  });
+}
+
 // Remove will check current keys first
 function cleanTokenStyle(tokenKey: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
@@ -29,14 +37,7 @@ function cleanTokenStyle(tokenKey: string) {
 
   if (cleanableKeyList.length < tokenKeyList.length) {
     cleanableKeyList.forEach((key) => {
-      const styles = document.querySelectorAll(
-        `style[data-token-key="${key}"]`,
-      );
-
-      styles.forEach((style) => {
-        style.parentNode?.removeChild(style);
-      });
-
+      removeStyleTags(key);
       tokenKeys.delete(key);
     });
   }
@@ -71,6 +72,9 @@ export default function useCacheToken(
 
       const hashId = `css-${hash(tokenKey)}`;
       derivativeToken._hashId = hashId;
+
+      // Clean up ssr style
+      removeStyleTags(tokenKey);
 
       return [derivativeToken, hashId];
     },

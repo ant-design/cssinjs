@@ -7,7 +7,8 @@ import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
-import CacheContext from './CacheContext';
+import StyleContext from './StyleContext';
+import type Cache from './Cache';
 import type { Theme } from '.';
 import { token2key } from './util';
 import type Keyframes from './Keyframes';
@@ -149,7 +150,7 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path, hashId } = info;
-  const { autoClear } = React.useContext(CacheContext);
+  const { autoClear, insertStyle } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
   const fullPath = [theme.id, tokenKey, ...path];
@@ -163,21 +164,61 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
       const styleId = uniqueHash(fullPath, styleStr);
 
-      if (isClientSide) {
+      let shouldInsertStyle = isClientSide;
+      if (process.env.NODE_ENV !== 'production') {
+        shouldInsertStyle =
+          // Dumi docs usage
+          (isClientSide && insertStyle !== false) ||
+          // Test usage
+          insertStyle === true;
+      }
+
+      if (shouldInsertStyle) {
         const style = updateCSS(styleStr, styleId);
 
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute('data-token-key', tokenKey);
       }
 
-      return styleStr;
+      return [styleStr, tokenKey];
     },
     // Remove cache if no need
-    (styleStr) => {
+    ([styleStr]) => {
       if (autoClear && isClientSide) {
         const styleId = uniqueHash(fullPath, styleStr);
         removeCSS(styleId);
       }
     },
   );
+}
+
+// ============================================================================
+// ==                                  SSR                                   ==
+// ============================================================================
+export function extractStyle(cache: Cache) {
+  // prefix with `style` is used for `useStyleRegister` to cache style context
+  const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
+    key.startsWith('style%'),
+  );
+
+  const tokenStyles: Record<string, string[]> = {};
+
+  styleKeys.forEach((key) => {
+    const [styleStr, tokenKey] = cache.cache.get(key)![1];
+
+    tokenStyles[tokenKey] = (tokenStyles[tokenKey] || []).concat(styleStr);
+  });
+
+  // Fill with styles
+  let styleText = '';
+
+  Object.keys(tokenStyles).forEach((tokenKey) => {
+    const styleStrList = tokenStyles[tokenKey];
+    const styleStr = styleStrList.join('');
+
+    // Wrap with style tag
+    styleText += `<style data-token-key="${tokenKey}">${styleStr}</style>`;
+  });
+
+  return styleText;
 }

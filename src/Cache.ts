@@ -1,7 +1,9 @@
 export type KeyType = string | number;
+type ValueType = [number, any]; // [times, realValue]
 
-class Entity<ValueType = any> {
-  private cache = new Map<string, ValueType>();
+class Entity {
+  /** @private Internal cache map. Do not access this directly */
+  cache = new Map<string, ValueType>();
 
   get(keys: KeyType[]): ValueType | null {
     return this.cache.get(keys.join('%')) || null;
