@@ -1,7 +1,7 @@
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { StyleProvider, Cache, extractStyle } from '../../src';
+import { StyleProvider } from '../../src';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -54,40 +54,32 @@ const Pre: React.FC = ({ children }) => (
 );
 
 export default function App() {
-  const cacheRef = React.useRef(new Cache());
+  const ssrHTML = React.useMemo(
+    () =>
+      renderToString(
+        <StyleProvider insertStyle={false}>
+          <Demo />
+        </StyleProvider>,
+      ),
+    [],
+  );
 
-  const [ssrHTML, ssrStyle] = React.useMemo(() => {
-    const html = renderToString(
-      <StyleProvider
-        // Tell cssinjs not insert dom style. No need in real world
-        insertStyle={false}
-        cache={cacheRef.current}
-      >
-        <Demo />
-      </StyleProvider>,
-    );
-
-    const style = extractStyle(cacheRef.current);
-
-    return [html, style];
-  }, []);
-
+  // 模拟一个空白文档，并且注水
   React.useEffect(() => {
-    const container = document.getElementById('ssr');
-    hydrate(<Demo />, container);
+    console.log('Delay to hydrate...');
+    setTimeout(() => {
+      // const container = document.getElementById('ssr');
+      // hydrate(<Demo />, container);
+    }, 500);
   }, []);
 
   return (
     <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
       <h3>服务端渲染提前获取所有样式</h3>
 
-      <Pre>{ssrStyle}</Pre>
       <Pre>{ssrHTML}</Pre>
 
-      <div
-        id="ssr"
-        dangerouslySetInnerHTML={{ __html: `${ssrStyle}<div>${ssrHTML}</div>` }}
-      />
+      <div id="ssr" dangerouslySetInnerHTML={{ __html: ssrHTML }} />
     </div>
   );
 }
