@@ -15,6 +15,6 @@ jobs:
           dist: public
           build: |
             npm install
-            npm run build
+            npm run docs:build
       - name: Get the preview_url
         run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
