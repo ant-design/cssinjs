@@ -68,8 +68,8 @@ export default function App() {
   React.useEffect(() => {
     console.log('Delay to hydrate...');
     setTimeout(() => {
-      // const container = document.getElementById('ssr');
-      // hydrate(<Demo />, container);
+      const container = document.getElementById('ssr');
+      hydrate(<Demo />, container);
     }, 500);
   }, []);
 
