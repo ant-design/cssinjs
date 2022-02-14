@@ -12,10 +12,13 @@ export interface StyleContextProps {
    * If not provided, it will auto create <style /> on the end of Provider in server side.
    */
   cache: CacheEntity;
+  /** Tell children that this context is default generated context */
+  defaultContext: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
   cache: new CacheEntity(),
+  defaultContext: true,
 });
 
 export type StyleProviderProps = Partial<StyleContextProps>;
@@ -41,19 +44,22 @@ export const StyleProvider: React.FC<StyleProviderProps> = ({
   cache,
   children,
 }) => {
+  const { cache: parentCache, defaultContext } = React.useContext(StyleContext);
+
   const context = React.useMemo<StyleContextProps>(
     () => ({
       autoClear,
       mock,
-      cache: cache || new CacheEntity(),
+      cache: cache || parentCache || new CacheEntity(),
+      defaultContext: false,
     }),
-    [autoClear, mock, cache],
+    [autoClear, parentCache, mock, cache],
   );
 
   const shouldInsertSSRStyle = React.useMemo(() => {
     const isServerSide = mock !== undefined ? mock === 'server' : !canUseDom();
-    return isServerSide && !cache;
-  }, [mock, cache]);
+    return isServerSide && !cache && defaultContext;
+  }, [mock, cache, defaultContext]);
 
   return (
     <StyleContext.Provider value={context}>

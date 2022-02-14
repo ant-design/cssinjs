@@ -175,4 +175,51 @@ describe('SSR', () => {
 
     expect(errorSpy).not.toHaveBeenCalled();
   });
+
+  describe('nest provider', () => {
+    it('extract', () => {
+      const cache = new Cache();
+
+      const html = renderToString(
+        <StyleProvider cache={cache}>
+          <StyleProvider>
+            <StyleProvider>
+              <StyleProvider>
+                <StyleProvider>
+                  <Box />
+                </StyleProvider>
+              </StyleProvider>
+            </StyleProvider>
+          </StyleProvider>
+        </StyleProvider>,
+      );
+
+      const style = extractStyle(cache);
+
+      expect(html).toEqual('<div class="box"></div>');
+      expect(style).toEqual(
+        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+      );
+    });
+
+    it('tricky', () => {
+      const html = renderToString(
+        <StyleProvider>
+          <StyleProvider>
+            <StyleProvider>
+              <StyleProvider>
+                <StyleProvider>
+                  <Box />
+                </StyleProvider>
+              </StyleProvider>
+            </StyleProvider>
+          </StyleProvider>
+        </StyleProvider>,
+      );
+
+      expect(html).toEqual(
+        '<div class="box"></div><style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+      );
+    });
+  });
 });
