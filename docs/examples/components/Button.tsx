@@ -102,11 +102,14 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const ghostCls = `${prefixCls}-ghost`;
 
   // 全局注册，内部会做缓存优化
-  useStyleRegister({ theme, token, hashId, path: [prefixCls] }, () => [
-    genDefaultButtonStyle(defaultCls, token),
-    genPrimaryButtonStyle(primaryCls, token),
-    genGhostButtonStyle(ghostCls, token),
-  ]);
+  const wrapSSR = useStyleRegister(
+    { theme, token, hashId, path: [prefixCls] },
+    () => [
+      genDefaultButtonStyle(defaultCls, token),
+      genPrimaryButtonStyle(primaryCls, token),
+      genGhostButtonStyle(ghostCls, token),
+    ],
+  );
 
   const typeCls =
     (
@@ -116,11 +119,11 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
       } as any
     )[type as any] || defaultCls;
 
-  return (
+  return wrapSSR(
     <button
       className={classNames(prefixCls, typeCls, hashId, className)}
       {...restProps}
-    />
+    />,
   );
 };
 

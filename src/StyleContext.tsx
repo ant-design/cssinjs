@@ -1,7 +1,18 @@
 import * as React from 'react';
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import CacheEntity from './Cache';
-import { getTokenStyles } from './useStyleRegister';
+
+export const ATTR_TOKEN = 'data-token-key';
+export const ATTR_MARK = 'token-hash';
+
+export function createCache() {
+  const styles = document.body.querySelectorAll(`style[${ATTR_TOKEN}]`);
+
+  Array.from(styles).forEach((style) => {
+    document.head.appendChild(style);
+  });
+
+  return new CacheEntity();
+}
 
 export interface StyleContextProps {
   autoClear?: boolean;
@@ -13,30 +24,15 @@ export interface StyleContextProps {
    */
   cache: CacheEntity;
   /** Tell children that this context is default generated context */
-  defaultContext: boolean;
+  defaultCache: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
-  cache: new CacheEntity(),
-  defaultContext: true,
+  cache: createCache(),
+  defaultCache: true,
 });
 
 export type StyleProviderProps = Partial<StyleContextProps>;
-
-const InlineStyle = ({ cache }: { cache: CacheEntity }) => {
-  const styles = getTokenStyles(cache);
-  return (
-    <>
-      {styles.map(({ token, style }, index) => (
-        <style
-          data-token-key={token}
-          key={index}
-          dangerouslySetInnerHTML={{ __html: style }}
-        />
-      ))}
-    </>
-  );
-};
 
 export const StyleProvider: React.FC<StyleProviderProps> = ({
   autoClear,
@@ -44,28 +40,21 @@ export const StyleProvider: React.FC<StyleProviderProps> = ({
   cache,
   children,
 }) => {
-  const { cache: parentCache, defaultContext } = React.useContext(StyleContext);
+  const { cache: parentCache, defaultCache: parentDefaultCache } =
+    React.useContext(StyleContext);
 
   const context = React.useMemo<StyleContextProps>(
     () => ({
       autoClear,
       mock,
-      cache: cache || parentCache || new CacheEntity(),
-      defaultContext: false,
+      cache: cache || parentCache || createCache(),
+      defaultCache: !cache && parentDefaultCache,
     }),
-    [autoClear, parentCache, mock, cache],
+    [autoClear, parentCache, mock, cache, parentDefaultCache],
   );
 
-  const shouldInsertSSRStyle = React.useMemo(() => {
-    const isServerSide = mock !== undefined ? mock === 'server' : !canUseDom();
-    return isServerSide && !cache && defaultContext;
-  }, [mock, cache, defaultContext]);
-
   return (
-    <StyleContext.Provider value={context}>
-      {children}
-      {shouldInsertSSRStyle && <InlineStyle cache={context.cache} />}
-    </StyleContext.Provider>
+    <StyleContext.Provider value={context}>{children}</StyleContext.Provider>
   );
 };
 

@@ -8,8 +8,8 @@ import {
   CSSInterpolation,
   useStyleRegister,
   StyleProvider,
-  Cache,
   extractStyle,
+  createCache,
 } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
@@ -79,7 +79,7 @@ describe('SSR', () => {
 
   it('ssr extract style', () => {
     // >>> SSR
-    const cache = new Cache();
+    const cache = createCache();
 
     const html = renderToString(
       <StyleProvider cache={cache}>
@@ -111,7 +111,7 @@ describe('SSR', () => {
     prepareEnv();
     render(
       // New cache here to avoid conflict with other test case cache
-      <StyleProvider cache={new Cache()}>
+      <StyleProvider cache={createCache()}>
         <Box />
       </StyleProvider>,
       root,
@@ -158,7 +158,7 @@ describe('SSR', () => {
     document.body.appendChild(root);
     hydrate(
       <StyleProvider
-        cache={new Cache()}
+        cache={createCache()}
         // Force insert style since we hack `canUseDom` to false
         mock="client"
       >
@@ -178,7 +178,7 @@ describe('SSR', () => {
 
   describe('nest provider', () => {
     it('extract', () => {
-      const cache = new Cache();
+      const cache = createCache();
 
       const html = renderToString(
         <StyleProvider cache={cache}>
