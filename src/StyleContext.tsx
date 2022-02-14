@@ -34,23 +34,31 @@ const StyleContext = React.createContext<StyleContextProps>({
 
 export type StyleProviderProps = Partial<StyleContextProps>;
 
-export const StyleProvider: React.FC<StyleProviderProps> = ({
-  autoClear,
-  mock,
-  cache,
-  children,
-}) => {
-  const { cache: parentCache, defaultCache: parentDefaultCache } =
-    React.useContext(StyleContext);
+export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
+  const { autoClear, mock, cache, children } = props;
+  const {
+    cache: parentCache,
+    autoClear: parentAutoClear,
+    mock: parentMock,
+    defaultCache: parentDefaultCache,
+  } = React.useContext(StyleContext);
 
   const context = React.useMemo<StyleContextProps>(
     () => ({
-      autoClear,
-      mock,
+      autoClear: autoClear ?? parentAutoClear,
+      mock: mock ?? parentMock,
       cache: cache || parentCache || createCache(),
       defaultCache: !cache && parentDefaultCache,
     }),
-    [autoClear, parentCache, mock, cache, parentDefaultCache],
+    [
+      autoClear,
+      parentAutoClear,
+      parentMock,
+      parentCache,
+      mock,
+      cache,
+      parentDefaultCache,
+    ],
   );
 
   return (

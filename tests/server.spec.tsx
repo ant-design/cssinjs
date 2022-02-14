@@ -66,9 +66,11 @@ describe('SSR', () => {
   const Box = () => {
     const [token] = useCacheToken(theme, [baseToken]);
 
-    useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
+    const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
+      genStyle(token),
+    ]);
 
-    return <div className="box" />;
+    return wrapSSR(<div className="box" />);
   };
 
   it('should not use cache', () => {
@@ -91,7 +93,7 @@ describe('SSR', () => {
 
     expect(html).toEqual('<div class="box"></div>');
     expect(style).toEqual(
-      '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+      '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style>',
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
@@ -106,20 +108,6 @@ describe('SSR', () => {
 
       expect(document.head.querySelectorAll('style')).toHaveLength(2);
     };
-
-    // >>> Ensure render will remove style
-    prepareEnv();
-    render(
-      // New cache here to avoid conflict with other test case cache
-      <StyleProvider cache={createCache()}>
-        <Box />
-      </StyleProvider>,
-      root,
-    );
-    // Not remove other style
-    expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
-    expect(document.head.querySelectorAll('style')).toHaveLength(1);
-    unmountComponentAtNode(root);
 
     // >>> Hydrate
     prepareEnv();
@@ -198,7 +186,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style>',
       );
     });
 
@@ -218,7 +206,7 @@ describe('SSR', () => {
       );
 
       expect(html).toEqual(
-        '<div class="box"></div><style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff">.box{background-color:#1890ff;}</style>',
+        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style><div class="box"></div>',
       );
     });
   });
