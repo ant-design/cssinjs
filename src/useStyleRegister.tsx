@@ -150,7 +150,7 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path, hashId } = info;
-  const { autoClear, insertStyle } = React.useContext(StyleContext);
+  const { autoClear, mock } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
   const fullPath = [theme.id, tokenKey, ...path];
@@ -166,11 +166,7 @@ export default function useStyleRegister(
 
       let shouldInsertStyle = isClientSide;
       if (process.env.NODE_ENV !== 'production') {
-        shouldInsertStyle =
-          // Dumi docs usage
-          (isClientSide && insertStyle !== false) ||
-          // Test usage
-          insertStyle === true;
+        shouldInsertStyle = isClientSide && mock !== 'server';
       }
 
       if (shouldInsertStyle) {

@@ -4,7 +4,7 @@ import CacheEntity from './Cache';
 export interface StyleContextProps {
   autoClear?: boolean;
   /** @private Test only. Not work in production. */
-  insertStyle?: boolean;
+  mock?: 'server' | 'client';
   /** Only set when you need ssr to extract style on you own */
   cache: CacheEntity;
 }
@@ -17,17 +17,17 @@ export type StyleProviderProps = Partial<StyleContextProps>;
 
 export const StyleProvider: React.FC<StyleProviderProps> = ({
   autoClear,
-  insertStyle,
+  mock,
   cache,
   children,
 }) => {
   const context = React.useMemo<StyleContextProps>(
     () => ({
       autoClear,
-      insertStyle,
+      mock,
       cache: cache || new CacheEntity(),
     }),
-    [autoClear, insertStyle, cache],
+    [autoClear, mock, cache],
   );
 
   return (

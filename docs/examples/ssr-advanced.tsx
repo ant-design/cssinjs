@@ -60,7 +60,7 @@ export default function App() {
     const html = renderToString(
       <StyleProvider
         // Tell cssinjs not insert dom style. No need in real world
-        insertStyle={false}
+        mock="server"
         cache={cacheRef.current}
       >
         <Demo />

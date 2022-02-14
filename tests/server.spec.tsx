@@ -113,7 +113,7 @@ describe('SSR', () => {
       <StyleProvider
         cache={cache}
         // Force insert style since we hack `canUseDom` to false
-        insertStyle
+        mock="client"
       >
         <Box />
       </StyleProvider>,

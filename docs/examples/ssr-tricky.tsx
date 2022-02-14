@@ -57,7 +57,7 @@ export default function App() {
   const ssrHTML = React.useMemo(
     () =>
       renderToString(
-        <StyleProvider insertStyle={false}>
+        <StyleProvider mock="server">
           <Demo />
         </StyleProvider>,
       ),
