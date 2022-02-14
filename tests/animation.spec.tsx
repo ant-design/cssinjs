@@ -6,7 +6,6 @@ import {
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
-  StyleContext,
   Keyframes,
 } from '../src';
 

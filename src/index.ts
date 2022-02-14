@@ -4,7 +4,7 @@ import useStyleRegister, { extractStyle } from './useStyleRegister';
 import type { CSSObject, CSSInterpolation } from './useStyleRegister';
 import useCacheToken from './useCacheToken';
 import Cache from './Cache';
-import StyleContext from './StyleContext';
+import { StyleProvider } from './StyleContext';
 import Keyframes from './Keyframes';
 
 export {
@@ -12,7 +12,7 @@ export {
   useStyleRegister,
   useCacheToken,
   Cache,
-  StyleContext,
+  StyleProvider,
   Keyframes,
   extractStyle,
 };

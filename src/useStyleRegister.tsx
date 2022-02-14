@@ -150,7 +150,7 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path, hashId } = info;
-  const { autoClear, insertStyle } = React.useContext(StyleContext);
+  const { autoClear, mock } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
   const fullPath = [theme.id, tokenKey, ...path];
@@ -165,12 +165,8 @@ export default function useStyleRegister(
       const styleId = uniqueHash(fullPath, styleStr);
 
       let shouldInsertStyle = isClientSide;
-      if (process.env.NODE_ENV !== 'production') {
-        shouldInsertStyle =
-          // Dumi docs usage
-          (isClientSide && insertStyle !== false) ||
-          // Test usage
-          insertStyle === true;
+      if (process.env.NODE_ENV !== 'production' && mock !== undefined) {
+        shouldInsertStyle = mock !== 'server';
       }
 
       if (shouldInsertStyle) {
@@ -195,7 +191,10 @@ export default function useStyleRegister(
 // ============================================================================
 // ==                                  SSR                                   ==
 // ============================================================================
-export function extractStyle(cache: Cache) {
+/**
+ * @private Do not use since this is a internal API
+ */
+export function getTokenStyles(cache: Cache) {
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
     key.startsWith('style%'),
@@ -209,15 +208,27 @@ export function extractStyle(cache: Cache) {
     tokenStyles[tokenKey] = (tokenStyles[tokenKey] || []).concat(styleStr);
   });
 
-  // Fill with styles
-  let styleText = '';
-
-  Object.keys(tokenStyles).forEach((tokenKey) => {
+  return Object.keys(tokenStyles).map((tokenKey) => {
     const styleStrList = tokenStyles[tokenKey];
     const styleStr = styleStrList.join('');
 
     // Wrap with style tag
-    styleText += `<style data-token-key="${tokenKey}">${styleStr}</style>`;
+    return {
+      token: tokenKey,
+      style: styleStr,
+    };
+  });
+}
+
+export function extractStyle(cache: Cache) {
+  const styleList = getTokenStyles(cache);
+
+  // Fill with styles
+  let styleText = '';
+
+  styleList.forEach(({ token, style }) => {
+    // Wrap with style tag
+    styleText += `<style data-token-key="${token}">${style}</style>`;
   });
 
   return styleText;
