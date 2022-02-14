@@ -165,8 +165,8 @@ export default function useStyleRegister(
       const styleId = uniqueHash(fullPath, styleStr);
 
       let shouldInsertStyle = isClientSide;
-      if (process.env.NODE_ENV !== 'production') {
-        shouldInsertStyle = isClientSide && mock !== 'server';
+      if (process.env.NODE_ENV !== 'production' && mock !== undefined) {
+        shouldInsertStyle = mock !== 'server';
       }
 
       if (shouldInsertStyle) {

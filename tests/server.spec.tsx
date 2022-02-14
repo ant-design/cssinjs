@@ -33,14 +33,28 @@ const baseToken: DesignToken = {
 
 const theme = new Theme(derivative);
 
-jest.mock('rc-util/lib/Dom/canUseDom', () => () => false);
+let mockCanUseDom = false;
+
+jest.mock('rc-util/lib/Dom/canUseDom', () => () => mockCanUseDom);
 
 describe('SSR', () => {
+  let errorSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    errorSpy = jest.spyOn(console, 'error');
+  });
+
   beforeEach(() => {
+    mockCanUseDom = false;
+
+    errorSpy.mockReset();
+
     const styles = Array.from(document.head.querySelectorAll('style'));
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
     });
+
+    document.body.innerHTML = '';
   });
 
   const genStyle = (token: DerivativeToken): CSSInterpolation => ({
@@ -122,5 +136,43 @@ describe('SSR', () => {
     // Not remove other style
     expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
     expect(document.head.querySelectorAll('style')).toHaveLength(2);
+
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('tricky ssr', () => {
+    const html = renderToString(
+      <StyleProvider>
+        <Box />
+      </StyleProvider>,
+    );
+
+    // >>> Exist style
+    const root = document.createElement('div');
+    root.id = 'root';
+    root.innerHTML = html;
+    expect(root.querySelectorAll('style')).toHaveLength(1);
+
+    // >>> Hydrate
+    mockCanUseDom = true;
+    document.body.appendChild(root);
+    hydrate(
+      <StyleProvider
+        cache={new Cache()}
+        // Force insert style since we hack `canUseDom` to false
+        mock="client"
+      >
+        <Box />
+      </StyleProvider>,
+      root,
+    );
+
+    // Remove inline style
+    expect(root.querySelectorAll('style')).toHaveLength(0);
+
+    // Patch to header
+    expect(document.head.querySelectorAll('style')).toHaveLength(1);
+
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 });

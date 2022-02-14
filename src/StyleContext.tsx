@@ -51,7 +51,7 @@ export const StyleProvider: React.FC<StyleProviderProps> = ({
   );
 
   const shouldInsertSSRStyle = React.useMemo(() => {
-    const isServerSide = mock === 'server' || !canUseDom();
+    const isServerSide = mock !== undefined ? mock === 'server' : !canUseDom();
     return isServerSide && !cache;
   }, [mock, cache]);
 
