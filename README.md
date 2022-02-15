@@ -25,6 +25,11 @@
 [bundlephobia-image]: https://badgen.net/bundlephobia/minzip/@ant-design/cssinjs
 
 Component level cssinjs solution used in [ant.design](https://ant.design).
+It's a subset of [Emotion](https://emotion.sh/) with design token logic wrapper. Please feel free to use emotion directly if you want to find a web cssinjs solution. cssinjs related dep packages:
+
+- stylis
+- @emotion/hash
+- @emotion/unitless
 
 ## Live Demo
 
