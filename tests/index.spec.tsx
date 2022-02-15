@@ -171,6 +171,8 @@ describe('csssinjs', () => {
     };
 
     const wrapper = mount(<TokenShower />);
-    expect(wrapper.text().includes('nothing1')).toBeTruthy();
+
+    // src/util.tsx - token2key func
+    expect(wrapper.text()).toEqual('_k4efjt');
   });
 });

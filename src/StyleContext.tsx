@@ -1,15 +1,28 @@
 import * as React from 'react';
 import CacheEntity from './Cache';
 
-export const ATTR_TOKEN = 'data-token-key';
-export const ATTR_MARK = 'token-hash';
+export const ATTR_TOKEN = 'data-token-hash';
+export const ATTR_MARK = 'data-css-hash';
 
 export function createCache() {
-  const styles = document.body.querySelectorAll(`style[${ATTR_TOKEN}]`);
+  const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`);
 
   Array.from(styles).forEach((style) => {
     document.head.appendChild(style);
   });
+
+  // Deduplicate of moved styles
+  const styleHash: Record<string, boolean> = {};
+  Array.from(document.querySelectorAll(`style[${ATTR_MARK}]`)).forEach(
+    (style) => {
+      const hash = style.getAttribute(ATTR_MARK)!;
+      if (styleHash[hash]) {
+        style.parentNode?.removeChild(style);
+      } else {
+        styleHash[hash] = true;
+      }
+    },
+  );
 
   return new CacheEntity();
 }

@@ -63,7 +63,7 @@ export default function useCacheToken(
 
   const cachedToken = useGlobalCache(
     'token',
-    [theme.id, salt, tokenStr],
+    [salt, tokenStr],
     () => {
       const mergedDesignToken = Object.assign({}, ...tokens);
       const derivativeToken = theme.getDerivativeToken(mergedDesignToken);

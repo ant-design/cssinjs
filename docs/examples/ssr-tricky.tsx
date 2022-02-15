@@ -15,9 +15,11 @@ const Demo = () => {
 
   return (
     <div style={{ display: 'flex', columnGap: 8 }}>
-      <Button {...sharedProps} type="ghost">
-        Button
-      </Button>
+      {new Array(3).fill(0).map((_, i) => (
+        <Button key={i} {...sharedProps} type="ghost">
+          Button {i + 1}
+        </Button>
+      ))}
       <Spin />
 
       <DesignTokenContext.Provider

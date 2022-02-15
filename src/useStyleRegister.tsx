@@ -132,7 +132,6 @@ export const parseStyle = (
 // ============================================================================
 // ==                                Register                                ==
 // ============================================================================
-// We takes `theme.id` as part of hash to avoid HMR hit to remove the same style
 function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
@@ -149,11 +148,11 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { theme, token, path, hashId } = info;
+  const { token, path, hashId } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
-  const fullPath = [theme.id, tokenKey, ...path];
+  const fullPath = [tokenKey, ...path];
 
   // Check if need insert style
   let isMergedClientSide = isClientSide;
@@ -197,7 +196,7 @@ export default function useStyleRegister(
         <style
           {...{
             [ATTR_TOKEN]: cachedTokenKey,
-            [`data-${ATTR_MARK}`]: cachedStyleId,
+            [ATTR_MARK]: cachedStyleId,
           }}
           dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
         />
@@ -225,7 +224,7 @@ export function extractStyle(cache: Cache) {
     const [styleStr, tokenKey, styleId]: [string, string, string] =
       cache.cache.get(key)![1];
 
-    styleText += `<style ${ATTR_TOKEN}="${tokenKey}" data-${ATTR_MARK}="${styleId}">${styleStr}</style>`;
+    styleText += `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${styleStr}</style>`;
   });
 
   return styleText;
