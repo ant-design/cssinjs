@@ -197,7 +197,7 @@ export default function useStyleRegister(
         <style
           {...{
             [ATTR_TOKEN]: cachedTokenKey,
-            [`data-${ATTR_MARK}`]: cachedStyleId,
+            [ATTR_MARK]: cachedStyleId,
           }}
           dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
         />
@@ -225,7 +225,7 @@ export function extractStyle(cache: Cache) {
     const [styleStr, tokenKey, styleId]: [string, string, string] =
       cache.cache.get(key)![1];
 
-    styleText += `<style ${ATTR_TOKEN}="${tokenKey}" data-${ATTR_MARK}="${styleId}">${styleStr}</style>`;
+    styleText += `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${styleStr}</style>`;
   });
 
   return styleText;
