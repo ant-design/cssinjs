@@ -1,7 +1,7 @@
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { StyleProvider, Cache, extractStyle } from '../../src';
+import { StyleProvider, createCache, extractStyle } from '../../src';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -54,7 +54,7 @@ const Pre: React.FC = ({ children }) => (
 );
 
 export default function App() {
-  const cacheRef = React.useRef(new Cache());
+  const cacheRef = React.useRef(createCache());
 
   const [ssrHTML, ssrStyle] = React.useMemo(() => {
     const html = renderToString(
@@ -74,7 +74,7 @@ export default function App() {
 
   // 模拟一个空白文档，并且注水
   React.useEffect(() => {
-    console.log('Delay to hydrate...');
+    console.log('Prepare env...');
     setTimeout(() => {
       const styles = document.createElement('div');
       styles.innerHTML = ssrStyle;
@@ -83,9 +83,12 @@ export default function App() {
         document.head.appendChild(style);
       });
 
-      const container = document.getElementById('ssr');
-      hydrate(<Demo />, container);
-    }, 500);
+      setTimeout(() => {
+        console.log('Hydrate...');
+        const container = document.getElementById('ssr');
+        hydrate(<Demo />, container);
+      }, 500);
+    }, 50);
   }, []);
 
   return (

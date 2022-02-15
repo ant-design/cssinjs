@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { useToken } from './theme';
 import type { DerivativeToken } from './theme';
 import { useStyleRegister, Keyframes } from '../../../src/';
-import type { CSSInterpolation, CSSObject } from '../../../src/';
+import type { CSSInterpolation } from '../../../src/';
 
 const animation = new Keyframes('loadingCircle', {
   to: {
@@ -38,12 +38,13 @@ const Spin = ({ className, ...restProps }: SpinProps) => {
   const [theme, token, hashId] = useToken();
 
   // 全局注册，内部会做缓存优化
-  useStyleRegister({ theme, token, hashId, path: [prefixCls] }, () => [
-    genSpinStyle(prefixCls, token, hashId),
-  ]);
+  const wrapSSR = useStyleRegister(
+    { theme, token, hashId, path: [prefixCls] },
+    () => [genSpinStyle(prefixCls, token, hashId)],
+  );
 
-  return (
-    <div className={classNames(prefixCls, hashId, className)} {...restProps} />
+  return wrapSSR(
+    <div className={classNames(prefixCls, hashId, className)} {...restProps} />,
   );
 };
 

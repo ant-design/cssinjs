@@ -1,7 +1,7 @@
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { StyleProvider } from '../../src';
+import { StyleProvider, createCache } from '../../src';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -66,10 +66,15 @@ export default function App() {
 
   // 模拟一个空白文档，并且注水
   React.useEffect(() => {
-    console.log('Delay to hydrate...');
     setTimeout(() => {
+      console.log('Hydrate...');
       const container = document.getElementById('ssr');
-      hydrate(<Demo />, container);
+      hydrate(
+        <StyleProvider cache={createCache()}>
+          <Demo />
+        </StyleProvider>,
+        container,
+      );
     }, 500);
   }, []);
 

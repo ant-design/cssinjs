@@ -7,7 +7,7 @@ import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
-import StyleContext from './StyleContext';
+import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
 import { token2key } from './util';
@@ -150,12 +150,18 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { theme, token, path, hashId } = info;
-  const { autoClear, mock } = React.useContext(StyleContext);
+  const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
   const fullPath = [theme.id, tokenKey, ...path];
 
-  useGlobalCache(
+  // Check if need insert style
+  let isMergedClientSide = isClientSide;
+  if (process.env.NODE_ENV !== 'production' && mock !== undefined) {
+    isMergedClientSide = mock === 'client';
+  }
+
+  const [cachedStyleStr, cachedTokenKey, cachedStyleId] = useGlobalCache(
     'style',
     fullPath,
     // Create cache if needed
@@ -164,71 +170,62 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
       const styleId = uniqueHash(fullPath, styleStr);
 
-      let shouldInsertStyle = isClientSide;
-      if (process.env.NODE_ENV !== 'production' && mock !== undefined) {
-        shouldInsertStyle = mock !== 'server';
-      }
-
-      if (shouldInsertStyle) {
-        const style = updateCSS(styleStr, styleId);
+      if (isMergedClientSide) {
+        const style = updateCSS(styleStr, styleId, { mark: ATTR_MARK });
 
         // Used for `useCacheToken` to remove on batch when token removed
-        style.setAttribute('data-token-key', tokenKey);
+        style.setAttribute(ATTR_TOKEN, tokenKey);
       }
 
-      return [styleStr, tokenKey];
+      return [styleStr, tokenKey, styleId];
     },
     // Remove cache if no need
-    ([styleStr]) => {
+    ([, , styleId]) => {
       if (autoClear && isClientSide) {
-        const styleId = uniqueHash(fullPath, styleStr);
-        removeCSS(styleId);
+        removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
   );
+
+  return (node: React.ReactElement) => {
+    if (isMergedClientSide || !defaultCache) {
+      return node;
+    }
+
+    return (
+      <>
+        <style
+          {...{
+            [ATTR_TOKEN]: cachedTokenKey,
+            [`data-${ATTR_MARK}`]: cachedStyleId,
+          }}
+          dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
+        />
+        {node}
+      </>
+    );
+  };
 }
 
 // ============================================================================
 // ==                                  SSR                                   ==
 // ============================================================================
-/**
- * @private Do not use since this is a internal API
- */
-export function getTokenStyles(cache: Cache) {
+
+export function extractStyle(cache: Cache) {
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
     key.startsWith('style%'),
   );
 
-  const tokenStyles: Record<string, string[]> = {};
+  // const tokenStyles: Record<string, string[]> = {};
 
-  styleKeys.forEach((key) => {
-    const [styleStr, tokenKey] = cache.cache.get(key)![1];
-
-    tokenStyles[tokenKey] = (tokenStyles[tokenKey] || []).concat(styleStr);
-  });
-
-  return Object.keys(tokenStyles).map((tokenKey) => {
-    const styleStrList = tokenStyles[tokenKey];
-    const styleStr = styleStrList.join('');
-
-    // Wrap with style tag
-    return {
-      token: tokenKey,
-      style: styleStr,
-    };
-  });
-}
-
-export function extractStyle(cache: Cache) {
-  const styleList = getTokenStyles(cache);
-
-  // Fill with styles
   let styleText = '';
 
-  styleList.forEach(({ token, style }) => {
-    // Wrap with style tag
-    styleText += `<style data-token-key="${token}">${style}</style>`;
+  styleKeys.forEach((key) => {
+    const [styleStr, tokenKey, styleId]: [string, string, string] =
+      cache.cache.get(key)![1];
+
+    styleText += `<style ${ATTR_TOKEN}="${tokenKey}" data-${ATTR_MARK}="${styleId}">${styleStr}</style>`;
   });
 
   return styleText;

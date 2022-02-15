@@ -1,4 +1,5 @@
 import hash from '@emotion/hash';
+import { ATTR_TOKEN } from './StyleContext';
 import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
 import { token2key } from './util';
@@ -18,7 +19,7 @@ function recordCleanToken(tokenKey: string) {
 
 function removeStyleTags(key: string) {
   if (typeof document !== 'undefined') {
-    const styles = document.querySelectorAll(`style[data-token-key="${key}"]`);
+    const styles = document.querySelectorAll(`style[${ATTR_TOKEN}="${key}"]`);
 
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
@@ -74,9 +75,6 @@ export default function useCacheToken(
 
       const hashId = `css-${hash(tokenKey)}`;
       derivativeToken._hashId = hashId;
-
-      // Clean up ssr style
-      removeStyleTags(tokenKey);
 
       return [derivativeToken, hashId];
     },
