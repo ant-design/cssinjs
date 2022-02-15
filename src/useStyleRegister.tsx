@@ -132,7 +132,6 @@ export const parseStyle = (
 // ============================================================================
 // ==                                Register                                ==
 // ============================================================================
-// We takes `theme.id` as part of hash to avoid HMR hit to remove the same style
 function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
@@ -149,11 +148,11 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { theme, token, path, hashId } = info;
+  const { token, path, hashId } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = (token._tokenKey as string) || token2key(token);
 
-  const fullPath = [theme.id, tokenKey, ...path];
+  const fullPath = [tokenKey, ...path];
 
   // Check if need insert style
   let isMergedClientSide = isClientSide;
