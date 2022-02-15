@@ -1,3 +1,5 @@
+import hash from '@emotion/hash';
+
 /**
  * Convert derivative token to key string
  */
@@ -12,5 +14,5 @@ export function token2key(token: any) {
       str += value;
     }
   });
-  return str;
+  return hash(str);
 }

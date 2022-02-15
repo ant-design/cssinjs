@@ -1,7 +1,7 @@
 import * as React from 'react';
 import CacheEntity from './Cache';
 
-export const ATTR_TOKEN = 'data-token-key';
+export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
 
 export function createCache() {
