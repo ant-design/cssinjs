@@ -2,7 +2,7 @@ import hash from '@emotion/hash';
 import { ATTR_TOKEN } from './StyleContext';
 import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
-import { token2key } from './util';
+import { flattenToken, token2key } from './util';
 
 export interface Option {
   /**
@@ -59,7 +59,9 @@ export default function useCacheToken(
   option: Option = {},
 ) {
   const { salt = '' } = option;
-  const tokenStr = token2key(Object.assign({}, ...tokens));
+
+  // Basic
+  const tokenStr = flattenToken(Object.assign({}, ...tokens));
 
   const cachedToken = useGlobalCache(
     'token',
@@ -69,12 +71,12 @@ export default function useCacheToken(
       const derivativeToken = theme.getDerivativeToken(mergedDesignToken);
 
       // Optimize for `useStyleRegister` performance
-      const tokenKey = `${salt}_${token2key(derivativeToken)}`;
+      const tokenKey = token2key(derivativeToken, salt);
       derivativeToken._tokenKey = tokenKey;
       recordCleanToken(tokenKey);
 
       const hashId = `css-${hash(tokenKey)}`;
-      derivativeToken._hashId = hashId;
+      derivativeToken._hashId = hashId; // Not used
 
       return [derivativeToken, hashId];
     },

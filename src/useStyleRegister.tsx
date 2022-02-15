@@ -10,7 +10,6 @@ import useGlobalCache from './useGlobalCache';
 import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
-import { token2key } from './util';
 import type Keyframes from './Keyframes';
 
 const isClientSide = canUseDom();
@@ -150,7 +149,7 @@ export default function useStyleRegister(
 ) {
   const { token, path, hashId } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
-  const tokenKey = (token._tokenKey as string) || token2key(token);
+  const tokenKey = token._tokenKey as string;
 
   const fullPath = [tokenKey, ...path];
 
@@ -209,7 +208,6 @@ export default function useStyleRegister(
 // ============================================================================
 // ==                                  SSR                                   ==
 // ============================================================================
-
 export function extractStyle(cache: Cache) {
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>

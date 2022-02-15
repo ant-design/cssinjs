@@ -173,6 +173,6 @@ describe('csssinjs', () => {
     const wrapper = mount(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(wrapper.text()).toEqual('_k4efjt');
+    expect(wrapper.text()).toEqual('rqtnqb');
   });
 });
