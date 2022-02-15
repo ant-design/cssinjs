@@ -93,7 +93,7 @@ describe('SSR', () => {
 
     expect(html).toEqual('<div class="box"></div>');
     expect(style).toEqual(
-      '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style>',
+      '<style data-token-hash="_19azv2f" data-css-hash="1srr4gr">.box{background-color:#1890ff;}</style>',
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
@@ -186,7 +186,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style>',
+        '<style data-token-hash="_19azv2f" data-css-hash="1srr4gr">.box{background-color:#1890ff;}</style>',
       );
     });
 
@@ -206,7 +206,7 @@ describe('SSR', () => {
       );
 
       expect(html).toEqual(
-        '<style data-token-key="_primaryColor#1890ffprimaryColorDisabled#1890ff" data-token-hash="11emgu6">.box{background-color:#1890ff;}</style><div class="box"></div>',
+        '<style data-token-hash="_19azv2f" data-css-hash="1srr4gr">.box{background-color:#1890ff;}</style><div class="box"></div>',
       );
     });
   });
