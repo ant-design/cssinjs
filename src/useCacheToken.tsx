@@ -61,14 +61,14 @@ export default function useCacheToken(
   const { salt = '' } = option;
 
   // Basic
-  const tokenStr = flattenToken(Object.assign({}, ...tokens));
+  const mergedToken = Object.assign({}, ...tokens);
+  const tokenStr = flattenToken(mergedToken);
 
   const cachedToken = useGlobalCache(
     'token',
     [salt, tokenStr],
     () => {
-      const mergedDesignToken = Object.assign({}, ...tokens);
-      const derivativeToken = theme.getDerivativeToken(mergedDesignToken);
+      const derivativeToken = theme.getDerivativeToken(mergedToken);
 
       // Optimize for `useStyleRegister` performance
       const tokenKey = token2key(derivativeToken, salt);
