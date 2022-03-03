@@ -1,13 +1,8 @@
 import * as React from 'react';
 import { mount } from 'enzyme';
-import {
-  Theme,
-  Cache,
-  useCacheToken,
-  CSSInterpolation,
-  useStyleRegister,
-  StyleProvider,
-} from '../src';
+import classNames from 'classnames';
+import { Theme, useCacheToken, useStyleRegister, StyleProvider } from '../src';
+import type { CSSInterpolation } from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -174,5 +169,39 @@ describe('csssinjs', () => {
 
     // src/util.tsx - token2key func
     expect(wrapper.text()).toEqual('rqtnqb');
+  });
+
+  it('hash', () => {
+    const genStyle = (): CSSInterpolation => ({
+      [`
+      .a,
+      .b
+      `]: {
+        background: 'red',
+      },
+    });
+
+    const Holder = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+      });
+
+      useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
+        genStyle(),
+      ]);
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    const wrapper = mount(<Holder />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+
+    const style = styles[0];
+    expect(style.innerHTML).toContain('.css-6dmvpu.a');
+    expect(style.innerHTML).toContain('.css-6dmvpu.b');
+
+    wrapper.unmount();
   });
 });

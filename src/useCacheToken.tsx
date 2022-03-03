@@ -53,18 +53,23 @@ function cleanTokenStyle(tokenKey: string) {
  * @param option Additional config
  * @returns Call Theme.getDerivativeToken(tokenObject) to get token
  */
-export default function useCacheToken(
+export default function useCacheToken<
+  DerivativeToken = object,
+  DesignToken = DerivativeToken,
+>(
   theme: Theme<any, any>,
-  tokens: object[],
+  tokens: Partial<DesignToken>[],
   option: Option = {},
-) {
+): [DerivativeToken, string] {
   const { salt = '' } = option;
 
   // Basic
   const mergedToken = Object.assign({}, ...tokens);
   const tokenStr = flattenToken(mergedToken);
 
-  const cachedToken = useGlobalCache(
+  const cachedToken = useGlobalCache<
+    [DerivativeToken & { _tokenKey: string }, string]
+  >(
     'token',
     [salt, tokenStr],
     () => {
