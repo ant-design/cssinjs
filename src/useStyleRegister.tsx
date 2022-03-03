@@ -96,7 +96,14 @@ export const parseStyle = (
 
         if (typeof value === 'object' && value) {
           // 当成嵌套对象来处理
-          const mergedKey = root && hashId ? `.${hashId}${key}` : key;
+          let mergedKey = key;
+
+          // 拆分多个选择器
+          if (root && hashId) {
+            const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
+            mergedKey = keys.join(',');
+          }
+
           styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
         } else {
           // 如果是样式则直接插入
