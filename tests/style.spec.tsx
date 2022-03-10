@@ -19,7 +19,15 @@ const derivative = (designToken: DesignToken): DerivativeToken => ({
 const theme = new Theme(derivative);
 
 describe('style warning', () => {
-  const errorSpy = jest.spyOn(console, 'error');
+  const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+  afterEach(() => {
+    errorSpy.mockReset();
+  });
+
+  afterAll(() => {
+    errorSpy.mockRestore();
+  });
 
   describe('no non-logical properties and values', () => {
     [
@@ -48,7 +56,7 @@ describe('style warning', () => {
         });
         const Demo = () => {
           const [token] = useCacheToken<DerivativeToken>(theme, []);
-          useStyleRegister({ theme, token, path: ['holder'] }, () => [
+          useStyleRegister({ theme, token, path: [`${prop}`] }, () => [
             genStyle(),
           ]);
           return <div />;
@@ -63,13 +71,13 @@ describe('style warning', () => {
     });
   });
 
-  test('content value should contain quotes', () => {
+  it('content value should contain quotes', () => {
     const genStyle = (): CSSObject => ({
       content: 'test',
     });
     const Demo = () => {
       const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister({ theme, token, path: ['holder'] }, () => [genStyle()]);
+      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
       return <div />;
     };
     mount(<Demo />);
@@ -79,4 +87,23 @@ describe('style warning', () => {
       ),
     );
   });
+
+  ['margin', 'padding'].forEach((prop) =>
+    it('margin and padding including four directions', () => {
+      const genStyle = (): CSSObject => ({
+        [prop]: '0 1px 0 3px',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
+        return <div />;
+      };
+      mount(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using '${prop}' property with different ${prop}Left and ${prop}Right,`,
+        ),
+      );
+    }),
+  );
 });

@@ -46,6 +46,18 @@ const styleValidate = (
         `You seem to be using non-logical property '${key}' which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
       );
       return;
+    case 'margin':
+    case 'padding':
+      if (typeof value === 'string') {
+        const valueArr = value.split(' ').map((item) => item.trim());
+        if (valueArr.length === 4 && valueArr[1] !== valueArr[3]) {
+          devWarning(
+            false,
+            `You seem to be using '${key}' property with different ${key}Left and ${key}Right, which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
+          );
+        }
+      }
+      return;
     default:
       return;
   }
