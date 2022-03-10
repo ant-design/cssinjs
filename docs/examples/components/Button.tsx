@@ -43,8 +43,6 @@ const genDefaultButtonStyle = (
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.componentBackgroundColor,
     color: token.textColor,
-    marginRight: 1,
-    marginLeft: 1,
 
     '&:hover': {
       borderColor: token.primaryColor,
