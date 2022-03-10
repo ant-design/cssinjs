@@ -31,6 +31,7 @@ const genSolidButtonStyle = (
   {
     [`.${prefixCls}`]: {
       ...postFn(),
+      borderRadius: '4px / 4px 8px',
     },
   },
 ];

@@ -88,10 +88,30 @@ describe('style warning', () => {
     );
   });
 
-  ['margin', 'padding'].forEach((prop) =>
-    it('margin and padding including four directions', () => {
+  ['margin', 'padding', 'borderWidth', 'borderStyle', 'borderColor'].forEach(
+    (prop) =>
+      it(`${prop} including four directions`, () => {
+        const genStyle = (): CSSObject => ({
+          [prop]: '0 1px 0 3px',
+        });
+        const Demo = () => {
+          const [token] = useCacheToken<DerivativeToken>(theme, []);
+          useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
+          return <div />;
+        };
+        mount(<Demo />);
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `You seem to be using '${prop}' property with different left ${prop} and right ${prop},`,
+          ),
+        );
+      }),
+  );
+
+  ['float', 'clear', 'textAlign'].forEach((prop) =>
+    it(`${prop} with left or right`, () => {
       const genStyle = (): CSSObject => ({
-        [prop]: '0 1px 0 3px',
+        [prop]: 'left',
       });
       const Demo = () => {
         const [token] = useCacheToken<DerivativeToken>(theme, []);
@@ -101,9 +121,33 @@ describe('style warning', () => {
       mount(<Demo />);
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          `You seem to be using '${prop}' property with different ${prop}Left and ${prop}Right,`,
+          `You seem to be using non-logical value 'left' of ${prop},`,
         ),
       );
     }),
+  );
+
+  ['2px 4px', '2px 2px 4px', '2px 2px 2px 4px', '2px / 2px 4px'].forEach(
+    (value) => {
+      it(`borderRadius with value '${value}'`, () => {
+        const genStyle = (): CSSObject => ({
+          borderRadius: value,
+        });
+        const Demo = () => {
+          const [token] = useCacheToken<DerivativeToken>(theme, []);
+          useStyleRegister(
+            { theme, token, path: [`borderRadius: ${value}`] },
+            () => [genStyle()],
+          );
+          return <div />;
+        };
+        mount(<Demo />);
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `You seem to be using non-logical value '${value}' of borderRadius`,
+          ),
+        );
+      });
+    },
   );
 });
