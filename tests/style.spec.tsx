@@ -127,27 +127,31 @@ describe('style warning', () => {
     }),
   );
 
-  ['2px 4px', '2px 2px 4px', '2px 2px 2px 4px', '2px / 2px 4px'].forEach(
-    (value) => {
-      it(`borderRadius with value '${value}'`, () => {
-        const genStyle = (): CSSObject => ({
-          borderRadius: value,
-        });
-        const Demo = () => {
-          const [token] = useCacheToken<DerivativeToken>(theme, []);
-          useStyleRegister(
-            { theme, token, path: [`borderRadius: ${value}`] },
-            () => [genStyle()],
-          );
-          return <div />;
-        };
-        mount(<Demo />);
-        expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `You seem to be using non-logical value '${value}' of borderRadius`,
-          ),
-        );
+  [
+    '2px 4px',
+    '2px 2px 4px',
+    '2px 2px 2px 4px',
+    '2px / 2px 4px',
+    '2px 4px / 2px 2px',
+  ].forEach((value) => {
+    it(`borderRadius with value '${value}'`, () => {
+      const genStyle = (): CSSObject => ({
+        borderRadius: value,
       });
-    },
-  );
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister(
+          { theme, token, path: [`borderRadius: ${value}`] },
+          () => [genStyle()],
+        );
+        return <div />;
+      };
+      mount(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using non-logical value '${value}' of borderRadius`,
+        ),
+      );
+    });
+  });
 });
