@@ -11,7 +11,7 @@ import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
-import styleValidate from './styleValidate';
+import { styleValidate } from './util';
 
 const isClientSide = canUseDom();
 
