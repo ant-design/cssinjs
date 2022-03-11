@@ -11,6 +11,7 @@ import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
+import { styleValidate } from './util';
 
 const isClientSide = canUseDom();
 
@@ -106,6 +107,10 @@ export const parseStyle = (
 
           styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
         } else {
+          if (process.env.NODE_ENV !== 'production') {
+            styleValidate(key, value);
+          }
+
           // 如果是样式则直接插入
           const styleName = key.replace(
             /[A-Z]/g,
