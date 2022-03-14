@@ -83,7 +83,6 @@ export const styleValidate = (
         }
       }
       return;
-    case 'float':
     case 'clear':
     case 'textAlign':
       if (value === 'left' || value === 'right') {
