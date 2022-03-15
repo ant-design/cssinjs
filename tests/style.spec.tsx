@@ -108,7 +108,7 @@ describe('style warning', () => {
       }),
   );
 
-  ['float', 'clear', 'textAlign'].forEach((prop) =>
+  ['clear', 'textAlign'].forEach((prop) =>
     it(`${prop} with left or right`, () => {
       const genStyle = (): CSSObject => ({
         [prop]: 'left',
