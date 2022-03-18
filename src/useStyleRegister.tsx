@@ -59,6 +59,7 @@ export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
   root = true,
+  injectHash = false,
 ) => {
   let styleStr = '';
 
@@ -96,16 +97,29 @@ export const parseStyle = (
         const value = style[key];
 
         if (typeof value === 'object' && value) {
+          let subInjectHash = false;
+
           // 当成嵌套对象来处理
-          let mergedKey = key;
+          let mergedKey = key.trim();
 
           // 拆分多个选择器
-          if (root && hashId) {
-            const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
-            mergedKey = keys.join(',');
+          if ((root || injectHash) && hashId) {
+            if (mergedKey.startsWith('@')) {
+              // 略过媒体查询，交给子节点继续插入 hashId
+              subInjectHash = true;
+            } else {
+              // 注入 hashId
+              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
+              mergedKey = keys.join(',');
+            }
           }
 
-          styleStr += `${mergedKey}${parseStyle(value as any, hashId, false)}`;
+          styleStr += `${mergedKey}${parseStyle(
+            value as any,
+            hashId,
+            false,
+            subInjectHash,
+          )}`;
         } else {
           if (process.env.NODE_ENV !== 'production') {
             styleValidate(key, value);
