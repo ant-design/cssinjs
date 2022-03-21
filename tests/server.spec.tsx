@@ -1,16 +1,16 @@
 import * as React from 'react';
-import { render, unmountComponentAtNode, hydrate } from 'react-dom';
+import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { mount } from 'enzyme';
 import {
   Theme,
   useCacheToken,
-  CSSInterpolation,
   useStyleRegister,
   StyleProvider,
   extractStyle,
   createCache,
 } from '../src';
+import type { CSSInterpolation } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 

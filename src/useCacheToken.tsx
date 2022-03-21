@@ -10,6 +10,7 @@ export interface Option {
    * This is used to generate different hashId even same derivative token for different version.
    */
   salt?: string;
+  override?: object;
 }
 
 const tokenKeys = new Map<string, number>();
@@ -60,30 +61,37 @@ export default function useCacheToken<
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
   option: Option = {},
-): [DerivativeToken, string] {
-  const { salt = '' } = option;
+): [DerivativeToken & { _tokenKey: string }, string] {
+  const { salt = '', override = {} } = option;
 
   // Basic
   const mergedToken = Object.assign({}, ...tokens);
   const tokenStr = flattenToken(mergedToken);
+  const overrideTokenStr = flattenToken(override);
 
   const cachedToken = useGlobalCache<
     [DerivativeToken & { _tokenKey: string }, string]
   >(
     'token',
-    [salt, tokenStr],
+    [salt, tokenStr, overrideTokenStr],
     () => {
       const derivativeToken = theme.getDerivativeToken(mergedToken);
 
+      // Merge with override
+      const mergedDerivativeToken = {
+        ...derivativeToken,
+        ...override,
+      };
+
       // Optimize for `useStyleRegister` performance
-      const tokenKey = token2key(derivativeToken, salt);
-      derivativeToken._tokenKey = tokenKey;
+      const tokenKey = token2key(mergedDerivativeToken, salt);
+      mergedDerivativeToken._tokenKey = tokenKey;
       recordCleanToken(tokenKey);
 
       const hashId = `css-${hash(tokenKey)}`;
-      derivativeToken._hashId = hashId; // Not used
+      mergedDerivativeToken._hashId = hashId; // Not used
 
-      return [derivativeToken, hashId];
+      return [mergedDerivativeToken, hashId];
     },
     (cache) => {
       // Remove token will remove all related style
