@@ -5,6 +5,8 @@ import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
 import { flattenToken, token2key } from './util';
 
+const EMPTY_OVERRIDE = {};
+
 export interface Option {
   /**
    * Generate token with salt.
@@ -63,7 +65,7 @@ export default function useCacheToken<
   tokens: Partial<DesignToken>[],
   option: Option = {},
 ): [DerivativeToken & { _tokenKey: string }, string] {
-  const { salt = '', override = {} } = option;
+  const { salt = '', override = EMPTY_OVERRIDE } = option;
 
   // Basic - We do basic cache here
   const mergedToken = React.useMemo(
