@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { mount } from 'enzyme';
 import classNames from 'classnames';
-import { Theme, useCacheToken, useStyleRegister, StyleProvider } from '../src';
+import {
+  Theme,
+  useCacheToken,
+  useStyleRegister,
+  StyleProvider,
+  createCache,
+} from '../src';
 import type { CSSInterpolation } from '../src';
 
 interface DesignToken {
@@ -48,7 +54,7 @@ describe('csssinjs', () => {
     });
 
     const Box = ({ propToken = baseToken }: { propToken?: DesignToken }) => {
-      const [token] = useCacheToken(theme, [propToken]);
+      const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [
         genStyle(token),
@@ -132,7 +138,7 @@ describe('csssinjs', () => {
     });
 
     const Nest = () => {
-      const [token] = useCacheToken(theme, [baseToken]);
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
 
       useStyleRegister({ theme, token, path: ['.parent'] }, () => [
         genStyle(token),
@@ -153,7 +159,7 @@ describe('csssinjs', () => {
   });
 
   it('serialize nest object token', () => {
-    const TokenShower = () => {
+    const TokenShower = (): any => {
       const [token] = useCacheToken(theme, [
         {
           nest: {
@@ -203,5 +209,54 @@ describe('csssinjs', () => {
     expect(style.innerHTML).toContain('.css-6dmvpu.b');
 
     wrapper.unmount();
+  });
+
+  describe('override', () => {
+    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+      '.box': {
+        width: 93,
+        lineHeight: 1,
+        backgroundColor: token.primaryColor,
+      },
+    });
+
+    const Box = ({
+      override,
+    }: {
+      propToken?: DesignToken;
+      override: object;
+    }) => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        override,
+      });
+
+      useStyleRegister({ theme, token, path: ['.box'] }, () => [
+        genStyle(token),
+      ]);
+
+      return <div className="box" />;
+    };
+
+    it('work', () => {
+      const Demo = () => (
+        <StyleProvider cache={createCache()}>
+          <Box
+            override={{
+              primaryColor: '#010203',
+            }}
+          />
+        </StyleProvider>
+      );
+
+      const wrapper = mount(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toContain('background-color:#010203;');
+
+      wrapper.unmount();
+    });
   });
 });
