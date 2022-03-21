@@ -7,13 +7,24 @@ import { flattenToken, token2key } from './util';
 
 const EMPTY_OVERRIDE = {};
 
-export interface Option {
+export interface Option<DerivativeToken> {
   /**
    * Generate token with salt.
    * This is used to generate different hashId even same derivative token for different version.
    */
   salt?: string;
   override?: object;
+  /**
+   * Format token as you need. Such as:
+   *
+   * - rename token
+   * - merge token
+   * - delete token
+   *
+   * This should always be the same since it's one time process.
+   * It's ok to useMemo outside but this has better cache strategy.
+   */
+  formatToken?: (mergedToken: any) => DerivativeToken;
 }
 
 const tokenKeys = new Map<string, number>();
@@ -63,9 +74,9 @@ export default function useCacheToken<
 >(
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
-  option: Option = {},
+  option: Option<DerivativeToken> = {},
 ): [DerivativeToken & { _tokenKey: string }, string] {
-  const { salt = '', override = EMPTY_OVERRIDE } = option;
+  const { salt = '', override = EMPTY_OVERRIDE, formatToken } = option;
 
   // Basic - We do basic cache here
   const mergedToken = React.useMemo(
@@ -90,10 +101,15 @@ export default function useCacheToken<
       const derivativeToken = theme.getDerivativeToken(mergedToken);
 
       // Merge with override
-      const mergedDerivativeToken = {
+      let mergedDerivativeToken = {
         ...derivativeToken,
         ...override,
       };
+
+      // Format if needed
+      if (formatToken) {
+        mergedDerivativeToken = formatToken(mergedDerivativeToken);
+      }
 
       // Optimize for `useStyleRegister` performance
       const tokenKey = token2key(mergedDerivativeToken, salt);

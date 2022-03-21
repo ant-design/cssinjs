@@ -212,11 +212,16 @@ describe('csssinjs', () => {
   });
 
   describe('override', () => {
-    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+    interface MyDerivativeToken extends DerivativeToken {
+      color: string;
+    }
+
+    const genStyle = (token: MyDerivativeToken): CSSInterpolation => ({
       '.box': {
         width: 93,
         lineHeight: 1,
         backgroundColor: token.primaryColor,
+        color: token.color,
       },
     });
 
@@ -226,8 +231,12 @@ describe('csssinjs', () => {
       propToken?: DesignToken;
       override: object;
     }) => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      const [token] = useCacheToken<MyDerivativeToken>(theme, [baseToken], {
         override,
+        formatToken: (origin: DerivativeToken) => ({
+          ...origin,
+          color: origin.primaryColor,
+        }),
       });
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [
@@ -255,6 +264,7 @@ describe('csssinjs', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toContain('background-color:#010203;');
+      expect(style.innerHTML).toContain('color:#010203;');
 
       wrapper.unmount();
     });
