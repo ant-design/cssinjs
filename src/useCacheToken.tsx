@@ -1,3 +1,4 @@
+import * as React from 'react';
 import hash from '@emotion/hash';
 import { ATTR_TOKEN } from './StyleContext';
 import type Theme from './Theme';
@@ -64,10 +65,19 @@ export default function useCacheToken<
 ): [DerivativeToken & { _tokenKey: string }, string] {
   const { salt = '', override = {} } = option;
 
-  // Basic
-  const mergedToken = Object.assign({}, ...tokens);
-  const tokenStr = flattenToken(mergedToken);
-  const overrideTokenStr = flattenToken(override);
+  // Basic - We do basic cache here
+  const mergedToken = React.useMemo(
+    () => Object.assign({}, ...tokens),
+    [tokens],
+  );
+  const tokenStr = React.useMemo(
+    () => flattenToken(mergedToken),
+    [mergedToken],
+  );
+  const overrideTokenStr = React.useMemo(
+    () => flattenToken(override),
+    [override],
+  );
 
   const cachedToken = useGlobalCache<
     [DerivativeToken & { _tokenKey: string }, string]
