@@ -135,8 +135,7 @@ export const parseStyle = (
             subInjectHash,
           )}`;
         } else {
-          const actualValue =
-            typeof value === 'object' ? (value as any)?.value : value;
+          const actualValue = (value as any)?.value ?? value;
           if (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
