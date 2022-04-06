@@ -61,7 +61,7 @@ function normalizeStyle(styleStr: string) {
 }
 
 function isCompoundCSSProperty(value: CSSObject[string]) {
-  return typeof value === 'object' && value && value.hasOwnProperty(SKIP_CHECK);
+  return typeof value === 'object' && value && SKIP_CHECK in value;
 }
 
 // Parse CSSObject to style content
