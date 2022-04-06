@@ -154,4 +154,17 @@ describe('style warning', () => {
       );
     });
   });
+
+  it('skip check should work', () => {
+    const genStyle = (): CSSObject => ({
+      content: { _skip_check_: true, value: 'content' },
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+      return <div />;
+    };
+    mount(<Demo />);
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
 });
