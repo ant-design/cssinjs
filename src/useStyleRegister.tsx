@@ -15,11 +15,17 @@ import { styleValidate } from './util';
 
 const isClientSide = canUseDom();
 
+const SKIP_CHECK = '_skip_check_';
+
 export type CSSProperties = CSS.PropertiesFallback<number | string>;
 export type CSSPropertiesWithMultiValues = {
   [K in keyof CSSProperties]:
     | CSSProperties[K]
-    | Extract<CSSProperties[K], string>[];
+    | Extract<CSSProperties[K], string>[]
+    | {
+        [SKIP_CHECK]: boolean;
+        value: CSSProperties[K] | Extract<CSSProperties[K], string>[];
+      };
 };
 
 export type CSSPseudos = { [K in CSS.Pseudos]?: CSSObject };
@@ -52,6 +58,10 @@ export interface CSSObject
 // Preprocessor style content to browser support one
 function normalizeStyle(styleStr: string) {
   return serialize(compile(styleStr), stringify);
+}
+
+function isCompoundCSSProperty(value: CSSObject[string]) {
+  return typeof value === 'object' && value && SKIP_CHECK in value;
 }
 
 // Parse CSSObject to style content
@@ -96,7 +106,11 @@ export const parseStyle = (
       Object.keys(style).forEach((key) => {
         const value = style[key];
 
-        if (typeof value === 'object' && value) {
+        if (
+          typeof value === 'object' &&
+          value &&
+          !isCompoundCSSProperty(value)
+        ) {
           let subInjectHash = false;
 
           // 当成嵌套对象来处理
@@ -121,8 +135,12 @@ export const parseStyle = (
             subInjectHash,
           )}`;
         } else {
-          if (process.env.NODE_ENV !== 'production') {
-            styleValidate(key, value);
+          const actualValue = (value as any)?.value ?? value;
+          if (
+            process.env.NODE_ENV !== 'production' &&
+            (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
+          ) {
+            styleValidate(key, actualValue);
           }
 
           // 如果是样式则直接插入
@@ -132,7 +150,7 @@ export const parseStyle = (
           );
 
           // Auto suffix with px
-          let formatValue = value;
+          let formatValue = actualValue;
           if (
             !unitless[key] &&
             typeof formatValue === 'number' &&
