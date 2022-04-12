@@ -47,7 +47,9 @@ const StyleContext = React.createContext<StyleContextProps>({
   defaultCache: true,
 });
 
-export type StyleProviderProps = Partial<StyleContextProps>;
+export type StyleProviderProps = Partial<StyleContextProps> & {
+  children?: React.ReactNode;
+};
 
 export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
   const { autoClear, mock, cache, children } = props;
