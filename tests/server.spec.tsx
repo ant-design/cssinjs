@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 import {
   Theme,
   useCacheToken,
@@ -64,7 +64,7 @@ describe('SSR', () => {
   });
 
   const Box = () => {
-    const [token] = useCacheToken(theme, [baseToken]);
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
 
     const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
       genStyle(token),
@@ -74,7 +74,7 @@ describe('SSR', () => {
   };
 
   it('should not use cache', () => {
-    mount(<Box />);
+    render(<Box />);
 
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
   });

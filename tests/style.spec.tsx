@@ -1,6 +1,6 @@
-import { CSSObject } from '../src/useStyleRegister';
+import type { CSSObject } from '../src/useStyleRegister';
 import { Theme, useCacheToken, useStyleRegister } from '../src';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 
 interface DesignToken {
@@ -61,7 +61,7 @@ describe('style warning', () => {
           ]);
           return <div />;
         };
-        mount(<Demo />);
+        render(<Demo />);
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining(
             `You seem to be using non-logical property '${prop}'`,
@@ -80,7 +80,7 @@ describe('style warning', () => {
       useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
       return <div />;
     };
-    mount(<Demo />);
+    render(<Demo />);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
         `You seem to be using a value for 'content' without quotes`,
@@ -99,7 +99,7 @@ describe('style warning', () => {
           useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
           return <div />;
         };
-        mount(<Demo />);
+        render(<Demo />);
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining(
             `You seem to be using '${prop}' property with different left ${prop} and right ${prop},`,
@@ -118,7 +118,7 @@ describe('style warning', () => {
         useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
         return <div />;
       };
-      mount(<Demo />);
+      render(<Demo />);
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `You seem to be using non-logical value 'left' of ${prop},`,
@@ -146,7 +146,7 @@ describe('style warning', () => {
         );
         return <div />;
       };
-      mount(<Demo />);
+      render(<Demo />);
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `You seem to be using non-logical value '${value}' of borderRadius`,
@@ -164,7 +164,7 @@ describe('style warning', () => {
       useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
       return <div />;
     };
-    mount(<Demo />);
+    render(<Demo />);
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });
