@@ -179,6 +179,10 @@ function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
 
+function Empty() {
+  return null;
+}
+
 /**
  * Register a style to the global style sheet.
  */
@@ -230,12 +234,12 @@ export default function useStyleRegister(
   );
 
   return (node: React.ReactElement) => {
-    if (isMergedClientSide || !defaultCache) {
-      return node;
-    }
+    let styleNode: React.ReactElement;
 
-    return (
-      <>
+    if (isMergedClientSide || !defaultCache) {
+      styleNode = <Empty />;
+    } else {
+      styleNode = (
         <style
           {...{
             [ATTR_TOKEN]: cachedTokenKey,
@@ -243,6 +247,12 @@ export default function useStyleRegister(
           }}
           dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
         />
+      );
+    }
+
+    return (
+      <>
+        {styleNode}
         {node}
       </>
     );
