@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { render } from '@testing-library/react';
 import {
@@ -111,7 +110,7 @@ describe('SSR', () => {
 
     // >>> Hydrate
     prepareEnv();
-    hydrate(
+    render(
       <StyleProvider
         cache={cache}
         // Force insert style since we hack `canUseDom` to false
@@ -119,7 +118,10 @@ describe('SSR', () => {
       >
         <Box />
       </StyleProvider>,
-      root,
+      {
+        hydrate: true,
+        container: root,
+      },
     );
     // Not remove other style
     expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
@@ -144,7 +146,7 @@ describe('SSR', () => {
     // >>> Hydrate
     mockCanUseDom = true;
     document.body.appendChild(root);
-    hydrate(
+    render(
       <StyleProvider
         cache={createCache()}
         // Force insert style since we hack `canUseDom` to false
@@ -152,7 +154,10 @@ describe('SSR', () => {
       >
         <Box />
       </StyleProvider>,
-      root,
+      {
+        hydrate: true,
+        container: root,
+      },
     );
 
     // Remove inline style
