@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import {
   Theme,
@@ -53,7 +53,11 @@ describe('csssinjs', () => {
       },
     });
 
-    const Box = ({ propToken = baseToken }: { propToken?: DesignToken }) => {
+    interface BoxProps {
+      propToken?: DesignToken;
+    }
+
+    const Box = ({ propToken = baseToken }: BoxProps) => {
       const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [
@@ -65,7 +69,7 @@ describe('csssinjs', () => {
 
     it('useToken', () => {
       // Multiple time only has one style instance
-      const wrapper = mount(
+      const { unmount } = render(
         <div>
           <Box />
           <Box />
@@ -82,30 +86,36 @@ describe('csssinjs', () => {
       );
 
       // Default not remove style
-      wrapper.unmount();
+      unmount();
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
     });
 
     // We will not remove style immediately,
     // but remove when second style patched.
     it('remove old style to ensure style set only exist one', () => {
-      const wrapper = mount(<Box />);
+      const getBox = (props?: BoxProps) => <Box {...props} />;
+
+      const { rerender } = render(getBox());
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
 
       // First change
-      wrapper.setProps({
-        propToken: {
-          primaryColor: 'red',
-        },
-      });
+      rerender(
+        getBox({
+          propToken: {
+            primaryColor: 'red',
+          },
+        }),
+      );
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
 
       // Second change
-      wrapper.setProps({
-        propToken: {
-          primaryColor: 'green',
-        },
-      });
+      rerender(
+        getBox({
+          propToken: {
+            primaryColor: 'green',
+          },
+        }),
+      );
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
     });
 
@@ -116,10 +126,10 @@ describe('csssinjs', () => {
         </StyleProvider>
       );
 
-      const wrapper = mount(<Demo />);
+      const { unmount } = render(<Demo />);
       expect(document.head.querySelectorAll('style')).toHaveLength(1);
 
-      wrapper.unmount();
+      unmount();
       expect(document.head.querySelectorAll('style')).toHaveLength(0);
     });
   });
@@ -147,7 +157,7 @@ describe('csssinjs', () => {
       return null;
     };
 
-    mount(<Nest />);
+    render(<Nest />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
@@ -171,10 +181,10 @@ describe('csssinjs', () => {
       return token._tokenKey;
     };
 
-    const wrapper = mount(<TokenShower />);
+    const { container } = render(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(wrapper.text()).toEqual('rqtnqb');
+    expect(container.textContent).toEqual('rqtnqb');
   });
 
   it('hash', () => {
@@ -199,7 +209,7 @@ describe('csssinjs', () => {
       return <div className={classNames('box', hashId)} />;
     };
 
-    const wrapper = mount(<Holder />);
+    const { unmount } = render(<Holder />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
@@ -208,7 +218,7 @@ describe('csssinjs', () => {
     expect(style.innerHTML).toContain('.css-6dmvpu.a');
     expect(style.innerHTML).toContain('.css-6dmvpu.b');
 
-    wrapper.unmount();
+    unmount();
   });
 
   describe('override', () => {
@@ -257,7 +267,7 @@ describe('csssinjs', () => {
         </StyleProvider>
       );
 
-      const wrapper = mount(<Demo />);
+      const { unmount } = render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
       expect(styles).toHaveLength(1);
@@ -266,7 +276,7 @@ describe('csssinjs', () => {
       expect(style.innerHTML).toContain('background-color:#010203;');
       expect(style.innerHTML).toContain('color:#010203;');
 
-      wrapper.unmount();
+      unmount();
     });
   });
 });

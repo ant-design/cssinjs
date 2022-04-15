@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 import {
   Theme,
-  Cache,
   useCacheToken,
   CSSInterpolation,
   useStyleRegister,
@@ -63,7 +62,7 @@ describe('animation', () => {
       expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
       // Multiple time only has one style instance
-      mount(<Box />);
+      render(<Box />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
       expect(styles).toHaveLength(1);

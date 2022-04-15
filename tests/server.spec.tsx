@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 import {
   Theme,
   useCacheToken,
@@ -63,18 +62,27 @@ describe('SSR', () => {
     },
   });
 
-  const Box = () => {
-    const [token] = useCacheToken(theme, [baseToken]);
+  const Box = ({ children }: { children?: React.ReactNode }) => {
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
 
     const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
       genStyle(token),
     ]);
 
-    return wrapSSR(<div className="box" />);
+    return wrapSSR(<div className="box">{children}</div>);
+  };
+
+  const IdHolder = () => {
+    const id = React.useId();
+    return (
+      <div id={id} className="id">
+        {id}
+      </div>
+    );
   };
 
   it('should not use cache', () => {
-    mount(<Box />);
+    render(<Box />);
 
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
   });
@@ -85,13 +93,19 @@ describe('SSR', () => {
 
     const html = renderToString(
       <StyleProvider cache={cache}>
-        <Box />
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
       </StyleProvider>,
     );
 
     const style = extractStyle(cache);
 
-    expect(html).toEqual('<div class="box"></div>');
+    expect(html).toEqual(
+      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
+    );
     expect(style).toEqual(
       '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style>',
     );
@@ -111,15 +125,22 @@ describe('SSR', () => {
 
     // >>> Hydrate
     prepareEnv();
-    hydrate(
+    render(
       <StyleProvider
         cache={cache}
         // Force insert style since we hack `canUseDom` to false
         mock="client"
       >
-        <Box />
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
       </StyleProvider>,
-      root,
+      {
+        hydrate: true,
+        container: root,
+      },
     );
     // Not remove other style
     expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
@@ -131,7 +152,11 @@ describe('SSR', () => {
   it('tricky ssr', () => {
     const html = renderToString(
       <StyleProvider>
-        <Box />
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
       </StyleProvider>,
     );
 
@@ -144,15 +169,22 @@ describe('SSR', () => {
     // >>> Hydrate
     mockCanUseDom = true;
     document.body.appendChild(root);
-    hydrate(
+    render(
       <StyleProvider
         cache={createCache()}
         // Force insert style since we hack `canUseDom` to false
         mock="client"
       >
-        <Box />
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
       </StyleProvider>,
-      root,
+      {
+        hydrate: true,
+        container: root,
+      },
     );
 
     // Remove inline style
