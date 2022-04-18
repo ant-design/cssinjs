@@ -25,7 +25,9 @@ export function token2key(token: any, slat: string): string {
 export function warning(message: string, component?: string) {
   devWarning(
     false,
-    `[Ant Design CSS-in-JS] ${component ? `${component}: ` : ''}${message}`,
+    `[Ant Design CSS-in-JS] ${
+      component ? `Error in ${component}: ` : ''
+    }${message}`,
   );
 }
 

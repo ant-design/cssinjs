@@ -195,11 +195,10 @@ export default function useStyleRegister(
     token: any;
     path: string[];
     hashId?: string;
-    component?: string;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, component } = info;
+  const { token, path, hashId } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -217,7 +216,9 @@ export default function useStyleRegister(
     // Create cache if needed
     () => {
       const styleObj = styleFn();
-      const styleStr = normalizeStyle(parseStyle(styleObj, hashId, component));
+      const styleStr = normalizeStyle(
+        parseStyle(styleObj, hashId, path.join('-')),
+      );
       const styleId = uniqueHash(fullPath, styleStr);
 
       if (isMergedClientSide) {

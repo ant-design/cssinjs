@@ -175,13 +175,14 @@ describe('style warning', () => {
     });
     const Demo = () => {
       const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister(
-        { theme, token, path: ['component msg'], component: 'Test' },
-        () => [genStyle()],
-      );
+      useStyleRegister({ theme, token, path: ['component-msg'] }, () => [
+        genStyle(),
+      ]);
       return <div />;
     };
     render(<Demo />);
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Test'));
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('component-msg'),
+    );
   });
 });
