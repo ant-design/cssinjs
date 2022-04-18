@@ -88,24 +88,23 @@ describe('style warning', () => {
     );
   });
 
-  ['margin', 'padding', 'borderWidth', 'borderStyle', 'borderColor'].forEach(
-    (prop) =>
-      it(`${prop} including four directions`, () => {
-        const genStyle = (): CSSObject => ({
-          [prop]: '0 1px 0 3px',
-        });
-        const Demo = () => {
-          const [token] = useCacheToken<DerivativeToken>(theme, []);
-          useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
-          return <div />;
-        };
-        render(<Demo />);
-        expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `You seem to be using '${prop}' property with different left ${prop} and right ${prop},`,
-          ),
-        );
-      }),
+  ['margin', 'padding', 'borderWidth', 'borderStyle'].forEach((prop) =>
+    it(`${prop} including four directions`, () => {
+      const genStyle = (): CSSObject => ({
+        [prop]: '0 1px 0 3px',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using '${prop}' property with different left ${prop} and right ${prop},`,
+        ),
+      );
+    }),
   );
 
   ['clear', 'textAlign'].forEach((prop) =>
