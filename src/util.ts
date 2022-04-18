@@ -22,19 +22,17 @@ export function token2key(token: any, slat: string): string {
   return hash(`${slat}_${flattenToken(token)}`);
 }
 
-export function warning(message: string, component?: string) {
+export function warning(message: string, path?: string) {
   devWarning(
     false,
-    `[Ant Design CSS-in-JS] ${
-      component ? `Error in ${component}: ` : ''
-    }${message}`,
+    `[Ant Design CSS-in-JS] ${path ? `Error in ${path}: ` : ''}${message}`,
   );
 }
 
 export const styleValidate = (
   key: string,
   value: string | number | boolean | null | undefined,
-  component?: string,
+  path?: string,
 ) => {
   switch (key) {
     case 'content':
@@ -51,7 +49,7 @@ export const styleValidate = (
       ) {
         warning(
           `You seem to be using a value for 'content' without quotes, try replacing it with \`content: '"${value}"'\``,
-          component,
+          path,
         );
       }
       return;
@@ -75,7 +73,7 @@ export const styleValidate = (
     case 'borderBottomRightRadius':
       warning(
         `You seem to be using non-logical property '${key}' which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
-        component,
+        path,
       );
       return;
     case 'margin':
@@ -88,7 +86,7 @@ export const styleValidate = (
         if (valueArr.length === 4 && valueArr[1] !== valueArr[3]) {
           warning(
             `You seem to be using '${key}' property with different left ${key} and right ${key}, which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
-            component,
+            path,
           );
         }
       }
@@ -98,7 +96,7 @@ export const styleValidate = (
       if (value === 'left' || value === 'right') {
         warning(
           `You seem to be using non-logical value '${value}' of ${key}, which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
-          component,
+          path,
         );
       }
       return;
@@ -128,7 +126,7 @@ export const styleValidate = (
         if (invalid) {
           warning(
             `You seem to be using non-logical value '${value}' of ${key}, which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties.`,
-            component,
+            path,
           );
         }
       }

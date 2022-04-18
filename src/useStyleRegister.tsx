@@ -68,7 +68,7 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
-  component?: string,
+  path?: string,
   root = true,
   injectHash = false,
 ) => {
@@ -100,7 +100,7 @@ export const parseStyle = (
       styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
         keyframe.style,
         hashId,
-        component,
+        path,
         false,
       )}`;
     } else {
@@ -133,7 +133,7 @@ export const parseStyle = (
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
-            component,
+            path,
             false,
             subInjectHash,
           )}`;
@@ -143,7 +143,7 @@ export const parseStyle = (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
           ) {
-            styleValidate(key, actualValue, component);
+            styleValidate(key, actualValue, path);
           }
 
           // 如果是样式则直接插入
