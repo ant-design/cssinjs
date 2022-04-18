@@ -74,7 +74,7 @@ export const styleValidate = (
     case 'padding':
     case 'borderWidth':
     case 'borderStyle':
-    case 'borderColor':
+      // case 'borderColor':
       if (typeof value === 'string') {
         const valueArr = value.split(' ').map((item) => item.trim());
         if (valueArr.length === 4 && valueArr[1] !== valueArr[3]) {
