@@ -68,6 +68,7 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
+  component?: string,
   root = true,
   injectHash = false,
 ) => {
@@ -99,6 +100,7 @@ export const parseStyle = (
       styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
         keyframe.style,
         hashId,
+        component,
         false,
       )}`;
     } else {
@@ -131,6 +133,7 @@ export const parseStyle = (
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
+            component,
             false,
             subInjectHash,
           )}`;
@@ -140,7 +143,7 @@ export const parseStyle = (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
           ) {
-            styleValidate(key, actualValue);
+            styleValidate(key, actualValue, component);
           }
 
           // 如果是样式则直接插入
@@ -192,10 +195,11 @@ export default function useStyleRegister(
     token: any;
     path: string[];
     hashId?: string;
+    component?: string;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId } = info;
+  const { token, path, hashId, component } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -213,7 +217,7 @@ export default function useStyleRegister(
     // Create cache if needed
     () => {
       const styleObj = styleFn();
-      const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
+      const styleStr = normalizeStyle(parseStyle(styleObj, hashId, component));
       const styleId = uniqueHash(fullPath, styleStr);
 
       if (isMergedClientSide) {
