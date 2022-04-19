@@ -68,6 +68,7 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
+  path?: string,
   root = true,
   injectHash = false,
 ) => {
@@ -99,6 +100,7 @@ export const parseStyle = (
       styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
         keyframe.style,
         hashId,
+        path,
         false,
       )}`;
     } else {
@@ -131,6 +133,7 @@ export const parseStyle = (
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
+            path,
             false,
             subInjectHash,
           )}`;
@@ -140,7 +143,7 @@ export const parseStyle = (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
           ) {
-            styleValidate(key, actualValue);
+            styleValidate(key, actualValue, path);
           }
 
           // 如果是样式则直接插入
@@ -213,7 +216,9 @@ export default function useStyleRegister(
     // Create cache if needed
     () => {
       const styleObj = styleFn();
-      const styleStr = normalizeStyle(parseStyle(styleObj, hashId));
+      const styleStr = normalizeStyle(
+        parseStyle(styleObj, hashId, path.join('-')),
+      );
       const styleId = uniqueHash(fullPath, styleStr);
 
       if (isMergedClientSide) {

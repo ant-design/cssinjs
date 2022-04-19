@@ -160,10 +160,29 @@ describe('style warning', () => {
     });
     const Demo = () => {
       const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+      useStyleRegister({ theme, token, path: ['content_skip'] }, () => [
+        genStyle(),
+      ]);
       return <div />;
     };
     render(<Demo />);
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('should contain component', () => {
+    const genStyle = (): CSSObject => ({
+      content: '',
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['component-msg'] }, () => [
+        genStyle(),
+      ]);
+      return <div />;
+    };
+    render(<Demo />);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('component-msg'),
+    );
   });
 });
