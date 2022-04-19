@@ -219,5 +219,20 @@ describe('style warning', () => {
         `CSS animation '${anim.getName()}' is used without declaring keyframes`,
       ),
     );
+    errorSpy.mockRestore();
+    const Demo2 = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['anim'] }, () => [
+        genStyle(),
+        anim,
+      ]);
+      return <div />;
+    };
+    render(<Demo2 />);
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining(
+        `CSS animation '${anim.getName()}' is used without declaring keyframes`,
+      ),
+    );
   });
 });
