@@ -218,8 +218,6 @@ export default function useStyleRegister(
     fullPath,
     // Create cache if needed
     () => {
-      animationStatistics = {};
-
       const styleObj = styleFn();
       const styleStr = normalizeStyle(
         parseStyle(styleObj, hashId, path.join('-')),
