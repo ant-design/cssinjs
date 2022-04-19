@@ -11,7 +11,7 @@ import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
-import { styleValidate } from './util';
+import { styleValidate, warning } from './util';
 
 const isClientSide = canUseDom();
 
@@ -64,6 +64,8 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
   return typeof value === 'object' && value && SKIP_CHECK in value;
 }
 
+export let animationStatistics: Record<string, boolean> = {};
+
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
@@ -97,6 +99,7 @@ export const parseStyle = (
     if ((style as any)._keyframe) {
       // Keyframe
       const keyframe = style as unknown as Keyframes;
+      animationStatistics[keyframe.getName(hashId)] = false;
       styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
         keyframe.style,
         hashId,
@@ -220,6 +223,17 @@ export default function useStyleRegister(
         parseStyle(styleObj, hashId, path.join('-')),
       );
       const styleId = uniqueHash(fullPath, styleStr);
+
+      // Animation check
+      Object.entries(animationStatistics).forEach(([key, value]) => {
+        if (value) {
+          warning(
+            `CSS animation '${key}' is used without declaring keyframes, which may cause animation loss.`,
+            path.join('-'),
+          );
+        }
+      });
+      animationStatistics = {};
 
       if (isMergedClientSide) {
         const style = updateCSS(styleStr, styleId, { mark: ATTR_MARK });

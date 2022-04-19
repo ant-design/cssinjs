@@ -2,6 +2,8 @@ import type { CSSObject } from '../src/useStyleRegister';
 import { Theme, useCacheToken, useStyleRegister } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import Keyframes from '../src/Keyframes';
+import { animationStatistics } from '../src/useStyleRegister';
 
 interface DesignToken {
   primaryColor: string;
@@ -183,6 +185,54 @@ describe('style warning', () => {
     render(<Demo />);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('component-msg'),
+    );
+  });
+
+  it('should check animation used with keyframes declared', () => {
+    const anim = new Keyframes('antSlideUpIn', {
+      '0%': {
+        transform: 'scaleY(0.8)',
+        transformOrigin: '0% 0%',
+        opacity: 0,
+      },
+
+      '100%': {
+        transform: 'scaleY(1)',
+        transformOrigin: '0% 0%',
+        opacity: 1,
+      },
+    });
+
+    const genStyle = (): CSSObject => ({
+      animationName: anim.getName(),
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['anim'] }, () => [genStyle()]);
+      return <div />;
+    };
+    expect(animationStatistics).toEqual({});
+    render(<Demo />);
+    expect(animationStatistics).toEqual({});
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `CSS animation '${anim.getName()}' is used without declaring keyframes`,
+      ),
+    );
+    errorSpy.mockRestore();
+    const Demo2 = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['anim'] }, () => [
+        genStyle(),
+        anim,
+      ]);
+      return <div />;
+    };
+    render(<Demo2 />);
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining(
+        `CSS animation '${anim.getName()}' is used without declaring keyframes`,
+      ),
     );
   });
 });
