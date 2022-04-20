@@ -25,6 +25,13 @@ const baseToken: DesignToken = {
   primaryColor: '#1890ff',
 };
 
+const theme = new Theme(derivative);
+const animation = new Keyframes('anim', {
+  to: {
+    transform: `rotate(360deg)`,
+  },
+});
+
 describe('animation', () => {
   beforeEach(() => {
     const styles = Array.from(document.head.querySelectorAll('style'));
@@ -34,13 +41,6 @@ describe('animation', () => {
   });
 
   describe('without hashed', () => {
-    const theme = new Theme(derivative);
-    const animation = new Keyframes('anim', {
-      to: {
-        transform: `rotate(360deg)`,
-      },
-    });
-
     const genStyle = (): CSSInterpolation => [
       {
         ['.box']: {
@@ -70,6 +70,31 @@ describe('animation', () => {
       const style = styles[0];
       expect(style.innerHTML).toEqual(
         '.box{animation:anim 1s;}@keyframes anim{to{transform:rotate(360deg);}}',
+      );
+    });
+  });
+
+  describe('hashed', () => {
+    it('should accept Keyframes as animationName value', () => {
+      let testHashId = '';
+
+      const Demo = () => {
+        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        testHashId = hashId;
+        useStyleRegister(
+          { theme, token, path: ['keyframes-hashed'], hashId },
+          () => [animation, { '.demo': { animationName: animation } }],
+        );
+        return <div />;
+      };
+      render(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toEqual(
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}.${testHashId}.demo{animation-name:${testHashId}-anim;}`,
       );
     });
   });
