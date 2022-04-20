@@ -7,6 +7,13 @@ import { flattenToken, token2key } from './util';
 
 const EMPTY_OVERRIDE = {};
 
+// Generate different prefix to make user selector break in production env.
+// This helps developer not to do style override directly on the hash id.
+const hashPrefix =
+  process.env.NODE_ENV !== 'production'
+    ? 'css-dev-only-do-not-override'
+    : 'css';
+
 export interface Option<DerivativeToken> {
   /**
    * Generate token with salt.
@@ -116,7 +123,7 @@ export default function useCacheToken<
       mergedDerivativeToken._tokenKey = tokenKey;
       recordCleanToken(tokenKey);
 
-      const hashId = `css-${hash(tokenKey)}`;
+      const hashId = `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 
       return [mergedDerivativeToken, hashId];

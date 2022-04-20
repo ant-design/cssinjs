@@ -215,8 +215,8 @@ describe('csssinjs', () => {
     expect(styles).toHaveLength(1);
 
     const style = styles[0];
-    expect(style.innerHTML).toContain('.css-6dmvpu.a');
-    expect(style.innerHTML).toContain('.css-6dmvpu.b');
+    expect(style.innerHTML).toContain('.css-dev-only-do-not-override-6dmvpu.a');
+    expect(style.innerHTML).toContain('.css-dev-only-do-not-override-6dmvpu.b');
 
     unmount();
   });
