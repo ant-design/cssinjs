@@ -97,5 +97,28 @@ describe('animation', () => {
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}.${testHashId}.demo{animation-name:${testHashId}-anim;}`,
       );
     });
+
+    it('could be declared in CSSObject', () => {
+      let testHashId = '';
+
+      const Demo = () => {
+        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        testHashId = hashId;
+        useStyleRegister(
+          { theme, token, path: ['keyframes-hashed'], hashId },
+          () => [{ '.demo': { animationName: animation, test: animation } }],
+        );
+        return <div />;
+      };
+      render(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toEqual(
+        `.${testHashId}.demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      );
+    });
   });
 });
