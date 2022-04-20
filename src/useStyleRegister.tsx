@@ -122,7 +122,7 @@ export const parseStyle = (
         if (
           typeof value === 'object' &&
           value &&
-          !(value as Keyframes)._keyframe &&
+          (key !== 'animationName' || !(value as Keyframes)._keyframe) &&
           !isCompoundCSSProperty(value)
         ) {
           let subInjectHash = false;
