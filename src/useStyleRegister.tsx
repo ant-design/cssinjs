@@ -239,17 +239,15 @@ export default function useStyleRegister(
       const styleId = uniqueHash(fullPath, styleStr);
 
       // Animation check
-      if (process.env.NODE_ENV !== 'production') {
-        Object.entries(animationStatistics).forEach(([key, value]) => {
-          if (value) {
-            warning(
-              `CSS animation '${key}' is used without declaring keyframes, which may cause animation loss.`,
-              path.join('-'),
-            );
-          }
-        });
-        animationStatistics = {};
-      }
+      Object.entries(animationStatistics).forEach(([key, value]) => {
+        if (value) {
+          warning(
+            `CSS animation '${key}' is used without declaring keyframes, which may cause animation loss.`,
+            path.join('-'),
+          );
+        }
+      });
+      animationStatistics = {};
 
       if (isMergedClientSide) {
         const style = updateCSS(styleStr, styleId, { mark: ATTR_MARK });
