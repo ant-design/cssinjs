@@ -17,7 +17,15 @@ const isClientSide = canUseDom();
 
 const SKIP_CHECK = '_skip_check_';
 
-export type CSSProperties = CSS.PropertiesFallback<number | string>;
+export type CSSProperties = Omit<
+  CSS.PropertiesFallback<number | string>,
+  'animationName'
+> & {
+  animationName?:
+    | CSS.PropertiesFallback<number | string>['animationName']
+    | Keyframes;
+};
+
 export type CSSPropertiesWithMultiValues = {
   [K in keyof CSSProperties]:
     | CSSProperties[K]
@@ -114,6 +122,7 @@ export const parseStyle = (
         if (
           typeof value === 'object' &&
           value &&
+          !(value as Keyframes)._keyframe &&
           !isCompoundCSSProperty(value)
         ) {
           let subInjectHash = false;
@@ -163,6 +172,11 @@ export const parseStyle = (
             formatValue !== 0
           ) {
             formatValue = `${formatValue}px`;
+          }
+
+          // handle animationName & Keyframe value
+          if (key === 'animationName' && (value as Keyframes)?._keyframe) {
+            formatValue = (value as Keyframes).getName(hashId);
           }
 
           styleStr += `${styleName}:${formatValue};`;
