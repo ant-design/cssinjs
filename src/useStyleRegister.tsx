@@ -145,7 +145,7 @@ export const parseStyle = (
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
-            path,
+            `${path} -> ${mergedKey}`,
             false,
             subInjectHash,
           )}`;

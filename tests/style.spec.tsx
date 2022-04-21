@@ -188,6 +188,25 @@ describe('style warning', () => {
     );
   });
 
+  it('should contain selector', () => {
+    const genStyle = (): CSSObject => ({
+      '.demo': {
+        content: '',
+      },
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['selector-in-warning'] }, () => [
+        genStyle(),
+      ]);
+      return <div />;
+    };
+    render(<Demo />);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('selector-in-warning -> .demo'),
+    );
+  });
+
   it('should check animation used with keyframes declared', () => {
     const anim = new Keyframes('antSlideUpIn', {
       '0%': {

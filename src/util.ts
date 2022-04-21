@@ -25,7 +25,7 @@ export function token2key(token: any, slat: string): string {
 export function warning(message: string, path?: string) {
   devWarning(
     false,
-    `[Ant Design CSS-in-JS] ${path ? `Error in ${path}: ` : ''}${message}`,
+    `[Ant Design CSS-in-JS] ${path ? `Error in '${path}': ` : ''}${message}`,
   );
 }
 
@@ -137,7 +137,6 @@ export const styleValidate = (
       return;
     case 'animation':
       if (hashId) {
-        console.log('checked', path);
         warning(
           `You seem to be using hashed animation '${value}', in which case 'animationName' with Keyframe as value is recommended.`,
           path,
