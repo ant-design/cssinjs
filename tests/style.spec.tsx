@@ -219,7 +219,7 @@ describe('style warning', () => {
         `CSS animation '${anim.getName()}' is used without declaring keyframes`,
       ),
     );
-    errorSpy.mockRestore();
+    errorSpy.mockReset();
     const Demo2 = () => {
       const [token] = useCacheToken<DerivativeToken>(theme, []);
       useStyleRegister({ theme, token, path: ['anim'] }, () => [
@@ -233,6 +233,38 @@ describe('style warning', () => {
       expect.stringContaining(
         `CSS animation '${anim.getName()}' is used without declaring keyframes`,
       ),
+    );
+  });
+
+  it('should use animationName if hashed', () => {
+    const anim = new Keyframes('antSlideUpIn', {
+      '0%': {
+        transform: 'scaleY(0.8)',
+        transformOrigin: '0% 0%',
+        opacity: 0,
+      },
+
+      '100%': {
+        transform: 'scaleY(1)',
+        transformOrigin: '0% 0%',
+        opacity: 1,
+      },
+    });
+
+    const genStyle = (): CSSObject => ({
+      animation: anim.getName(),
+    });
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister(
+        { theme, token, path: ['anim-hashed-animation'], hashId },
+        () => [genStyle(), anim],
+      );
+      return <div />;
+    };
+    render(<Demo />);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(`You seem to be using hashed animation`),
     );
   });
 });

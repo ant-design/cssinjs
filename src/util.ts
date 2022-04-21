@@ -32,8 +32,12 @@ export function warning(message: string, path?: string) {
 export const styleValidate = (
   key: string,
   value: string | number | boolean | null | undefined,
-  path?: string,
+  info: {
+    path?: string;
+    hashId?: string;
+  } = {},
 ) => {
+  const { path, hashId } = info;
   switch (key) {
     case 'content':
       // From emotion: https://github.com/emotion-js/emotion/blob/main/packages/serialize/src/index.js#L63
@@ -131,6 +135,14 @@ export const styleValidate = (
         }
       }
       return;
+    case 'animation':
+      if (hashId) {
+        console.log('checked', path);
+        warning(
+          `You seem to be using hashed animation '${value}', in which case 'animationName' with Keyframe as value is recommended.`,
+          path,
+        );
+      }
     default:
       return;
   }
