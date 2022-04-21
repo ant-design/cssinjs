@@ -155,7 +155,7 @@ export const parseStyle = (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
           ) {
-            styleValidate(key, actualValue, path);
+            styleValidate(key, actualValue, { path, hashId });
           }
 
           // 如果是样式则直接插入
