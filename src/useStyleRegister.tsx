@@ -7,7 +7,11 @@ import hash from '@emotion/hash';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import useGlobalCache from './useGlobalCache';
-import StyleContext, { ATTR_MARK, ATTR_TOKEN } from './StyleContext';
+import StyleContext, {
+  ATTR_MARK,
+  ATTR_TOKEN,
+  ATTR_DEV_CACHE_PATH,
+} from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
@@ -254,6 +258,11 @@ export default function useStyleRegister(
 
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);
+
+        // Dev usage to find which cache path made this easily
+        if (process.env.NODE_ENV !== 'production') {
+          style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
+        }
       }
 
       return [styleStr, tokenKey, styleId];

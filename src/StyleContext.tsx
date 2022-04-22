@@ -3,6 +3,7 @@ import CacheEntity from './Cache';
 
 export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
+export const ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
 
 export function createCache() {
   if (typeof document !== 'undefined') {
