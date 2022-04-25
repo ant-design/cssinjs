@@ -1,5 +1,4 @@
 import type { CSSInterpolation } from './useStyleRegister';
-import { animationStatistics } from './useStyleRegister';
 
 class Keyframe {
   private name: string;
@@ -11,12 +10,7 @@ class Keyframe {
   }
 
   getName(hashId: string = ''): string {
-    const animationName = hashId ? `${hashId}-${this.name}` : this.name;
-    if (animationStatistics[animationName] === undefined) {
-      animationStatistics[animationName] = true;
-    }
-
-    return animationName;
+    return hashId ? `${hashId}-${this.name}` : this.name;
   }
 
   _keyframe = true;

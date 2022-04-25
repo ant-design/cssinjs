@@ -15,7 +15,7 @@ import StyleContext, {
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
-import { styleValidate, warning } from './util';
+import { styleValidate } from './util';
 
 const isClientSide = canUseDom();
 
@@ -88,6 +88,19 @@ export const parseStyle = (
 ) => {
   let styleStr = '';
 
+  function parseKeyframes(keyframes: Keyframes) {
+    if (animationStatistics[keyframes.getName(hashId)]) {
+      return '';
+    }
+    animationStatistics[keyframes.getName(hashId)] = true;
+    return `@keyframes ${keyframes.getName(hashId)}${parseStyle(
+      keyframes.style,
+      hashId,
+      path,
+      false,
+    )}`;
+  }
+
   function flattenList(
     list: ArrayCSSInterpolation,
     fullList: CSSObject[] = [],
@@ -110,14 +123,7 @@ export const parseStyle = (
   flattenStyleList.forEach((style) => {
     if ((style as any)._keyframe) {
       // Keyframe
-      const keyframe = style as unknown as Keyframes;
-      animationStatistics[keyframe.getName(hashId)] = false;
-      styleStr += `@keyframes ${keyframe.getName(hashId)}${parseStyle(
-        keyframe.style,
-        hashId,
-        path,
-        false,
-      )}`;
+      styleStr += parseKeyframes(style as unknown as Keyframes);
     } else {
       // Normal CSSObject
       Object.keys(style).forEach((key) => {
@@ -180,6 +186,7 @@ export const parseStyle = (
 
           // handle animationName & Keyframe value
           if (key === 'animationName' && (value as Keyframes)?._keyframe) {
+            styleStr += parseKeyframes(value as Keyframes);
             formatValue = (value as Keyframes).getName(hashId);
           }
 
@@ -242,15 +249,7 @@ export default function useStyleRegister(
       );
       const styleId = uniqueHash(fullPath, styleStr);
 
-      // Animation check
-      Object.entries(animationStatistics).forEach(([key, value]) => {
-        if (value) {
-          warning(
-            `CSS animation '${key}' is used without declaring keyframes, which may cause animation loss.`,
-            path.join('-'),
-          );
-        }
-      });
+      // Clear animation statistics
       animationStatistics = {};
 
       if (isMergedClientSide) {

@@ -105,8 +105,55 @@ describe('animation', () => {
         const [token, hashId] = useCacheToken(theme, [baseToken]);
         testHashId = hashId;
         useStyleRegister(
-          { theme, token, path: ['keyframes-hashed'], hashId },
+          { theme, token, path: ['keyframes-in-CSSObject'], hashId },
           () => [{ '.demo': { animationName: animation, test: animation } }],
+        );
+        return <div />;
+      };
+      render(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toEqual(
+        `.${testHashId}.demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      );
+    });
+
+    it('could be used without declaring keyframes', () => {
+      let testHashId = '';
+
+      const Demo = () => {
+        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        testHashId = hashId;
+        useStyleRegister(
+          { theme, token, path: ['keyframes-not-declared'], hashId },
+          () => [{ '.demo': { animationName: animation } }],
+        );
+        return <div />;
+      };
+      render(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toEqual(
+        `.${testHashId}.demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      );
+    });
+
+    it('keyframes should be only declared once', () => {
+      let testHashId = '';
+      const anim = animation;
+
+      const Demo = () => {
+        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        testHashId = hashId;
+        useStyleRegister(
+          { theme, token, path: ['keyframes-declared-once'], hashId },
+          () => [{ '.demo': { animationName: animation, anim } }],
         );
         return <div />;
       };
