@@ -15,7 +15,7 @@ import StyleContext, {
 import type Cache from './Cache';
 import type { Theme } from '.';
 import type Keyframes from './Keyframes';
-import { styleValidate, warning } from './util';
+import { styleValidate } from './util';
 
 const isClientSide = canUseDom();
 
