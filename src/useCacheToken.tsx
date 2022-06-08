@@ -110,13 +110,17 @@ export default function useCacheToken<
       // Merge with override
       let mergedDerivativeToken = {
         ...derivativeToken,
-        ...override,
       };
 
       // Format if needed
       if (formatToken) {
         mergedDerivativeToken = formatToken(mergedDerivativeToken);
       }
+
+      mergedDerivativeToken = {
+        ...mergedDerivativeToken,
+        ...override,
+      };
 
       // Optimize for `useStyleRegister` performance
       const tokenKey = token2key(mergedDerivativeToken, salt);

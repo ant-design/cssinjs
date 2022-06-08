@@ -278,5 +278,27 @@ describe('csssinjs', () => {
 
       unmount();
     });
+
+    it('override should override formattedToken', () => {
+      const Demo = () => (
+        <StyleProvider cache={createCache()}>
+          <Box
+            override={{
+              color: '#010203',
+            }}
+          />
+        </StyleProvider>
+      );
+
+      const { unmount } = render(<Demo />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const style = styles[0];
+      expect(style.innerHTML).toContain('color:#010203;');
+
+      unmount();
+    });
   });
 });
