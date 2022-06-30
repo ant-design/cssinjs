@@ -1,6 +1,10 @@
 import * as React from 'react';
 import hash from '@emotion/hash';
-import { ATTR_TOKEN } from './StyleContext';
+import {
+  ATTR_TOKEN,
+  CSS_IN_JS_INSTANCE,
+  CSS_IN_JS_INSTANCE_ID,
+} from './StyleContext';
 import type Theme from './Theme';
 import useGlobalCache from './useGlobalCache';
 import { flattenToken, token2key } from './util';
@@ -44,7 +48,9 @@ function removeStyleTags(key: string) {
     const styles = document.querySelectorAll(`style[${ATTR_TOKEN}="${key}"]`);
 
     styles.forEach((style) => {
-      style.parentNode?.removeChild(style);
+      if ((style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+        style.parentNode?.removeChild(style);
+      }
     });
   }
 }

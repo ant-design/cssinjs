@@ -5,6 +5,10 @@ export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
 export const ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
 
+// Mark css-in-js instance in style element
+export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
+export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
+
 export function createCache() {
   if (typeof document !== 'undefined') {
     const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`);
