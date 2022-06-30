@@ -103,7 +103,7 @@ export default function useCacheToken<
     [DerivativeToken & { _tokenKey: string }, string]
   >(
     'token',
-    [salt, tokenStr, overrideTokenStr],
+    [salt, theme.id, tokenStr, overrideTokenStr],
     () => {
       const derivativeToken = theme.getDerivativeToken(mergedToken);
 

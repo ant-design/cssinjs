@@ -1,6 +1,24 @@
 import React from 'react';
 import Button from './components/Button';
-import { DesignToken, DesignTokenContext } from './components/theme';
+import { DesignTokenContext, ThemeContext } from './components/theme';
+import type { DesignToken, DerivativeToken } from './components/theme';
+import { createTheme } from '../../src';
+
+function derivativeA(designToken: DesignToken): DerivativeToken {
+  return {
+    ...designToken,
+    primaryColor: 'red',
+    primaryColorDisabled: 'red',
+  };
+}
+
+function derivativeB(designToken: DesignToken): DerivativeToken {
+  return {
+    ...designToken,
+    primaryColor: 'green',
+    primaryColorDisabled: 'green',
+  };
+}
 
 const ButtonList = () => (
   <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
@@ -11,26 +29,31 @@ const ButtonList = () => (
 );
 
 export default function App() {
-  const redTheme: Partial<DesignToken> = {
-    primaryColor: 'red',
-  };
-  const orangeTheme: Partial<DesignToken> = {
-    primaryColor: 'orange',
-  };
+  const [, forceUpdate] = React.useState({});
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', rowGap: 8 }}>
       <h3>混合主题</h3>
 
-      <ButtonList />
-
-      <DesignTokenContext.Provider value={{ token: redTheme, hashed: true }}>
+      <DesignTokenContext.Provider value={{ hashed: true }}>
         <ButtonList />
+
+        <ThemeContext.Provider value={createTheme(derivativeA)}>
+          <ButtonList />
+        </ThemeContext.Provider>
+
+        <ThemeContext.Provider value={createTheme(derivativeB)}>
+          <ButtonList />
+        </ThemeContext.Provider>
       </DesignTokenContext.Provider>
 
-      <DesignTokenContext.Provider value={{ token: orangeTheme, hashed: true }}>
-        <ButtonList />
-      </DesignTokenContext.Provider>
+      <button
+        onClick={() => {
+          forceUpdate({});
+        }}
+      >
+        Force ReRender
+      </button>
     </div>
   );
 }

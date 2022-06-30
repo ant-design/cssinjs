@@ -1,6 +1,7 @@
 import React from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Theme, useCacheToken } from '../../../src';
+import type { Theme } from '../../../src';
+import { createTheme, useCacheToken } from '../../../src';
 import type { CSSObject } from '../../../src';
 
 export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
@@ -43,9 +44,7 @@ function derivative(designToken: DesignToken): DerivativeToken {
   };
 }
 
-export const ThemeContext = React.createContext(
-  new Theme<DesignToken, DerivativeToken>(derivative),
-);
+export const ThemeContext = React.createContext(createTheme(derivative));
 
 export const DesignTokenContext = React.createContext<{
   token?: Partial<DesignToken>;
@@ -54,12 +53,12 @@ export const DesignTokenContext = React.createContext<{
   token: defaultDesignToken,
 });
 
-export function useToken() {
+export function useToken(): [Theme<any, any>, DerivativeToken, string] {
   const { token: rootDesignToken = defaultDesignToken, hashed } =
     React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 
-  const [token, hashId] = useCacheToken(
+  const [token, hashId] = useCacheToken<DerivativeToken, DesignToken>(
     theme,
     [defaultDesignToken, rootDesignToken],
     {
