@@ -11,6 +11,8 @@ import StyleContext, {
   ATTR_MARK,
   ATTR_TOKEN,
   ATTR_DEV_CACHE_PATH,
+  CSS_IN_JS_INSTANCE,
+  CSS_IN_JS_INSTANCE_ID,
 } from './StyleContext';
 import type Cache from './Cache';
 import type { Theme } from '.';
@@ -254,6 +256,8 @@ export default function useStyleRegister(
 
       if (isMergedClientSide) {
         const style = updateCSS(styleStr, styleId, { mark: ATTR_MARK });
+
+        (style as any)[CSS_IN_JS_INSTANCE] = CSS_IN_JS_INSTANCE_ID;
 
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);

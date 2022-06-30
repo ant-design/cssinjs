@@ -9,6 +9,11 @@ import {
   createCache,
 } from '../src';
 import type { CSSInterpolation } from '../src';
+import {
+  ATTR_TOKEN,
+  CSS_IN_JS_INSTANCE,
+  CSS_IN_JS_INSTANCE_ID,
+} from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -278,5 +283,63 @@ describe('csssinjs', () => {
 
       unmount();
     });
+  });
+
+  it('style should contain instance id', () => {
+    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+      div: {
+        color: token.primaryColor,
+      },
+    });
+
+    const Demo = ({ colorPrimary = 'red' }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: colorPrimary }],
+        {
+          salt: 'test',
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-instance'] },
+        () => [genStyle(token)],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    const { rerender } = render(<Demo />);
+    const styles = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
+    expect(styles.length).toBe(1);
+    expect(
+      Array.from(styles).some((style) => style.innerHTML.includes('color:red')),
+    ).toBeTruthy();
+    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+
+    rerender(<Demo colorPrimary="blue" />);
+    const stylesRe = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
+    expect(stylesRe.length).toBe(1);
+    expect(
+      Array.from(stylesRe).some((style) =>
+        style.innerHTML.includes('color:blue'),
+      ),
+    ).toBeTruthy();
+    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+    (stylesRe[0] as any)[CSS_IN_JS_INSTANCE] = '123';
+
+    rerender(<Demo colorPrimary="yellow" />);
+    const stylesRe2 = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
+    expect(stylesRe2.length).toBe(2);
+    expect(
+      Array.from(stylesRe2).some((style) =>
+        style.innerHTML.includes('color:blue'),
+      ),
+    ).toBeTruthy();
+    expect(
+      Array.from(stylesRe2).some((style) =>
+        style.innerHTML.includes('color:yellow'),
+      ),
+    ).toBeTruthy();
   });
 });
