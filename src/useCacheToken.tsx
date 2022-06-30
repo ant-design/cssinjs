@@ -48,10 +48,7 @@ function removeStyleTags(key: string) {
     const styles = document.querySelectorAll(`style[${ATTR_TOKEN}="${key}"]`);
 
     styles.forEach((style) => {
-      if (
-        (style as any)[CSS_IN_JS_INSTANCE] &&
-        (style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID
-      ) {
+      if ((style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
         style.parentNode?.removeChild(style);
       }
     });
