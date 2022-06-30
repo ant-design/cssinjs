@@ -36,10 +36,10 @@ const cacheThemes = new Map<
   [Theme<any, any>, number]
 >();
 
-// const MAX_CACHE_SIZE = 20;
-// const MAX_CACHE_OFFSET = 5;
-const MAX_CACHE_SIZE = 2;
-const MAX_CACHE_OFFSET = 1;
+const MAX_CACHE_SIZE = 20;
+const MAX_CACHE_OFFSET = 5;
+
+let createTimes = 0;
 
 /**
  * Same as new Theme, but will always return same one if `derivative` not changed.
@@ -57,7 +57,8 @@ export function createTheme<
   const cached = cacheThemes.get(derivative)!;
 
   // Refresh Call Time
-  cached[1] = Date.now();
+  createTimes += 1;
+  cached[1] = createTimes;
 
   // Clean up if cache is too large
   if (cacheThemes.size >= MAX_CACHE_SIZE + MAX_CACHE_OFFSET) {
