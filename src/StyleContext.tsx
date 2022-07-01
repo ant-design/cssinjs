@@ -26,7 +26,9 @@ export function createCache() {
       (style) => {
         const hash = style.getAttribute(ATTR_MARK)!;
         if (styleHash[hash]) {
-          style.parentNode?.removeChild(style);
+          if ((style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+            style.parentNode?.removeChild(style);
+          }
         } else {
           styleHash[hash] = true;
         }
