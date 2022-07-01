@@ -12,6 +12,11 @@ import {
 import type { CSSInterpolation } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import {
+  CSS_IN_JS_INSTANCE,
+  CSS_IN_JS_INSTANCE_ID,
+  ATTR_MARK,
+} from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -192,6 +197,11 @@ describe('SSR', () => {
 
     // Patch to header
     expect(document.head.querySelectorAll('style')).toHaveLength(1);
+    expect(
+      (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
+        CSS_IN_JS_INSTANCE
+      ],
+    ).toBe(CSS_IN_JS_INSTANCE_ID);
 
     expect(errorSpy).not.toHaveBeenCalled();
   });
