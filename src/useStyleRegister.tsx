@@ -141,6 +141,7 @@ export const parseStyle = (
 
           // 当成嵌套对象来处理
           let mergedKey = key.trim();
+          // Whether treat child as root. In most case it is false.
           let nextRoot = false;
 
           // 拆分多个选择器
@@ -158,7 +159,10 @@ export const parseStyle = (
             !hashId &&
             (mergedKey === '&' || mergedKey === '')
           ) {
-            // In case of `& { a: red }` and without hashId, treat child as root
+            // In case of `{ '&': { a: { color: 'red' } } }` or `{ '': { a: { color: 'red' } } }` without hashId,
+            // we will get `&{a:{color:red;}}` or `{a:{color:red;}}` string for stylis to compile,
+            // but it does not conform to stylis syntax, and finally we will get `{color:red;}` as css, which is wrong.
+            // So we need to remove key in root, and treat child `{ a: { color: 'red' } }` as root.
             mergedKey = '';
             nextRoot = true;
           }
