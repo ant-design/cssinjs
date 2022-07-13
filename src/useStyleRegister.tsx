@@ -141,6 +141,7 @@ export const parseStyle = (
 
           // 当成嵌套对象来处理
           let mergedKey = key.trim();
+          let nextRoot = false;
 
           // 拆分多个选择器
           if ((root || injectHash) && hashId) {
@@ -152,13 +153,21 @@ export const parseStyle = (
               const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
               mergedKey = keys.join(',');
             }
+          } else if (
+            root &&
+            !hashId &&
+            (mergedKey === '&' || mergedKey === '')
+          ) {
+            // In case of `& { a: red }` and without hashId, treat child as root
+            mergedKey = '';
+            nextRoot = true;
           }
 
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
             `${path} -> ${mergedKey}`,
-            false,
+            nextRoot,
             subInjectHash,
           )}`;
         } else {

@@ -342,4 +342,56 @@ describe('csssinjs', () => {
       ),
     ).toBeTruthy();
   });
+
+  it('style under hash should work without hash', () => {
+    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+      a: {
+        color: token.primaryColor,
+      },
+    });
+    const genStyle2 = (): CSSInterpolation => ({
+      div: {
+        color: 'blue',
+      },
+    });
+
+    let hash = '';
+
+    const Demo = ({ colorPrimary = 'red' }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: colorPrimary }],
+        {
+          salt: 'test',
+        },
+      );
+      hash = hashId;
+
+      useStyleRegister(
+        { theme, token, path: ['cssinjs-style-directly-under-hash'] },
+        () => [{ '&': genStyle(token) }, { '': genStyle2() }],
+      );
+
+      useStyleRegister(
+        {
+          theme,
+          token,
+          hashId,
+          path: ['cssinjs-style-directly-under-hash-hashed'],
+        },
+        () => [{ '&': genStyle(token) }, { '': genStyle2() }],
+      );
+
+      return <div className={classNames('box')} />;
+    };
+
+    render(<Demo />);
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(2);
+
+    expect(styles[0].innerHTML).toBe('a{color:red;}div{color:blue;}');
+    expect(styles[1].innerHTML).toBe(
+      `.${hash} a{color:red;}.${hash} div{color:blue;}`,
+    );
+  });
 });
