@@ -93,4 +93,40 @@ describe('Theme', () => {
     expect(tokenList[0]).toEqual(tokenList[1]);
     expect(tokenList[0]).not.toEqual(tokenList[2]);
   });
+
+  it('support pipe derivatives', () => {
+    const sameSeed = { primaryColor: 'red' };
+
+    const Demo = ({ theme }: { theme: Theme<any, any> }) => {
+      const [token] = useCacheToken<DerivativeToken, DesignToken>(theme, [
+        sameSeed,
+      ]);
+
+      return <span>{JSON.stringify(token)}</span>;
+    };
+
+    const { container } = render(
+      <Demo
+        theme={createTheme<any, any>({
+          defaultDerivative: (seed) => ({
+            ...seed,
+            primaryColorText: 'blue',
+            primaryColorIcon: 'green',
+          }),
+          derivatives: [
+            (seed) => ({ primaryColorText: seed.primaryColor }),
+            (_, map) => ({ primaryColorIcon: map.primaryColorText }),
+          ],
+        })}
+      />,
+    );
+
+    const tokenList = Array.from(container.querySelectorAll('span')).map(
+      (span) => span.textContent,
+    );
+
+    expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColor', 'red');
+    expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColorText', 'red');
+    expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColorIcon', 'red');
+  });
 });
