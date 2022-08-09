@@ -3,6 +3,14 @@ export type TokenType = object;
 export type DerivativeFunc<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
+> = (
+  designToken: DesignToken,
+  derivativeToken: DerivativeToken,
+) => Partial<DerivativeToken>;
+
+export type DefaultDerivativeFunc<
+  DesignToken extends TokenType,
+  DerivativeToken extends TokenType,
 > = (designToken: DesignToken) => DerivativeToken;
 
 let uuid = 0;
@@ -15,24 +23,46 @@ export default class Theme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
 > {
-  private derivative: DerivativeFunc<DesignToken, DerivativeToken>;
+  private defaultDerivative: DefaultDerivativeFunc<
+    DesignToken,
+    DerivativeToken
+  >;
+  private derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[];
   public readonly id: number;
 
-  constructor(derivative: DerivativeFunc<DesignToken, DerivativeToken>) {
-    this.derivative = derivative;
+  constructor(
+    defaultDerivative: DefaultDerivativeFunc<DesignToken, DerivativeToken>,
+    derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[],
+  ) {
+    this.defaultDerivative = defaultDerivative;
+    this.derivatives = derivatives;
     this.id = uuid;
 
     uuid += 1;
   }
 
   getDerivativeToken(token: DesignToken): DerivativeToken {
-    return this.derivative(token);
+    const defaultDerivativeToken = this.defaultDerivative(token);
+    return (
+      this.derivatives?.reduce<DerivativeToken>(
+        (result, derivative) => ({ ...result, ...derivative(token, result) }),
+        defaultDerivativeToken,
+      ) ?? defaultDerivativeToken
+    );
   }
 }
 
 // ================================== Cache ==================================
+export type DerivativeOptions<
+  DesignToken extends TokenType,
+  DerivativeToken extends TokenType,
+> = {
+  defaultDerivative: DefaultDerivativeFunc<DesignToken, DerivativeToken>;
+  derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[];
+};
+
 const cacheThemes = new Map<
-  DerivativeFunc<any, any>,
+  DerivativeOptions<any, any>,
   [Theme<any, any>, number]
 >();
 
@@ -47,10 +77,11 @@ let createTimes = 0;
 export function createTheme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
->(derivative: DerivativeFunc<DesignToken, DerivativeToken>) {
+>(derivative: DerivativeOptions<DesignToken, DerivativeToken>) {
   // Create new theme if not exist
   if (!cacheThemes.has(derivative)) {
-    cacheThemes.set(derivative, [new Theme(derivative), 0]);
+    const { defaultDerivative, derivatives } = derivative;
+    cacheThemes.set(derivative, [new Theme(defaultDerivative, derivatives), 0]);
   }
 
   // Get theme from cache

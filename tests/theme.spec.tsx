@@ -18,16 +18,18 @@ describe('Theme', () => {
         primaryColorDisabled: designToken.primaryColor,
       });
 
-      return derivative;
+      return { defaultDerivative: derivative };
     };
 
     // Same one
-    function sameOne(designToken: DesignToken): DerivativeToken {
-      return {
-        ...designToken,
-        primaryColorDisabled: designToken.primaryColor,
-      };
-    }
+    const sameOne = {
+      defaultDerivative: (designToken: DesignToken): DerivativeToken => {
+        return {
+          ...designToken,
+          primaryColorDisabled: designToken.primaryColor,
+        };
+      },
+    };
 
     const sameTheme = createTheme(sameOne);
 
@@ -57,12 +59,14 @@ describe('Theme', () => {
 
     let calledTimes = 0;
 
-    const sameFn = (origin: DesignToken) => {
-      calledTimes += 1;
-      return {
-        ...origin,
-        primaryColorDisabled: 'red',
-      };
+    const sameFn = {
+      defaultDerivative: (origin: DesignToken) => {
+        calledTimes += 1;
+        return {
+          ...origin,
+          primaryColorDisabled: 'red',
+        };
+      },
     };
 
     const { container } = render(
@@ -70,10 +74,12 @@ describe('Theme', () => {
         <Demo theme={createTheme(sameFn)} />
         <Demo theme={createTheme(sameFn)} />
         <Demo
-          theme={createTheme((origin) => ({
-            ...origin,
-            primaryColorDisabled: 'blue',
-          }))}
+          theme={createTheme({
+            defaultDerivative: (origin) => ({
+              ...origin,
+              primaryColorDisabled: 'blue',
+            }),
+          })}
         />
       </div>,
     );
