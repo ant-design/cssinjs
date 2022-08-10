@@ -18,17 +18,15 @@ describe('Theme', () => {
         primaryColorDisabled: designToken.primaryColor,
       });
 
-      return { defaultDerivative: derivative };
+      return derivative;
     };
 
     // Same one
-    const sameOne = {
-      defaultDerivative: (designToken: DesignToken): DerivativeToken => {
-        return {
-          ...designToken,
-          primaryColorDisabled: designToken.primaryColor,
-        };
-      },
+    const sameOne = (designToken: DesignToken): DerivativeToken => {
+      return {
+        ...designToken,
+        primaryColorDisabled: designToken.primaryColor,
+      };
     };
 
     const sameTheme = createTheme(sameOne);
@@ -59,14 +57,12 @@ describe('Theme', () => {
 
     let calledTimes = 0;
 
-    const sameFn = {
-      defaultDerivative: (origin: DesignToken) => {
-        calledTimes += 1;
-        return {
-          ...origin,
-          primaryColorDisabled: 'red',
-        };
-      },
+    const sameFn = (origin: DesignToken) => {
+      calledTimes += 1;
+      return {
+        ...origin,
+        primaryColorDisabled: 'red',
+      };
     };
 
     const { container } = render(
@@ -74,12 +70,10 @@ describe('Theme', () => {
         <Demo theme={createTheme(sameFn)} />
         <Demo theme={createTheme(sameFn)} />
         <Demo
-          theme={createTheme({
-            defaultDerivative: (origin) => ({
-              ...origin,
-              primaryColorDisabled: 'blue',
-            }),
-          })}
+          theme={createTheme((origin) => ({
+            ...origin,
+            primaryColorDisabled: 'blue',
+          }))}
         />
       </div>,
     );
@@ -107,17 +101,17 @@ describe('Theme', () => {
 
     const { container } = render(
       <Demo
-        theme={createTheme<any, any>({
-          defaultDerivative: (seed) => ({
+        theme={createTheme<any, any>(
+          (seed) => ({
             ...seed,
             primaryColorText: 'blue',
             primaryColorIcon: 'green',
           }),
-          derivatives: [
+          [
             (seed) => ({ primaryColorText: seed.primaryColor }),
             (_, map) => ({ primaryColorIcon: map.primaryColorText }),
           ],
-        })}
+        )}
       />,
     );
 
