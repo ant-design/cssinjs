@@ -66,6 +66,24 @@ type DerivativeOptions = {
   derivatives?: DerivativeFunc<any, any>[];
 };
 
+function sameDerivativeOption(
+  left: DerivativeOptions,
+  right: DerivativeOptions,
+) {
+  if (
+    left.defaultDerivative !== right.defaultDerivative ||
+    left.derivatives?.length !== right.derivatives?.length
+  ) {
+    return false;
+  }
+  for (let i = 0; i < (left.derivatives?.length ?? 0); i++) {
+    if (left.derivatives?.[i] !== right.derivatives?.[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 class ThemeCache {
   public static MAX_CACHE_SIZE = 20;
   public static MAX_CACHE_OFFSET = 5;
@@ -82,10 +100,6 @@ class ThemeCache {
 
   public size(): number {
     return this.keys.length;
-  }
-
-  public get(derivativeOption: DerivativeOptions): Theme<any, any> | undefined {
-    return this.internalGet(derivativeOption, true)?.[0];
   }
 
   private internalGet(
@@ -110,11 +124,18 @@ class ThemeCache {
     return cache?.value;
   }
 
-  has(derivativeOption: DerivativeOptions): boolean {
+  public get(derivativeOption: DerivativeOptions): Theme<any, any> | undefined {
+    return this.internalGet(derivativeOption, true)?.[0];
+  }
+
+  public has(derivativeOption: DerivativeOptions): boolean {
     return !!this.internalGet(derivativeOption);
   }
 
-  set(derivativeOption: DerivativeOptions, value: Theme<any, any>): void {
+  public set(
+    derivativeOption: DerivativeOptions,
+    value: Theme<any, any>,
+  ): void {
     const { defaultDerivative, derivatives } = derivativeOption;
     const derivativesList = [defaultDerivative, ...(derivatives ?? [])];
 
@@ -185,35 +206,19 @@ class ThemeCache {
     return result;
   }
 
-  delete(derivativeOption: DerivativeOptions): Theme<any, any> | undefined {
+  public delete(
+    derivativeOption: DerivativeOptions,
+  ): Theme<any, any> | undefined {
     // If cache exists
     if (this.has(derivativeOption)) {
       this.keys = this.keys.filter(
-        (item) => !ThemeCache.sameDerivativeOption(item, derivativeOption),
+        (item) => !sameDerivativeOption(item, derivativeOption),
       );
       const { defaultDerivative, derivatives } = derivativeOption;
       const derivativesList = [defaultDerivative, ...(derivatives ?? [])];
       return this.deleteByPath(this.cache, derivativesList);
     }
     return undefined;
-  }
-
-  public static sameDerivativeOption(
-    left: DerivativeOptions,
-    right: DerivativeOptions,
-  ) {
-    if (
-      left.defaultDerivative !== right.defaultDerivative ||
-      left.derivatives?.length !== right.derivatives?.length
-    ) {
-      return false;
-    }
-    for (let i = 0; i < (left.derivatives?.length ?? 0); i++) {
-      if (left.derivatives?.[i] !== right.derivatives?.[i]) {
-        return false;
-      }
-    }
-    return true;
   }
 }
 
