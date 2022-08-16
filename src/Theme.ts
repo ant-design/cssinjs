@@ -1,3 +1,5 @@
+import { warning } from 'rc-util/lib/warning';
+
 export type TokenType = object;
 
 export type DerivativeFunc<
@@ -6,12 +8,7 @@ export type DerivativeFunc<
 > = (
   designToken: DesignToken,
   derivativeToken: DerivativeToken,
-) => Partial<DerivativeToken>;
-
-export type DefaultDerivativeFunc<
-  DesignToken extends TokenType,
-  DerivativeToken extends TokenType,
-> = (designToken: DesignToken) => DerivativeToken;
+) => DerivativeToken;
 
 let uuid = 0;
 
@@ -23,61 +20,54 @@ export default class Theme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
 > {
-  private readonly defaultDerivative: DefaultDerivativeFunc<
-    DesignToken,
-    DerivativeToken
-  >;
-  private derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[];
+  private derivatives: DerivativeFunc<DesignToken, DerivativeToken>[];
   public readonly id: number;
 
-  constructor(
-    defaultDerivative: DefaultDerivativeFunc<DesignToken, DerivativeToken>,
-    derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[],
-  ) {
-    this.defaultDerivative = defaultDerivative;
+  constructor(derivatives: DerivativeFunc<DesignToken, DerivativeToken>[]) {
     this.derivatives = derivatives;
     this.id = uuid;
+
+    if (derivatives.length === 0) {
+      warning(
+        derivatives.length > 0,
+        '[Ant Design CSS-in-JS] Theme should have at least one derivative function.',
+      );
+    }
 
     uuid += 1;
   }
 
   getDerivativeToken(token: DesignToken): DerivativeToken {
-    const defaultDerivativeToken = this.defaultDerivative(token);
+    const derivativeToken = token as unknown as DerivativeToken;
     return (
-      this.derivatives?.reduce<DerivativeToken>(
-        (result, derivative) => ({ ...result, ...derivative(token, result) }),
-        defaultDerivativeToken,
-      ) ?? defaultDerivativeToken
+      this.derivatives.reduce<DerivativeToken>(
+        (result, derivative) => derivative(token, result),
+        derivativeToken,
+      ) ?? derivativeToken
     );
   }
 }
 
 // ================================== Cache ==================================
 type ThemeCacheMap = Map<
-  DerivativeFunc<any, any> | DefaultDerivativeFunc<any, any>,
+  DerivativeFunc<any, any>,
   {
     map?: ThemeCacheMap;
     value?: [Theme<any, any>, number];
   }
 >;
 
-type DerivativeOptions = {
-  defaultDerivative: DefaultDerivativeFunc<any, any>;
-  derivatives?: DerivativeFunc<any, any>[];
-};
+type DerivativeOptions = DerivativeFunc<any, any>[];
 
 export function sameDerivativeOption(
   left: DerivativeOptions,
   right: DerivativeOptions,
 ) {
-  if (
-    left.defaultDerivative !== right.defaultDerivative ||
-    left.derivatives?.length !== right.derivatives?.length
-  ) {
+  if (left.length !== right.length) {
     return false;
   }
-  for (let i = 0; i < (left.derivatives?.length ?? 0); i++) {
-    if (left.derivatives?.[i] !== right.derivatives?.[i]) {
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] !== right[i]) {
       return false;
     }
   }
@@ -106,12 +96,8 @@ export class ThemeCache {
     derivativeOption: DerivativeOptions,
     updateCallTimes: boolean = false,
   ): [Theme<any, any>, number] | undefined {
-    const { defaultDerivative, derivatives } = derivativeOption;
-    let cache = this.cache.get(defaultDerivative);
-    if (!derivatives) {
-      return cache?.value;
-    }
-    derivatives.forEach((derivative) => {
+    let cache: ReturnType<ThemeCacheMap['get']> = { map: this.cache };
+    derivativeOption.forEach((derivative) => {
       if (!cache) {
         cache = undefined;
       } else {
@@ -136,9 +122,6 @@ export class ThemeCache {
     derivativeOption: DerivativeOptions,
     value: Theme<any, any>,
   ): void {
-    const { defaultDerivative, derivatives } = derivativeOption;
-    const derivativesList = [defaultDerivative, ...(derivatives ?? [])];
-
     // New cache
     if (!this.has(derivativeOption)) {
       if (
@@ -162,8 +145,8 @@ export class ThemeCache {
     }
 
     let cache = this.cache;
-    derivativesList.forEach((derivative, index) => {
-      if (index === derivativesList.length - 1) {
+    derivativeOption.forEach((derivative, index) => {
+      if (index === derivativeOption.length - 1) {
         cache.set(derivative, { value: [value, this.cacheCallTimes++] });
       } else {
         const cacheValue = cache.get(derivative);
@@ -205,9 +188,7 @@ export class ThemeCache {
       this.keys = this.keys.filter(
         (item) => !sameDerivativeOption(item, derivativeOption),
       );
-      const { defaultDerivative, derivatives } = derivativeOption;
-      const derivativesList = [defaultDerivative, ...(derivatives ?? [])];
-      return this.deleteByPath(this.cache, derivativesList);
+      return this.deleteByPath(this.cache, derivativeOption);
     }
     return undefined;
   }
@@ -221,19 +202,12 @@ const cacheThemes = new ThemeCache();
 export function createTheme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
->(
-  defaultDerivative: DefaultDerivativeFunc<DesignToken, DerivativeToken>,
-  derivatives?: DerivativeFunc<DesignToken, DerivativeToken>[],
-) {
+>(derivatives: DerivativeFunc<DesignToken, DerivativeToken>[]) {
   // Create new theme if not exist
-  const derivativeOption = { defaultDerivative, derivatives };
-  if (!cacheThemes.has(derivativeOption)) {
-    cacheThemes.set(
-      derivativeOption,
-      new Theme(defaultDerivative, derivatives),
-    );
+  if (!cacheThemes.has(derivatives)) {
+    cacheThemes.set(derivatives, new Theme(derivatives));
   }
 
   // Get theme from cache and return
-  return cacheThemes.get(derivativeOption)!;
+  return cacheThemes.get(derivatives)!;
 }

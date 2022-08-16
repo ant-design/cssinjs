@@ -27,7 +27,7 @@ describe('Theme', () => {
             }),
         );
       derivatives.forEach((item) => {
-        cache.set({ defaultDerivative: item }, new Theme<any, any>(item));
+        cache.set([item], new Theme<any, any>([item]));
       });
       expect(cache.size()).toBe(
         ThemeCache.MAX_CACHE_OFFSET + ThemeCache.MAX_CACHE_SIZE,
@@ -35,16 +35,12 @@ describe('Theme', () => {
       Array(5)
         .fill(1)
         .forEach((_, index) => {
-          expect(
-            cache.get({ defaultDerivative: derivatives[index] }),
-          ).toBeUndefined();
+          expect(cache.get([derivatives[index]])).toBeUndefined();
         });
       Array(ThemeCache.MAX_CACHE_OFFSET + ThemeCache.MAX_CACHE_SIZE)
         .fill(1)
         .forEach((_, index) => {
-          expect(
-            cache.get({ defaultDerivative: derivatives[index + 5] }),
-          ).toBeTruthy();
+          expect(cache.get([derivatives[index + 5]])).toBeTruthy();
         });
     });
 
@@ -59,38 +55,18 @@ describe('Theme', () => {
               primaryColorDisabled: `${index}`,
             }),
         );
-      const option = { defaultDerivative: derivatives[0], derivatives };
-      const option2 = {
-        defaultDerivative: derivatives[0],
-        derivatives: derivatives.concat(derivatives),
-      };
-      const option3 = {
-        defaultDerivative: derivatives[0],
-        derivatives: derivatives.map((d) => d).reverse(),
-      };
-      cache.set(option, new Theme<any, any>(derivatives[0]));
-      cache.set(option, new Theme<any, any>(derivatives[1]));
-      cache.set(option2, new Theme<any, any>(derivatives[0]));
-      cache.set(option3, new Theme<any, any>(derivatives[0]));
+      const option = derivatives;
+      const option2 = derivatives.concat(derivatives);
+      const option3 = derivatives.map((d) => d).reverse();
+      cache.set(option, new Theme<any, any>(derivatives));
+      cache.set(option, new Theme<any, any>(derivatives.concat(derivatives)));
+      cache.set(option2, new Theme<any, any>(derivatives));
+      cache.set(option3, new Theme<any, any>(derivatives));
       expect(cache.size()).toBe(3);
-      expect(
-        cache.get({
-          defaultDerivative: derivatives[0],
-          derivatives: derivatives.slice(0, 2),
-        }),
-      ).toBeUndefined();
-      expect(
-        cache.delete({
-          defaultDerivative: derivatives[0],
-          derivatives: derivatives.slice(0, 2),
-        }),
-      ).toBeUndefined();
-      expect(
-        cache.delete({
-          defaultDerivative: derivatives[0],
-          derivatives: [derivatives[1]],
-        }),
-      ).toBeUndefined();
+      expect(cache.get(derivatives.slice(0, 2))).toBeUndefined();
+      expect(cache.delete(derivatives.slice(0, 2))).toBeUndefined();
+      expect(cache.delete([derivatives[1]])).toBeUndefined();
+      expect(cache.size()).toBe(3);
       expect(cache.delete(option2)).toBeTruthy();
       expect(cache.size()).toBe(2);
       expect(cache.get(option)).toBeTruthy();
@@ -106,7 +82,7 @@ describe('Theme', () => {
         primaryColorDisabled: designToken.primaryColor,
       });
 
-      return derivative;
+      return [derivative];
     };
 
     // Same one
@@ -117,10 +93,10 @@ describe('Theme', () => {
       };
     };
 
-    const sameTheme = createTheme(sameOne);
+    const sameTheme = createTheme([sameOne]);
 
     for (let i = 0; i < 100; i += 1) {
-      const theme = createTheme(sameOne);
+      const theme = createTheme([sameOne]);
       expect(theme).toBe(sameTheme);
     }
 
@@ -129,7 +105,7 @@ describe('Theme', () => {
       createTheme(createDerivativeFn());
     }
 
-    expect(createTheme(sameOne)).not.toBe(sameTheme);
+    expect(createTheme([sameOne])).not.toBe(sameTheme);
   });
 
   it('theme in cache', () => {
@@ -155,13 +131,15 @@ describe('Theme', () => {
 
     const { container } = render(
       <div>
-        <Demo theme={createTheme(sameFn)} />
-        <Demo theme={createTheme(sameFn)} />
+        <Demo theme={createTheme([sameFn])} />
+        <Demo theme={createTheme([sameFn])} />
         <Demo
-          theme={createTheme((origin) => ({
-            ...origin,
-            primaryColorDisabled: 'blue',
-          }))}
+          theme={createTheme([
+            (origin) => ({
+              ...origin,
+              primaryColorDisabled: 'blue',
+            }),
+          ])}
         />
       </div>,
     );
@@ -189,17 +167,15 @@ describe('Theme', () => {
 
     const { container } = render(
       <Demo
-        theme={createTheme<any, any>(
+        theme={createTheme<any, any>([
           (seed) => ({
             ...seed,
             primaryColorText: 'blue',
             primaryColorIcon: 'green',
           }),
-          [
-            (seed) => ({ primaryColorText: seed.primaryColor }),
-            (_, map) => ({ primaryColorIcon: map.primaryColorText }),
-          ],
-        )}
+          (seed, map) => ({ ...map, primaryColorText: seed.primaryColor }),
+          (_, map) => ({ ...map, primaryColorIcon: map.primaryColorText }),
+        ])}
       />,
     );
 
@@ -210,5 +186,17 @@ describe('Theme', () => {
     expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColor', 'red');
     expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColorText', 'red');
     expect(JSON.parse(tokenList[0]!)).toHaveProperty('primaryColorIcon', 'red');
+  });
+
+  it('should warn if empty array', () => {
+    const errSpy = jest.spyOn(console, 'error');
+    expect(errSpy).toHaveBeenCalledTimes(0);
+    createTheme([]);
+    expect(errSpy).toHaveBeenCalledTimes(1);
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Theme should have at least'),
+    );
+    errSpy.mockRestore();
+    errSpy.mockReset();
   });
 });

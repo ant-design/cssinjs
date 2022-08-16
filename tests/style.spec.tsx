@@ -3,7 +3,6 @@ import { Theme, useCacheToken, useStyleRegister } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import Keyframes from '../src/Keyframes';
-import { animationStatistics } from '../src/useStyleRegister';
 
 interface DesignToken {
   primaryColor: string;
@@ -18,7 +17,7 @@ const derivative = (designToken: DesignToken): DerivativeToken => ({
   primaryColorDisabled: designToken.primaryColor,
 });
 
-const theme = new Theme(derivative);
+const theme = new Theme([derivative]);
 
 describe('style warning', () => {
   const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
