@@ -17,7 +17,7 @@ const derivative = (designToken: DesignToken): DerivativeToken => ({
   primaryColorDisabled: designToken.primaryColor,
 });
 
-const theme = new Theme([derivative]);
+const theme = new Theme(derivative);
 
 describe('style warning', () => {
   const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});

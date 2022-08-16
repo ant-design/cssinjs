@@ -32,7 +32,7 @@ const baseToken: DesignToken = {
   primaryColor: '#1890ff',
 };
 
-const theme = new Theme([derivative]);
+const theme = new Theme(derivative);
 
 describe('csssinjs', () => {
   beforeEach(() => {

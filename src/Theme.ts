@@ -23,8 +23,12 @@ export default class Theme<
   private derivatives: DerivativeFunc<DesignToken, DerivativeToken>[];
   public readonly id: number;
 
-  constructor(derivatives: DerivativeFunc<DesignToken, DerivativeToken>[]) {
-    this.derivatives = derivatives;
+  constructor(
+    derivatives:
+      | DerivativeFunc<DesignToken, DerivativeToken>
+      | DerivativeFunc<DesignToken, DerivativeToken>[],
+  ) {
+    this.derivatives = Array.isArray(derivatives) ? derivatives : [derivatives];
     this.id = uuid;
 
     if (derivatives.length === 0) {
@@ -199,12 +203,19 @@ const cacheThemes = new ThemeCache();
 export function createTheme<
   DesignToken extends TokenType,
   DerivativeToken extends TokenType,
->(derivatives: DerivativeFunc<DesignToken, DerivativeToken>[]) {
+>(
+  derivatives:
+    | DerivativeFunc<DesignToken, DerivativeToken>[]
+    | DerivativeFunc<DesignToken, DerivativeToken>,
+) {
+  const derivativeArr = Array.isArray(derivatives)
+    ? derivatives
+    : [derivatives];
   // Create new theme if not exist
-  if (!cacheThemes.has(derivatives)) {
-    cacheThemes.set(derivatives, new Theme(derivatives));
+  if (!cacheThemes.has(derivativeArr)) {
+    cacheThemes.set(derivativeArr, new Theme(derivativeArr));
   }
 
   // Get theme from cache and return
-  return cacheThemes.get(derivatives)!;
+  return cacheThemes.get(derivativeArr)!;
 }

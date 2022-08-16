@@ -131,8 +131,8 @@ describe('Theme', () => {
 
     const { container } = render(
       <div>
-        <Demo theme={createTheme([sameFn])} />
-        <Demo theme={createTheme([sameFn])} />
+        <Demo theme={createTheme(sameFn)} />
+        <Demo theme={createTheme(sameFn)} />
         <Demo
           theme={createTheme([
             (origin) => ({
