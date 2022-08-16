@@ -1,6 +1,7 @@
 import { Theme, createTheme, useCacheToken } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import { ThemeCache } from '../src/Theme';
 
 interface DesignToken {
   primaryColor: string;
@@ -11,6 +12,66 @@ interface DerivativeToken extends DesignToken {
 }
 
 describe('Theme', () => {
+  describe('Cache', () => {
+    it('should have size limit', () => {
+      const cache = new ThemeCache();
+      const derivatives = Array(
+        ThemeCache.MAX_CACHE_OFFSET + ThemeCache.MAX_CACHE_SIZE + 5,
+      )
+        .fill(1)
+        .map(
+          (_, index) =>
+            (designToken: DesignToken): DerivativeToken => ({
+              ...designToken,
+              primaryColorDisabled: `${index}`,
+            }),
+        );
+      derivatives.forEach((item) => {
+        cache.set({ defaultDerivative: item }, new Theme<any, any>(item));
+      });
+      expect(cache.size()).toBe(
+        ThemeCache.MAX_CACHE_OFFSET + ThemeCache.MAX_CACHE_SIZE,
+      );
+      Array(5)
+        .fill(1)
+        .forEach((_, index) => {
+          expect(
+            cache.get({ defaultDerivative: derivatives[index] }),
+          ).toBeUndefined();
+        });
+      Array(ThemeCache.MAX_CACHE_OFFSET + ThemeCache.MAX_CACHE_SIZE)
+        .fill(1)
+        .forEach((_, index) => {
+          expect(
+            cache.get({ defaultDerivative: derivatives[index + 5] }),
+          ).toBeTruthy();
+        });
+    });
+
+    it('delete should delete all empty node', () => {
+      const cache = new ThemeCache();
+      const derivatives = Array(5)
+        .fill(1)
+        .map(
+          (_, index) =>
+            (designToken: DesignToken): DerivativeToken => ({
+              ...designToken,
+              primaryColorDisabled: `${index}`,
+            }),
+        );
+      const option = { defaultDerivative: derivatives[0], derivatives };
+      cache.set(option, new Theme<any, any>(derivatives[0]));
+      cache.delete(option);
+      expect(cache.size()).toBe(0);
+      expect(
+        cache.get({
+          defaultDerivative: derivatives[0],
+          derivatives: derivatives.slice(0, 2),
+        }),
+      ).toBeUndefined();
+    });
+  });
+
   it('cache-able', () => {
     const createDerivativeFn = () => {
       const derivative = (designToken: DesignToken): DerivativeToken => ({

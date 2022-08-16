@@ -84,7 +84,7 @@ function sameDerivativeOption(
   return true;
 }
 
-class ThemeCache {
+export class ThemeCache {
   public static MAX_CACHE_SIZE = 20;
   public static MAX_CACHE_OFFSET = 5;
 
@@ -142,7 +142,7 @@ class ThemeCache {
     // New cache
     if (!this.has(derivativeOption)) {
       if (
-        this.size() + 1 >=
+        this.size() + 1 >
         ThemeCache.MAX_CACHE_SIZE + ThemeCache.MAX_CACHE_OFFSET
       ) {
         const [targetKey] = this.keys.reduce<[DerivativeOptions, number]>(
