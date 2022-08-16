@@ -5,7 +5,7 @@ import {
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
 } from './StyleContext';
-import type Theme from './Theme';
+import type Theme from './theme/Theme';
 import useGlobalCache from './useGlobalCache';
 import { flattenToken, token2key } from './util';
 

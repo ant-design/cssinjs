@@ -1,7 +1,7 @@
 import { Theme, createTheme, useCacheToken } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { ThemeCache } from '../src/Theme';
+import ThemeCache from '../src/theme/ThemeCache';
 
 interface DesignToken {
   primaryColor: string;
@@ -189,7 +189,7 @@ describe('Theme', () => {
   });
 
   it('should warn if empty array', () => {
-    const errSpy = jest.spyOn(console, 'error');
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(jest.fn());
     expect(errSpy).toHaveBeenCalledTimes(0);
     createTheme([]);
     expect(errSpy).toHaveBeenCalledTimes(1);
