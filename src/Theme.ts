@@ -66,7 +66,7 @@ type DerivativeOptions = {
   derivatives?: DerivativeFunc<any, any>[];
 };
 
-function sameDerivativeOption(
+export function sameDerivativeOption(
   left: DerivativeOptions,
   right: DerivativeOptions,
 ) {
@@ -181,13 +181,7 @@ export class ThemeCache {
     currentCache: ThemeCacheMap,
     derivatives: DerivativeFunc<any, any>[],
   ): Theme<any, any> | undefined {
-    if (derivatives.length === 0) {
-      return;
-    }
-    const cache = currentCache.get(derivatives[0]);
-    if (!cache) {
-      return undefined;
-    }
+    const cache = currentCache.get(derivatives[0])!;
     if (derivatives.length === 1) {
       if (!cache.map) {
         currentCache.delete(derivatives[0]);
@@ -196,10 +190,7 @@ export class ThemeCache {
       }
       return cache.value?.[0];
     }
-    if (!cache.map) {
-      return undefined;
-    }
-    const result = this.deleteByPath(cache.map, derivatives.slice(1));
+    const result = this.deleteByPath(cache.map!, derivatives.slice(1));
     if ((!cache.map || cache.map.size === 0) && !cache.value) {
       currentCache.delete(derivatives[0]);
     }

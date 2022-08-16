@@ -60,15 +60,41 @@ describe('Theme', () => {
             }),
         );
       const option = { defaultDerivative: derivatives[0], derivatives };
+      const option2 = {
+        defaultDerivative: derivatives[0],
+        derivatives: derivatives.concat(derivatives),
+      };
+      const option3 = {
+        defaultDerivative: derivatives[0],
+        derivatives: derivatives.map((d) => d).reverse(),
+      };
       cache.set(option, new Theme<any, any>(derivatives[0]));
-      cache.delete(option);
-      expect(cache.size()).toBe(0);
+      cache.set(option2, new Theme<any, any>(derivatives[0]));
+      cache.set(option3, new Theme<any, any>(derivatives[0]));
+      expect(cache.size()).toBe(3);
       expect(
         cache.get({
           defaultDerivative: derivatives[0],
           derivatives: derivatives.slice(0, 2),
         }),
       ).toBeUndefined();
+      expect(
+        cache.delete({
+          defaultDerivative: derivatives[0],
+          derivatives: derivatives.slice(0, 2),
+        }),
+      ).toBeUndefined();
+      expect(
+        cache.delete({
+          defaultDerivative: derivatives[0],
+          derivatives: [derivatives[1]],
+        }),
+      ).toBeUndefined();
+      expect(cache.delete(option2)).toBeTruthy();
+      expect(cache.size()).toBe(2);
+      expect(cache.get(option)).toBeTruthy();
+      expect(cache.delete(option)).toBeTruthy();
+      expect(cache.size()).toBe(1);
     });
   });
 
