@@ -1,53 +1,5 @@
-import { warning } from 'rc-util/lib/warning';
-
-export type TokenType = object;
-
-export type DerivativeFunc<
-  DesignToken extends TokenType,
-  DerivativeToken extends TokenType,
-> = (
-  designToken: DesignToken,
-  derivativeToken?: DerivativeToken,
-) => DerivativeToken;
-
-let uuid = 0;
-
-/**
- * Theme with algorithms to derive tokens from design tokens.
- * Use `createTheme` first which will help to manage the theme instance cache.
- */
-export default class Theme<
-  DesignToken extends TokenType,
-  DerivativeToken extends TokenType,
-> {
-  private derivatives: DerivativeFunc<DesignToken, DerivativeToken>[];
-  public readonly id: number;
-
-  constructor(
-    derivatives:
-      | DerivativeFunc<DesignToken, DerivativeToken>
-      | DerivativeFunc<DesignToken, DerivativeToken>[],
-  ) {
-    this.derivatives = Array.isArray(derivatives) ? derivatives : [derivatives];
-    this.id = uuid;
-
-    if (derivatives.length === 0) {
-      warning(
-        derivatives.length > 0,
-        '[Ant Design CSS-in-JS] Theme should have at least one derivative function.',
-      );
-    }
-
-    uuid += 1;
-  }
-
-  getDerivativeToken(token: DesignToken): DerivativeToken {
-    return this.derivatives.reduce<DerivativeToken>(
-      (result, derivative) => derivative(token, result),
-      undefined as any,
-    );
-  }
-}
+import type Theme from './Theme';
+import type { DerivativeFunc } from './interface';
 
 // ================================== Cache ==================================
 type ThemeCacheMap = Map<
@@ -75,7 +27,7 @@ export function sameDerivativeOption(
   return true;
 }
 
-export class ThemeCache {
+export default class ThemeCache {
   public static MAX_CACHE_SIZE = 20;
   public static MAX_CACHE_OFFSET = 5;
 
@@ -193,29 +145,4 @@ export class ThemeCache {
     }
     return undefined;
   }
-}
-
-const cacheThemes = new ThemeCache();
-
-/**
- * Same as new Theme, but will always return same one if `derivative` not changed.
- */
-export function createTheme<
-  DesignToken extends TokenType,
-  DerivativeToken extends TokenType,
->(
-  derivatives:
-    | DerivativeFunc<DesignToken, DerivativeToken>[]
-    | DerivativeFunc<DesignToken, DerivativeToken>,
-) {
-  const derivativeArr = Array.isArray(derivatives)
-    ? derivatives
-    : [derivatives];
-  // Create new theme if not exist
-  if (!cacheThemes.has(derivativeArr)) {
-    cacheThemes.set(derivativeArr, new Theme(derivativeArr));
-  }
-
-  // Get theme from cache and return
-  return cacheThemes.get(derivativeArr)!;
 }
