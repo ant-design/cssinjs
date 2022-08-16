@@ -69,6 +69,7 @@ describe('Theme', () => {
         derivatives: derivatives.map((d) => d).reverse(),
       };
       cache.set(option, new Theme<any, any>(derivatives[0]));
+      cache.set(option, new Theme<any, any>(derivatives[1]));
       cache.set(option2, new Theme<any, any>(derivatives[0]));
       cache.set(option3, new Theme<any, any>(derivatives[0]));
       expect(cache.size()).toBe(3);
