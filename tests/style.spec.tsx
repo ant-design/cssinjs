@@ -3,7 +3,6 @@ import { Theme, useCacheToken, useStyleRegister } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import Keyframes from '../src/Keyframes';
-import { animationStatistics } from '../src/useStyleRegister';
 
 interface DesignToken {
   primaryColor: string;
