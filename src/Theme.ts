@@ -38,12 +38,9 @@ export default class Theme<
   }
 
   getDerivativeToken(token: DesignToken): DerivativeToken {
-    const derivativeToken = token as unknown as DerivativeToken;
-    return (
-      this.derivatives.reduce<DerivativeToken>(
-        (result, derivative) => derivative(token, result),
-        derivativeToken,
-      ) ?? derivativeToken
+    return this.derivatives.reduce<DerivativeToken>(
+      (result, derivative) => derivative(token, result),
+      token as unknown as DerivativeToken,
     );
   }
 }
