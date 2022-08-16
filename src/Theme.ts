@@ -7,7 +7,7 @@ export type DerivativeFunc<
   DerivativeToken extends TokenType,
 > = (
   designToken: DesignToken,
-  derivativeToken: DerivativeToken,
+  derivativeToken?: DerivativeToken,
 ) => DerivativeToken;
 
 let uuid = 0;
@@ -40,7 +40,7 @@ export default class Theme<
   getDerivativeToken(token: DesignToken): DerivativeToken {
     return this.derivatives.reduce<DerivativeToken>(
       (result, derivative) => derivative(token, result),
-      token as unknown as DerivativeToken,
+      undefined as any,
     );
   }
 }
