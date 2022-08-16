@@ -1,7 +1,7 @@
 import { Theme, createTheme, useCacheToken } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import ThemeCache from '../src/theme/ThemeCache';
+import { ThemeCache } from '../src/theme';
 
 interface DesignToken {
   primaryColor: string;
