@@ -14,7 +14,8 @@ export function createCache() {
     const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`);
 
     Array.from(styles).forEach((style) => {
-      (style as any)[CSS_IN_JS_INSTANCE] ??= CSS_IN_JS_INSTANCE_ID;
+      (style as any)[CSS_IN_JS_INSTANCE] =
+        (style as any)[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID;
       document.head.appendChild(style);
     });
 

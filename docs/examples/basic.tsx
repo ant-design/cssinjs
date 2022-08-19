@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from './components/Button';
+import './basic.less';
 
 export default function App() {
   const [show, setShow] = React.useState(true);
@@ -23,6 +24,8 @@ export default function App() {
           <Button>Default</Button>
           <Button type="primary">Primary</Button>
           <Button type="ghost">Ghost</Button>
+
+          <Button className="btn-override">Override By ClassName</Button>
         </>
       )}
     </div>

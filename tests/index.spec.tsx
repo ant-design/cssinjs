@@ -389,8 +389,8 @@ describe('csssinjs', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(2);
 
-    expect(styles[0].innerHTML).toBe('a{color:red;}div{color:blue;}');
-    expect(styles[1].innerHTML).toBe(
+    expect(styles[1].innerHTML).toBe('a{color:red;}div{color:blue;}');
+    expect(styles[0].innerHTML).toBe(
       `.${hash} a{color:red;}.${hash} div{color:blue;}`,
     );
   });
