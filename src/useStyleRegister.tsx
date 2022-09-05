@@ -271,7 +271,7 @@ export default function useStyleRegister(
       if (isMergedClientSide) {
         const style = updateCSS(styleStr, styleId, {
           mark: ATTR_MARK,
-          prepend: true,
+          prepend: 'queue',
         });
 
         (style as any)[CSS_IN_JS_INSTANCE] = CSS_IN_JS_INSTANCE_ID;
