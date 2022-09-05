@@ -269,6 +269,7 @@ export default function useStyleRegister(
       animationStatistics = {};
 
       if (isMergedClientSide) {
+        console.log('Trigger!', styleStr, styleId, ATTR_MARK);
         const style = updateCSS(styleStr, styleId, {
           mark: ATTR_MARK,
           prepend: 'queue',
@@ -306,6 +307,8 @@ export default function useStyleRegister(
           {...{
             [ATTR_TOKEN]: cachedTokenKey,
             [ATTR_MARK]: cachedStyleId,
+            // Mock of style should patch `data-rc-order` to enable rc-util handle this
+            'data-rc-order': 'prependQueue',
           }}
           dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
         />
