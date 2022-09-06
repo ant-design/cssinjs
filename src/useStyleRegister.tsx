@@ -269,7 +269,6 @@ export default function useStyleRegister(
       animationStatistics = {};
 
       if (isMergedClientSide) {
-        console.log('Trigger!', styleStr, styleId, ATTR_MARK);
         const style = updateCSS(styleStr, styleId, {
           mark: ATTR_MARK,
           prepend: 'queue',
