@@ -38,6 +38,14 @@ export const styleValidate = (
   } = {},
 ) => {
   const { path, hashId } = info;
+  const global = [
+    '-moz-initial',
+    'inherit',
+    'initial',
+    'revert',
+    'revert-layer',
+    'unset',
+  ];
   switch (key) {
     case 'content':
       // From emotion: https://github.com/emotion-js/emotion/blob/main/packages/serialize/src/index.js#L63
@@ -136,7 +144,34 @@ export const styleValidate = (
       }
       return;
     case 'animation':
-      if (hashId) {
+      const presetTimingFunction = [
+        'ease',
+        'ease-in',
+        'ease-in-out',
+        'ease-out',
+        'step-end',
+        'step-start',
+        'linear',
+      ];
+      const presetDirection = [
+        'alternate',
+        'alternate-reverse',
+        'normal',
+        'reverse',
+      ];
+      const presetFillMode = ['backwards', 'both', 'forwards', 'none'];
+      const presetOthers = ['infinite', 'none', 'paused', 'running'];
+      const presetAnimation = presetTimingFunction
+        .concat(presetDirection)
+        .concat(presetFillMode)
+        .concat(presetOthers)
+        .concat(global);
+
+      if (
+        hashId &&
+        typeof value === 'string' &&
+        !presetAnimation.includes(value)
+      ) {
         warning(
           `You seem to be using hashed animation '${value}', in which case 'animationName' with Keyframe as value is recommended.`,
           path,
