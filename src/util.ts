@@ -1,6 +1,5 @@
 import hash from '@emotion/hash';
 import devWarning from 'rc-util/lib/warning';
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
 
 export function flattenToken(token: any) {
   let str = '';
