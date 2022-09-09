@@ -136,7 +136,7 @@ export const styleValidate = (
       }
       return;
     case 'animation':
-      if (hashId) {
+      if (hashId && value !== 'none') {
         warning(
           `You seem to be using hashed animation '${value}', in which case 'animationName' with Keyframe as value is recommended.`,
           path,
