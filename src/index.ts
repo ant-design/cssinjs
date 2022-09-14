@@ -1,6 +1,6 @@
-import useStyleRegister, { extractStyle } from './useStyleRegister';
-import type { CSSObject, CSSInterpolation } from './useStyleRegister';
-import useCacheToken from './useCacheToken';
+import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
+import type { CSSObject, CSSInterpolation } from './hooks/useStyleRegister';
+import useCacheToken from './hooks/useCacheToken';
 import { StyleProvider, createCache } from './StyleContext';
 import Keyframes from './Keyframes';
 import type { TokenType, DerivativeFunc } from './theme';
