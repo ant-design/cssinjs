@@ -8,11 +8,12 @@ export default function useClientCache<CacheType>(
   keyPath: KeyType[],
   cacheFn: () => CacheType,
   onCacheRemove?: (cache: CacheType, fromHMR: boolean) => void,
+  shouldUpdateByHMR?: boolean,
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
 
-  const HMRUpdate = useHMR();
+  const HMRUpdate = useHMR(fullPath, cacheFn, shouldUpdateByHMR);
 
   // Create cache
   React.useMemo(

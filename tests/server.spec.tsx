@@ -130,6 +130,7 @@ describe('SSR', () => {
 
     // >>> Hydrate
     prepareEnv();
+    mockCanUseDom = true;
     render(
       <StyleProvider
         cache={cache}

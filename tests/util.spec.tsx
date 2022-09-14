@@ -1,4 +1,4 @@
-import { parseStyle } from '../src/useStyleRegister';
+import { parseStyle } from '../src/hooks/useStyleRegister';
 
 describe('util', () => {
   describe('parseStyle', () => {
