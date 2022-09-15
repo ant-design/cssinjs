@@ -1,4 +1,4 @@
-import { parseStyle } from '../src/hooks/useStyleRegister';
+import { normalizeStyle, parseStyle } from '../src/hooks/useStyleRegister';
 
 jest.mock('../src/util', () => {
   const origin = jest.requireActual('../src/util');
@@ -58,20 +58,22 @@ describe('util', () => {
       });
 
       it('order', () => {
-        const str = parseStyle(
-          [
-            {
-              p: {
-                color: 'red',
+        const str = normalizeStyle(
+          parseStyle(
+            [
+              {
+                p: {
+                  color: 'red',
+                },
               },
-            },
-          ],
-          'hashed',
-          'shared, test-layer',
+            ],
+            'hashed',
+            'shared, test-layer',
+          ),
         );
 
         expect(str).toEqual(
-          '@layer shared, test-layer;@layer test-layer {p.hashed{color:red;}}',
+          '@layer shared,test-layer;@layer test-layer{p.hashed{color:red;}}',
         );
       });
 

@@ -70,8 +70,9 @@ export interface CSSObject
 // ==                                 Parser                                 ==
 // ============================================================================
 // Preprocessor style content to browser support one
-function normalizeStyle(styleStr: string) {
-  return serialize(compile(styleStr), stringify);
+export function normalizeStyle(styleStr: string) {
+  const serialized = serialize(compile(styleStr), stringify);
+  return serialized.replace(/\{%%%\:[^;];}/g, ';');
 }
 
 function isCompoundCSSProperty(value: CSSObject[string]) {
@@ -230,7 +231,8 @@ export const parseStyle = (
 
     // Order of layer if needed
     if (layerCells.length > 1) {
-      styleStr = `@layer ${layer};${styleStr}`;
+      // zombieJ: stylis do not support layer order, so we need to handle it manually.
+      styleStr = `@layer ${layer}{%%%:%}${styleStr}`;
     }
   }
 

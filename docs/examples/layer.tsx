@@ -6,8 +6,23 @@ import { useStyleRegister, Theme } from '../../src';
 const theme = new Theme([() => ({})]);
 
 const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
-  // 全局注册，内部会做缓存优化
-  const wrapSSR = useStyleRegister(
+  // Shared
+  useStyleRegister(
+    {
+      theme,
+      token: { _tokenKey: 'test' },
+      path: ['shared'],
+      layer: 'shared',
+    },
+    () => ({
+      'html body .layer-div': {
+        color: 'rgba(0,0,0,0.65)',
+      },
+    }),
+  );
+
+  // Layer
+  useStyleRegister(
     {
       theme,
       token: { _tokenKey: 'test' },
@@ -16,8 +31,8 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
     },
     () => ({
       '.layer-div': {
-        color: 'blue',
-        // color: 'pink',
+        // color: 'blue',
+        color: 'pink',
 
         a: {
           color: 'orange',
@@ -31,9 +46,7 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
     }),
   );
 
-  return wrapSSR(
-    <div className={classNames(className, 'layer-div')} {...rest} />,
-  );
+  return <div className={classNames(className, 'layer-div')} {...rest} />;
 };
 
 export default function App() {
