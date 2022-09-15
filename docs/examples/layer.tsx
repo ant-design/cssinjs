@@ -16,8 +16,8 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
     },
     () => ({
       '.layer-div': {
-        // color: 'blue',
-        color: 'pink',
+        color: 'blue',
+        // color: 'pink',
 
         a: {
           color: 'orange',
