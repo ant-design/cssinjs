@@ -124,8 +124,14 @@ export const parseStyle = (
     Array.isArray(interpolation) ? interpolation : [interpolation],
   );
 
-  flattenStyleList.forEach((style) => {
-    if ((style as any)._keyframe) {
+  flattenStyleList.forEach((originStyle) => {
+    // Only root level can use raw string
+    const style: CSSObject =
+      typeof originStyle === 'string' && !root ? {} : originStyle;
+
+    if (typeof style === 'string') {
+      styleStr += `${style}\n`;
+    } else if ((style as any)._keyframe) {
       // Keyframe
       styleStr += parseKeyframes(style as unknown as Keyframes);
     } else {

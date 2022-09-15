@@ -1,6 +1,5 @@
 import { parseStyle } from '../src/hooks/useStyleRegister';
 
-// import { styleValidate, supportLayer } from '../util';
 jest.mock('../src/util', () => {
   const origin = jest.requireActual('../src/util');
   return {
@@ -41,20 +40,27 @@ describe('util', () => {
       );
     });
 
-    it('layer', () => {
-      const str = parseStyle(
-        [
-          {
-            p: {
-              color: 'red',
+    describe('layer', () => {
+      it('basic', () => {
+        const str = parseStyle(
+          [
+            {
+              p: {
+                color: 'red',
+              },
             },
-          },
-        ],
-        'hashed',
-        'test-layer',
-      );
+          ],
+          'hashed',
+          'test-layer',
+        );
 
-      expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
+        expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
+      });
+
+      it('raw order', () => {
+        const str = parseStyle('@layer a, b, c', 'hashed');
+        expect(str).toEqual('@layer a, b, c\n');
+      });
     });
   });
 });
