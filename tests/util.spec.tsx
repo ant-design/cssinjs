@@ -71,7 +71,7 @@ describe('util', () => {
         );
 
         expect(str).toEqual(
-          '@layer shared, test-layer\n@layer test-layer {p.hashed{color:red;}}',
+          '@layer shared, test-layer;@layer test-layer {p.hashed{color:red;}}',
         );
       });
 
