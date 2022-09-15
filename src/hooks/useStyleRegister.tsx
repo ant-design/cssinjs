@@ -70,8 +70,9 @@ export interface CSSObject
 // ==                                 Parser                                 ==
 // ============================================================================
 // Preprocessor style content to browser support one
-function normalizeStyle(styleStr: string) {
-  return serialize(compile(styleStr), stringify);
+export function normalizeStyle(styleStr: string) {
+  const serialized = serialize(compile(styleStr), stringify);
+  return serialized.replace(/\{%%%\:[^;];}/g, ';');
 }
 
 function isCompoundCSSProperty(value: CSSObject[string]) {
@@ -124,8 +125,14 @@ export const parseStyle = (
     Array.isArray(interpolation) ? interpolation : [interpolation],
   );
 
-  flattenStyleList.forEach((style) => {
-    if ((style as any)._keyframe) {
+  flattenStyleList.forEach((originStyle) => {
+    // Only root level can use raw string
+    const style: CSSObject =
+      typeof originStyle === 'string' && !root ? {} : originStyle;
+
+    if (typeof style === 'string') {
+      styleStr += `${style}\n`;
+    } else if ((style as any)._keyframe) {
       // Keyframe
       styleStr += parseKeyframes(style as unknown as Keyframes);
     } else {
@@ -153,7 +160,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
+              const keys = key.split(',').map((k) => `${k.trim()}.${hashId}`);
               mergedKey = keys.join(',');
             }
           } else if (
@@ -218,7 +225,15 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer && supportLayer()) {
-    styleStr = `@layer ${layer} {${styleStr}}`;
+    const layerCells = layer.split(',');
+    const layerName = layerCells[layerCells.length - 1].trim();
+    styleStr = `@layer ${layerName} {${styleStr}}`;
+
+    // Order of layer if needed
+    if (layerCells.length > 1) {
+      // zombieJ: stylis do not support layer order, so we need to handle it manually.
+      styleStr = `@layer ${layer}{%%%:%}${styleStr}`;
+    }
   }
 
   return styleStr;
@@ -299,8 +314,6 @@ export default function useStyleRegister(
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
-    // Should update by HMR
-    true,
   );
 
   return (node: React.ReactElement) => {
