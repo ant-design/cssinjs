@@ -20,7 +20,7 @@ describe('util', () => {
         'hashed',
       );
 
-      expect(str).toEqual('.btn.hashed{color:red;}');
+      expect(str).toEqual('.hashed.btn{color:red;}');
     });
 
     it('media', () => {
@@ -36,7 +36,7 @@ describe('util', () => {
       );
 
       expect(str).toEqual(
-        '@media (max-width: 12450px){.btn.hashed{color:red;}}',
+        '@media (max-width: 12450px){.hashed.btn{color:red;}}',
       );
     });
 
@@ -54,7 +54,7 @@ describe('util', () => {
           'test-layer',
         );
 
-        expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
+        expect(str).toEqual('@layer test-layer {.hashedp{color:red;}}');
       });
 
       it('order', () => {
@@ -73,7 +73,7 @@ describe('util', () => {
         );
 
         expect(str).toEqual(
-          '@layer shared,test-layer;@layer test-layer{p.hashed{color:red;}}',
+          '@layer shared,test-layer;@layer test-layer{.hashedp{color:red;}}',
         );
       });
 

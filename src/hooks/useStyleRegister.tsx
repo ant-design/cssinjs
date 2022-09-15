@@ -160,7 +160,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              const keys = key.split(',').map((k) => `${k.trim()}.${hashId}`);
+              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
               mergedKey = keys.join(',');
             }
           } else if (
