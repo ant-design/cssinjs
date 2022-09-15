@@ -1,5 +1,3 @@
-import url from 'url';
-
 function useProdHMR() {
   return false;
 }
