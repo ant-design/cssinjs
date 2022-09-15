@@ -299,6 +299,7 @@ export default function useStyleRegister(
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
+    // Should update by HMR
     true,
   );
 
