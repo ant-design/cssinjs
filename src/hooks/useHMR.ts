@@ -12,7 +12,7 @@ function useDevHMR() {
 
 export default process.env.NODE_ENV === 'production' ? useProdHMR : useDevHMR;
 
-// Webpack do not provide the HMR accept any deps update interface
+// Webpack `module.hot.accept` do not support any deps update trigger
 // We have to hack handler to force mark as HRM
 if (process.env.NODE_ENV !== 'production' && module && module.hot) {
   const win = window as any;
