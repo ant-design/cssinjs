@@ -153,7 +153,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
+              const keys = key.split(',').map((k) => `${k.trim()}.${hashId}`);
               mergedKey = keys.join(',');
             }
           } else if (
