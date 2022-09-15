@@ -224,7 +224,14 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer && supportLayer()) {
-    styleStr = `@layer ${layer} {${styleStr}}`;
+    const layerCells = layer.split(',');
+    const layerName = layerCells[layerCells.length - 1].trim();
+    styleStr = `@layer ${layerName} {${styleStr}}`;
+
+    // Order of layer if needed
+    if (layerCells.length > 1) {
+      styleStr = `@layer ${layer}\n${styleStr}`;
+    }
   }
 
   return styleStr;

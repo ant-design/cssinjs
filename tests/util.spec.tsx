@@ -57,6 +57,24 @@ describe('util', () => {
         expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
       });
 
+      it('order', () => {
+        const str = parseStyle(
+          [
+            {
+              p: {
+                color: 'red',
+              },
+            },
+          ],
+          'hashed',
+          'shared, test-layer',
+        );
+
+        expect(str).toEqual(
+          '@layer shared, test-layer\n@layer test-layer {p.hashed{color:red;}}',
+        );
+      });
+
       it('raw order', () => {
         const str = parseStyle('@layer a, b, c', 'hashed');
         expect(str).toEqual('@layer a, b, c\n');
