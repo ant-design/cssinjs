@@ -21,7 +21,7 @@ describe('util', () => {
         'hashed',
       );
 
-      expect(str).toEqual('.hashed.btn{color:red;}');
+      expect(str).toEqual('.btn.hashed{color:red;}');
     });
 
     it('media', () => {
@@ -37,7 +37,7 @@ describe('util', () => {
       );
 
       expect(str).toEqual(
-        '@media (max-width: 12450px){.hashed.btn{color:red;}}',
+        '@media (max-width: 12450px){.btn.hashed{color:red;}}',
       );
     });
 
