@@ -8,7 +8,12 @@ const theme = new Theme([() => ({})]);
 const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
   // 全局注册，内部会做缓存优化
   const wrapSSR = useStyleRegister(
-    { theme, token: { _tokenKey: 'test' }, path: ['layer'], layer: 'layer' },
+    {
+      theme,
+      token: { _tokenKey: 'test' },
+      path: ['layer'],
+      layer: 'shared, layer',
+    },
     () => ({
       '.layer-div': {
         // color: 'blue',

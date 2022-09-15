@@ -1,46 +1,27 @@
-import * as React from 'react';
-import StyleContext from '../StyleContext';
-import type { KeyType } from '../Cache';
-
 function useProdHMR() {
   return false;
 }
 
-export type CacheFn<CacheType> = () => CacheType;
+let webpackHMR = false;
 
-function useDevHMR<CacheType>(
-  fullPath: KeyType[],
-  cacheFn: CacheFn<CacheType> | CacheFn<CacheType>[],
-  shouldCheckHMR?: boolean,
-) {
-  const { cache: globalCache } = React.useContext(StyleContext);
-
-  let HMRUpdate = false;
-
-  const arrCacheFn = Array.isArray(cacheFn) ? cacheFn : [cacheFn];
-
-  React.useMemo(
-    () => {
-      globalCache.update(['__HMR__', ...fullPath], (prevCache) => {
-        const [, cache] = prevCache || [];
-        if (
-          shouldCheckHMR &&
-          cache &&
-          (arrCacheFn.length !== cache.length ||
-            arrCacheFn.some((fn, i) => fn !== cache[i]))
-        ) {
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          HMRUpdate = true;
-        }
-        return [0, arrCacheFn];
-      });
-    },
-    /* eslint-disable react-hooks/exhaustive-deps */
-    [fullPath.join('_')],
-    /* eslint-enable */
-  );
-
-  return HMRUpdate;
+function useDevHMR() {
+  return webpackHMR;
 }
 
 export default process.env.NODE_ENV === 'production' ? useProdHMR : useDevHMR;
+
+// Hack Webpack HMR to handle cache OOD
+if (module && module.hot) {
+  const win = window as any;
+  if (typeof win.webpackHotUpdate === 'function') {
+    const originWebpackHotUpdate = win.webpackHotUpdate;
+
+    win.webpackHotUpdate = (...args: any[]) => {
+      webpackHMR = true;
+      setTimeout(() => {
+        webpackHMR = false;
+      }, 0);
+      return originWebpackHotUpdate(...args);
+    };
+  }
+}

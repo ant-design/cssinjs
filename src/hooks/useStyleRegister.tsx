@@ -230,7 +230,7 @@ export const parseStyle = (
 
     // Order of layer if needed
     if (layerCells.length > 1) {
-      styleStr = `@layer ${layer}\n${styleStr}`;
+      styleStr = `@layer ${layer};${styleStr}`;
     }
   }
 
@@ -312,8 +312,6 @@ export default function useStyleRegister(
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
-    // Should update by HMR
-    true,
   );
 
   return (node: React.ReactElement) => {
