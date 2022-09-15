@@ -35,7 +35,7 @@ function useDevHMR<CacheType>(
 
           note(
             false,
-            `Style function not same. It may caused miss use the same 'path' or trigger by HMR.`,
+            `Style function not same. It may caused by using the same cache 'path' or refresh with HMR.`,
           );
         }
         return [0, arrCacheFn];
