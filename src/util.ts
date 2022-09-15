@@ -1,5 +1,7 @@
 import hash from '@emotion/hash';
 import devWarning from 'rc-util/lib/warning';
+import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import canUseDom from 'rc-util/lib/Dom/canUseDom';
 
 export function flattenToken(token: any) {
   let str = '';
@@ -146,3 +148,39 @@ export const styleValidate = (
       return;
   }
 };
+
+let canLayer: boolean | undefined = undefined;
+const layerKey = `layer-${Date.now()}-${Math.random()}`.replace(/\./g, '');
+const layerWidth = '903px';
+
+export function supportLayer(): boolean {
+  if (canLayer === undefined) {
+    if (canUseDom()) {
+      updateCSS(
+        `@layer ${layerKey} { .${layerKey} { width: ${layerWidth}; } }`,
+        layerKey,
+      );
+
+      const ele = document.createElement('div');
+      ele.style.position = 'fixed';
+      ele.style.left = '0';
+      ele.style.top = '0';
+      ele.className = layerKey;
+      document.body.appendChild(ele);
+
+      if (process.env.NODE_ENV !== 'production') {
+        ele.innerHTML = 'Test';
+        ele.style.zIndex = '9999999';
+      }
+
+      canLayer = getComputedStyle(ele).width === layerWidth;
+
+      ele.parentNode?.removeChild(ele);
+      removeCSS(layerKey);
+    } else {
+      canLayer = false;
+    }
+  }
+
+  return canLayer!;
+}

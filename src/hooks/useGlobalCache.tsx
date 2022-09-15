@@ -1,22 +1,34 @@
 import * as React from 'react';
-import StyleContext from './StyleContext';
-import type { KeyType } from './Cache';
+import StyleContext from '../StyleContext';
+import type { KeyType } from '../Cache';
+import useHMR from './useHMR';
 
 export default function useClientCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
   cacheFn: () => CacheType,
-  onCacheRemove?: (cache: CacheType) => void,
+  onCacheRemove?: (cache: CacheType, fromHMR: boolean) => void,
+  shouldUpdateByHMR?: boolean,
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
+
+  const HMRUpdate = useHMR(fullPath, cacheFn, shouldUpdateByHMR);
 
   // Create cache
   React.useMemo(
     () => {
       globalCache.update(fullPath, (prevCache) => {
         const [times = 0, cache] = prevCache || [];
-        const mergedCache = cache || cacheFn();
+
+        // HMR should always ignore cache since developer may change it
+        let tmpCache = cache;
+        if (process.env.NODE_ENV !== 'production' && cache && HMRUpdate) {
+          onCacheRemove?.(tmpCache, HMRUpdate);
+          tmpCache = null;
+        }
+
+        const mergedCache = tmpCache || cacheFn();
 
         return [times + 1, mergedCache];
       });
@@ -34,7 +46,7 @@ export default function useClientCache<CacheType>(
         const nextCount = times - 1;
 
         if (nextCount === 0) {
-          onCacheRemove?.(cache);
+          onCacheRemove?.(cache, false);
           return null;
         }
 

@@ -13,11 +13,11 @@ import StyleContext, {
   ATTR_DEV_CACHE_PATH,
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
-} from './StyleContext';
-import type Cache from './Cache';
-import type { Theme } from '.';
-import type Keyframes from './Keyframes';
-import { styleValidate } from './util';
+} from '../StyleContext';
+import type Cache from '../Cache';
+import type { Theme } from '..';
+import type Keyframes from '../Keyframes';
+import { styleValidate, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
 
@@ -84,6 +84,7 @@ export let animationStatistics: Record<string, boolean> = {};
 export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
+  layer?: string,
   path?: string,
   root = true,
   injectHash = false,
@@ -98,6 +99,7 @@ export const parseStyle = (
     return `@keyframes ${keyframes.getName(hashId)}${parseStyle(
       keyframes.style,
       hashId,
+      layer,
       path,
       false,
     )}`;
@@ -171,6 +173,7 @@ export const parseStyle = (
           styleStr += `${mergedKey}${parseStyle(
             value as any,
             hashId,
+            layer,
             `${path} -> ${mergedKey}`,
             nextRoot,
             subInjectHash,
@@ -214,6 +217,8 @@ export const parseStyle = (
 
   if (!root) {
     styleStr = `{${styleStr}}`;
+  } else if (layer && supportLayer()) {
+    styleStr = `@layer ${layer} {${styleStr}}`;
   }
 
   return styleStr;
@@ -239,10 +244,11 @@ export default function useStyleRegister(
     token: any;
     path: string[];
     hashId?: string;
+    layer?: string;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId } = info;
+  const { token, path, hashId, layer } = info;
   const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -261,7 +267,7 @@ export default function useStyleRegister(
     () => {
       const styleObj = styleFn();
       const styleStr = normalizeStyle(
-        parseStyle(styleObj, hashId, path.join('-')),
+        parseStyle(styleObj, hashId, layer, path.join('-')),
       );
       const styleId = uniqueHash(fullPath, styleStr);
 
@@ -288,11 +294,13 @@ export default function useStyleRegister(
       return [styleStr, tokenKey, styleId];
     },
     // Remove cache if no need
-    ([, , styleId]) => {
-      if (autoClear && isClientSide) {
+    ([, , styleId], fromHMR) => {
+      if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
+    // Should update by HMR
+    true,
   );
 
   return (node: React.ReactElement) => {
