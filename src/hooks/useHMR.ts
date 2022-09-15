@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { note } from 'rc-util/lib/warning';
 import StyleContext from '../StyleContext';
 import type { KeyType } from '../Cache';
 
