@@ -32,11 +32,6 @@ function useDevHMR<CacheType>(
         ) {
           // eslint-disable-next-line react-hooks/exhaustive-deps
           HMRUpdate = true;
-
-          note(
-            false,
-            `Style function not same. It may caused by using the same cache 'path' or refresh with HMR.`,
-          );
         }
         return [0, arrCacheFn];
       });
