@@ -21,7 +21,30 @@ describe('util', () => {
         { hashId: 'hashed' },
       );
 
-      expect(str).toEqual('.btn.hashed{color:red;}');
+      expect(str).toEqual('.hashed.btn{color:red;}');
+    });
+
+    it('connect', () => {
+      const str = normalizeStyle(
+        parseStyle(
+          {
+            'p.btn': {
+              '&-in': {
+                color: 'red',
+              },
+            },
+
+            'p#btn': {
+              color: 'blue',
+            },
+          },
+          { hashId: 'hashed' },
+        ),
+      );
+
+      expect(str).toEqual(
+        'p.hashed.btn-in{color:red;}p.hashed#btn{color:blue;}',
+      );
     });
 
     it('media', () => {
@@ -37,7 +60,7 @@ describe('util', () => {
       );
 
       expect(str).toEqual(
-        '@media (max-width: 12450px){.btn.hashed{color:red;}}',
+        '@media (max-width: 12450px){.hashed.btn{color:red;}}',
       );
     });
 

@@ -218,13 +218,13 @@ describe('csssinjs', () => {
 
     const style = styles[0];
     expect(style.innerHTML).toContain(
-      '.a:where(.css-dev-only-do-not-override-6dmvpu)',
+      ':where(.css-dev-only-do-not-override-6dmvpu).a',
     );
     expect(style.innerHTML).toContain(
-      '.b:where(.css-dev-only-do-not-override-6dmvpu)',
+      ':where(.css-dev-only-do-not-override-6dmvpu).b',
     );
     expect(style.innerHTML).toContain(
-      '.c:where(.css-dev-only-do-not-override-6dmvpu) .d',
+      ':where(.css-dev-only-do-not-override-6dmvpu).c .d',
     );
 
     unmount();
