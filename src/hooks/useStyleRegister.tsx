@@ -81,6 +81,25 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 
 export let animationStatistics: Record<string, boolean> = {};
 
+// 注入 hash 值
+function injectSelectorHash(key: string, hashId: string) {
+  if (!hashId) {
+    return key;
+  }
+
+  const hashClassName = `.${hashId}`;
+
+  // 注入 hashId
+  const keys = key.split(',').map((k) => {
+    const fullPath = k.trim().split(/\s+/);
+
+    return [`${fullPath[0] || ''}${hashClassName}`, ...fullPath.slice(1)].join(
+      ' ',
+    );
+  });
+  return keys.join(',');
+}
+
 export interface ParseConfig {
   hashId?: string;
   layer?: string;
@@ -171,8 +190,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
-              mergedKey = keys.join(',');
+              mergedKey = injectSelectorHash(key, hashId);
             }
           } else if (
             root &&
