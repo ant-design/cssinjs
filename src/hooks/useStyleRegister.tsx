@@ -17,7 +17,7 @@ import StyleContext, {
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
-import { styleValidate, supportLayer } from '../util';
+import { styleValidate, supportIs, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
 
@@ -88,12 +88,13 @@ function injectSelectorHash(key: string, hashId: string) {
   }
 
   const hashClassName = `.${hashId}`;
+  const hashSelector = supportIs() ? `:is(${hashClassName})` : hashClassName;
 
   // 注入 hashId
   const keys = key.split(',').map((k) => {
     const fullPath = k.trim().split(/\s+/);
 
-    return [`${fullPath[0] || ''}${hashClassName}`, ...fullPath.slice(1)].join(
+    return [`${fullPath[0] || ''}${hashSelector}`, ...fullPath.slice(1)].join(
       ' ',
     );
   });
