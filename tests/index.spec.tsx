@@ -194,10 +194,7 @@ describe('csssinjs', () => {
 
   it('hash', () => {
     const genStyle = (): CSSInterpolation => ({
-      [`
-      .a,
-      .b
-      `]: {
+      '.a,.b, .c .d': {
         background: 'red',
       },
     });
@@ -220,8 +217,15 @@ describe('csssinjs', () => {
     expect(styles).toHaveLength(1);
 
     const style = styles[0];
-    expect(style.innerHTML).toContain('.css-dev-only-do-not-override-6dmvpu.a');
-    expect(style.innerHTML).toContain('.css-dev-only-do-not-override-6dmvpu.b');
+    expect(style.innerHTML).toContain(
+      '.a:where(.css-dev-only-do-not-override-6dmvpu)',
+    );
+    expect(style.innerHTML).toContain(
+      '.b:where(.css-dev-only-do-not-override-6dmvpu)',
+    );
+    expect(style.innerHTML).toContain(
+      '.c:where(.css-dev-only-do-not-override-6dmvpu) .d',
+    );
 
     unmount();
   });
@@ -391,7 +395,7 @@ describe('csssinjs', () => {
 
     expect(styles[0].innerHTML).toBe('a{color:red;}div{color:blue;}');
     expect(styles[1].innerHTML).toBe(
-      `.${hash} a{color:red;}.${hash} div{color:blue;}`,
+      `:where(.${hash}) a{color:red;}:where(.${hash}) div{color:blue;}`,
     );
   });
 });

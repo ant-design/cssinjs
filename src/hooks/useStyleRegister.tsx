@@ -17,7 +17,7 @@ import StyleContext, {
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
-import { styleValidate, supportLayer } from '../util';
+import { styleValidate, supportWhere, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
 
@@ -81,15 +81,48 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 
 export let animationStatistics: Record<string, boolean> = {};
 
+// 注入 hash 值
+function injectSelectorHash(key: string, hashId: string) {
+  if (!hashId) {
+    return key;
+  }
+
+  const hashClassName = `.${hashId}`;
+  const hashSelector = supportWhere()
+    ? `:where(${hashClassName})`
+    : hashClassName;
+
+  // 注入 hashId
+  const keys = key.split(',').map((k) => {
+    const fullPath = k.trim().split(/\s+/);
+
+    return [`${fullPath[0] || ''}${hashSelector}`, ...fullPath.slice(1)].join(
+      ' ',
+    );
+  });
+  return keys.join(',');
+}
+
+export interface ParseConfig {
+  hashId?: string;
+  layer?: string;
+  path?: string;
+}
+
+export interface ParseInfo {
+  root?: boolean;
+  injectHash?: boolean;
+}
+
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
-  hashId?: string,
-  layer?: string,
-  path?: string,
-  root = true,
-  injectHash = false,
+  config: ParseConfig = {},
+  { root, injectHash }: ParseInfo = {
+    root: true,
+  },
 ) => {
+  const { hashId, layer, path } = config;
   let styleStr = '';
 
   function parseKeyframes(keyframes: Keyframes) {
@@ -99,10 +132,10 @@ export const parseStyle = (
     animationStatistics[keyframes.getName(hashId)] = true;
     return `@keyframes ${keyframes.getName(hashId)}${parseStyle(
       keyframes.style,
-      hashId,
-      layer,
-      path,
-      false,
+      config,
+      {
+        root: false,
+      },
     )}`;
   }
 
@@ -160,8 +193,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              const keys = key.split(',').map((k) => `.${hashId}${k.trim()}`);
-              mergedKey = keys.join(',');
+              mergedKey = injectSelectorHash(key, hashId);
             }
           } else if (
             root &&
@@ -179,11 +211,14 @@ export const parseStyle = (
 
           styleStr += `${mergedKey}${parseStyle(
             value as any,
-            hashId,
-            layer,
-            `${path} -> ${mergedKey}`,
-            nextRoot,
-            subInjectHash,
+            {
+              ...config,
+              path: `${path} -> ${mergedKey}`,
+            },
+            {
+              root: nextRoot,
+              injectHash: subInjectHash,
+            },
           )}`;
         } else {
           const actualValue = (value as any)?.value ?? value;
@@ -282,7 +317,11 @@ export default function useStyleRegister(
     () => {
       const styleObj = styleFn();
       const styleStr = normalizeStyle(
-        parseStyle(styleObj, hashId, layer, path.join('-')),
+        parseStyle(styleObj, {
+          hashId,
+          layer,
+          path: path.join('-'),
+        }),
       );
       const styleId = uniqueHash(fullPath, styleStr);
 

@@ -149,37 +149,61 @@ export const styleValidate = (
   }
 };
 
-let canLayer: boolean | undefined = undefined;
 const layerKey = `layer-${Date.now()}-${Math.random()}`.replace(/\./g, '');
 const layerWidth = '903px';
 
+function supportSelector(
+  styleStr: string,
+  handleElement?: (ele: HTMLElement) => void,
+): boolean {
+  if (canUseDom()) {
+    updateCSS(styleStr, layerKey);
+
+    const ele = document.createElement('div');
+    ele.style.position = 'fixed';
+    ele.style.left = '0';
+    ele.style.top = '0';
+    handleElement?.(ele);
+    document.body.appendChild(ele);
+
+    if (process.env.NODE_ENV !== 'production') {
+      ele.innerHTML = 'Test';
+      ele.style.zIndex = '9999999';
+    }
+
+    const support = getComputedStyle(ele).width === layerWidth;
+
+    ele.parentNode?.removeChild(ele);
+    removeCSS(layerKey);
+
+    return support;
+  }
+
+  return false;
+}
+
+let canWhere: boolean | undefined = undefined;
+export function supportWhere(): boolean {
+  if (canWhere === undefined) {
+    canWhere = supportSelector(
+      `:where(.${layerKey}) { width: ${layerWidth}!important; }`,
+      (ele) => {
+        ele.className = layerKey;
+      },
+    );
+  }
+  return canWhere;
+}
+
+let canLayer: boolean | undefined = undefined;
 export function supportLayer(): boolean {
   if (canLayer === undefined) {
-    if (canUseDom()) {
-      updateCSS(
-        `@layer ${layerKey} { .${layerKey} { width: ${layerWidth}; } }`,
-        layerKey,
-      );
-
-      const ele = document.createElement('div');
-      ele.style.position = 'fixed';
-      ele.style.left = '0';
-      ele.style.top = '0';
-      ele.className = layerKey;
-      document.body.appendChild(ele);
-
-      if (process.env.NODE_ENV !== 'production') {
-        ele.innerHTML = 'Test';
-        ele.style.zIndex = '9999999';
-      }
-
-      canLayer = getComputedStyle(ele).width === layerWidth;
-
-      ele.parentNode?.removeChild(ele);
-      removeCSS(layerKey);
-    } else {
-      canLayer = false;
-    }
+    canLayer = supportSelector(
+      `@layer ${layerKey} { .${layerKey} { width: ${layerWidth}!important; } }`,
+      (ele) => {
+        ele.className = layerKey;
+      },
+    );
   }
 
   return canLayer!;

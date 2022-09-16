@@ -5,6 +5,7 @@ jest.mock('../src/util', () => {
   return {
     ...origin,
     supportLayer: () => true,
+    supportWhere: () => false, // jsdom support `where` so we change to disabled to test
   };
 });
 
@@ -17,10 +18,10 @@ describe('util', () => {
             color: 'red',
           },
         },
-        'hashed',
+        { hashId: 'hashed' },
       );
 
-      expect(str).toEqual('.hashed.btn{color:red;}');
+      expect(str).toEqual('.btn.hashed{color:red;}');
     });
 
     it('media', () => {
@@ -32,11 +33,11 @@ describe('util', () => {
             },
           },
         },
-        'hashed',
+        { hashId: 'hashed' },
       );
 
       expect(str).toEqual(
-        '@media (max-width: 12450px){.hashed.btn{color:red;}}',
+        '@media (max-width: 12450px){.btn.hashed{color:red;}}',
       );
     });
 
@@ -50,11 +51,10 @@ describe('util', () => {
               },
             },
           ],
-          'hashed',
-          'test-layer',
+          { hashId: 'hashed', layer: 'test-layer' },
         );
 
-        expect(str).toEqual('@layer test-layer {.hashedp{color:red;}}');
+        expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
       });
 
       it('order', () => {
@@ -67,18 +67,17 @@ describe('util', () => {
                 },
               },
             ],
-            'hashed',
-            'shared, test-layer',
+            { hashId: 'hashed', layer: 'shared, test-layer' },
           ),
         );
 
         expect(str).toEqual(
-          '@layer shared,test-layer;@layer test-layer{.hashedp{color:red;}}',
+          '@layer shared,test-layer;@layer test-layer{p.hashed{color:red;}}',
         );
       });
 
       it('raw order', () => {
-        const str = parseStyle('@layer a, b, c', 'hashed');
+        const str = parseStyle('@layer a, b, c', { hashId: 'hashed' });
         expect(str).toEqual('@layer a, b, c\n');
       });
     });
