@@ -24,6 +24,29 @@ describe('util', () => {
       expect(str).toEqual('.hashed.btn{color:red;}');
     });
 
+    it('connect', () => {
+      const str = normalizeStyle(
+        parseStyle(
+          {
+            'p.btn': {
+              '&-in': {
+                color: 'red',
+              },
+            },
+
+            'p#btn': {
+              color: 'blue',
+            },
+          },
+          { hashId: 'hashed' },
+        ),
+      );
+
+      expect(str).toEqual(
+        'p.hashed.btn-in{color:red;}p.hashed#btn{color:blue;}',
+      );
+    });
+
     it('media', () => {
       const str = parseStyle(
         {

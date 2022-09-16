@@ -96,12 +96,13 @@ function injectSelectorHash(key: string, hashId: string) {
   const keys = key.split(',').map((k) => {
     const fullPath = k.trim().split(/\s+/);
 
+    // 如果 Selector 第一个是 HTML Element，那我们就插到它的后面。反之，就插到最前面。
     let firstPath = fullPath[0] || '';
-    if (firstPath.startsWith('.') || firstPath.startsWith('#')) {
-      firstPath = `${hashSelector}${firstPath}`;
-    } else {
-      firstPath = `${firstPath}${hashSelector}`;
-    }
+    const htmlElement = firstPath.match(/^\w+/)?.[0] || '';
+
+    firstPath = `${htmlElement}${hashSelector}${firstPath.slice(
+      htmlElement.length,
+    )}`;
 
     return [firstPath, ...fullPath.slice(1)].join(' ');
   });
