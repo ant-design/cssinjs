@@ -81,14 +81,20 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 
 export let animationStatistics: Record<string, boolean> = {};
 
+export interface ParseInfo {
+  root?: boolean;
+  injectHash?: boolean;
+}
+
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
   hashId?: string,
   layer?: string,
   path?: string,
-  root = true,
-  injectHash = false,
+  { root, injectHash }: ParseInfo = {
+    root: true,
+  },
 ) => {
   let styleStr = '';
 
@@ -102,7 +108,9 @@ export const parseStyle = (
       hashId,
       layer,
       path,
-      false,
+      {
+        root: false,
+      },
     )}`;
   }
 
@@ -182,8 +190,10 @@ export const parseStyle = (
             hashId,
             layer,
             `${path} -> ${mergedKey}`,
-            nextRoot,
-            subInjectHash,
+            {
+              root: nextRoot,
+              injectHash: subInjectHash,
+            },
           )}`;
         } else {
           const actualValue = (value as any)?.value ?? value;
