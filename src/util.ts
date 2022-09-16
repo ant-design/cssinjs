@@ -182,17 +182,17 @@ function supportSelector(
   return false;
 }
 
-let canIs: boolean | undefined = undefined;
-export function supportIs(): boolean {
-  if (canIs === undefined) {
-    canIs = supportSelector(
-      `:is(.${layerKey}) { width: ${layerWidth}!important; }`,
+let canWhere: boolean | undefined = undefined;
+export function supportWhere(): boolean {
+  if (canWhere === undefined) {
+    canWhere = supportSelector(
+      `:where(.${layerKey}) { width: ${layerWidth}!important; }`,
       (ele) => {
         ele.className = layerKey;
       },
     );
   }
-  return canIs;
+  return canWhere;
 }
 
 let canLayer: boolean | undefined = undefined;

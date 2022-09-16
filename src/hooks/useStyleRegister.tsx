@@ -17,7 +17,7 @@ import StyleContext, {
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
-import { styleValidate, supportIs, supportLayer } from '../util';
+import { styleValidate, supportWhere, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
 
@@ -88,7 +88,9 @@ function injectSelectorHash(key: string, hashId: string) {
   }
 
   const hashClassName = `.${hashId}`;
-  const hashSelector = supportIs() ? `:is(${hashClassName})` : hashClassName;
+  const hashSelector = supportWhere()
+    ? `:where(${hashClassName})`
+    : hashClassName;
 
   // 注入 hashId
   const keys = key.split(',').map((k) => {

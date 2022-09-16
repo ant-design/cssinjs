@@ -5,7 +5,7 @@ jest.mock('../src/util', () => {
   return {
     ...origin,
     supportLayer: () => true,
-    supportIs: () => true,
+    supportWhere: () => true,
   };
 });
 
@@ -21,7 +21,7 @@ describe('util', () => {
         { hashId: 'hashed' },
       );
 
-      expect(str).toEqual('.btn:is(.hashed){color:red;}');
+      expect(str).toEqual('.btn:where(.hashed){color:red;}');
     });
 
     it('media', () => {
@@ -37,7 +37,7 @@ describe('util', () => {
       );
 
       expect(str).toEqual(
-        '@media (max-width: 12450px){.btn:is(.hashed){color:red;}}',
+        '@media (max-width: 12450px){.btn:where(.hashed){color:red;}}',
       );
     });
 
@@ -54,7 +54,7 @@ describe('util', () => {
           { hashId: 'hashed', layer: 'test-layer' },
         );
 
-        expect(str).toEqual('@layer test-layer {p:is(.hashed){color:red;}}');
+        expect(str).toEqual('@layer test-layer {p:where(.hashed){color:red;}}');
       });
 
       it('order', () => {
@@ -72,7 +72,7 @@ describe('util', () => {
         );
 
         expect(str).toEqual(
-          '@layer shared,test-layer;@layer test-layer{p:is(.hashed){color:red;}}',
+          '@layer shared,test-layer;@layer test-layer{p:where(.hashed){color:red;}}',
         );
       });
 
