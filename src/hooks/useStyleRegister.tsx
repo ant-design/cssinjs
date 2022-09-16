@@ -96,9 +96,14 @@ function injectSelectorHash(key: string, hashId: string) {
   const keys = key.split(',').map((k) => {
     const fullPath = k.trim().split(/\s+/);
 
-    return [`${fullPath[0] || ''}${hashSelector}`, ...fullPath.slice(1)].join(
-      ' ',
-    );
+    let firstPath = fullPath[0] || '';
+    if (firstPath.startsWith('.') || firstPath.startsWith('#')) {
+      firstPath = `${hashSelector}${firstPath}`;
+    } else {
+      firstPath = `${firstPath}${hashSelector}`;
+    }
+
+    return [firstPath, ...fullPath.slice(1)].join(' ');
   });
   return keys.join(',');
 }

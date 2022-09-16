@@ -89,7 +89,7 @@ describe('animation', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toEqual(
-        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}.demo:where(.${testHashId}){animation-name:${testHashId}-anim;}`,
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
       );
     });
 
@@ -112,7 +112,7 @@ describe('animation', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toEqual(
-        `.demo:where(.${testHashId}){animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
 
@@ -135,7 +135,7 @@ describe('animation', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toEqual(
-        `.demo:where(.${testHashId}){animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
 
@@ -159,7 +159,7 @@ describe('animation', () => {
 
       const style = styles[0];
       expect(style.innerHTML).toEqual(
-        `.demo:where(.${testHashId}){animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
   });
