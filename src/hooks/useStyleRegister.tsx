@@ -81,6 +81,12 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 
 export let animationStatistics: Record<string, boolean> = {};
 
+export interface ParseConfig {
+  hashId?: string;
+  layer?: string;
+  path?: string;
+}
+
 export interface ParseInfo {
   root?: boolean;
   injectHash?: boolean;
@@ -89,13 +95,12 @@ export interface ParseInfo {
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
-  hashId?: string,
-  layer?: string,
-  path?: string,
+  config: ParseConfig = {},
   { root, injectHash }: ParseInfo = {
     root: true,
   },
 ) => {
+  const { hashId, layer, path } = config;
   let styleStr = '';
 
   function parseKeyframes(keyframes: Keyframes) {
@@ -105,9 +110,7 @@ export const parseStyle = (
     animationStatistics[keyframes.getName(hashId)] = true;
     return `@keyframes ${keyframes.getName(hashId)}${parseStyle(
       keyframes.style,
-      hashId,
-      layer,
-      path,
+      config,
       {
         root: false,
       },
@@ -187,9 +190,10 @@ export const parseStyle = (
 
           styleStr += `${mergedKey}${parseStyle(
             value as any,
-            hashId,
-            layer,
-            `${path} -> ${mergedKey}`,
+            {
+              ...config,
+              path: `${path} -> ${mergedKey}`,
+            },
             {
               root: nextRoot,
               injectHash: subInjectHash,
@@ -292,7 +296,11 @@ export default function useStyleRegister(
     () => {
       const styleObj = styleFn();
       const styleStr = normalizeStyle(
-        parseStyle(styleObj, hashId, layer, path.join('-')),
+        parseStyle(styleObj, {
+          hashId,
+          layer,
+          path: path.join('-'),
+        }),
       );
       const styleId = uniqueHash(fullPath, styleStr);
 

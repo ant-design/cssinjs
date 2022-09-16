@@ -17,7 +17,7 @@ describe('util', () => {
             color: 'red',
           },
         },
-        'hashed',
+        { hashId: 'hashed' },
       );
 
       expect(str).toEqual('.hashed.btn{color:red;}');
@@ -32,7 +32,7 @@ describe('util', () => {
             },
           },
         },
-        'hashed',
+        { hashId: 'hashed' },
       );
 
       expect(str).toEqual(
@@ -50,8 +50,7 @@ describe('util', () => {
               },
             },
           ],
-          'hashed',
-          'test-layer',
+          { hashId: 'hashed', layer: 'test-layer' },
         );
 
         expect(str).toEqual('@layer test-layer {.hashedp{color:red;}}');
@@ -67,8 +66,7 @@ describe('util', () => {
                 },
               },
             ],
-            'hashed',
-            'shared, test-layer',
+            { hashId: 'hashed', layer: 'shared, test-layer' },
           ),
         );
 
@@ -78,7 +76,7 @@ describe('util', () => {
       });
 
       it('raw order', () => {
-        const str = parseStyle('@layer a, b, c', 'hashed');
+        const str = parseStyle('@layer a, b, c', { hashId: 'hashed' });
         expect(str).toEqual('@layer a, b, c\n');
       });
     });
