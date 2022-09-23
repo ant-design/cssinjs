@@ -5,7 +5,6 @@ jest.mock('../src/util', () => {
   return {
     ...origin,
     supportLayer: () => true,
-    supportWhere: () => false, // jsdom support `where` so we change to disabled to test
   };
 });
 
