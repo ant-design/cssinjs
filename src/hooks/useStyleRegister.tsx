@@ -14,10 +14,11 @@ import StyleContext, {
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
 } from '../StyleContext';
+import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
-import { styleValidate, supportWhere, supportLayer } from '../util';
+import { styleValidate, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
 
@@ -82,15 +83,18 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 export let animationStatistics: Record<string, boolean> = {};
 
 // 注入 hash 值
-function injectSelectorHash(key: string, hashId: string) {
+function injectSelectorHash(
+  key: string,
+  hashId: string,
+  hashPriority?: HashPriority,
+) {
   if (!hashId) {
     return key;
   }
 
   const hashClassName = `.${hashId}`;
-  const hashSelector = supportWhere()
-    ? `:where(${hashClassName})`
-    : hashClassName;
+  const hashSelector =
+    hashPriority === 'low' ? `:where(${hashClassName})` : hashClassName;
 
   // 注入 hashId
   const keys = key.split(',').map((k) => {
@@ -111,6 +115,7 @@ function injectSelectorHash(key: string, hashId: string) {
 
 export interface ParseConfig {
   hashId?: string;
+  hashPriority?: HashPriority;
   layer?: string;
   path?: string;
 }
@@ -128,7 +133,7 @@ export const parseStyle = (
     root: true,
   },
 ) => {
-  const { hashId, layer, path } = config;
+  const { hashId, layer, path, hashPriority } = config;
   let styleStr = '';
 
   function parseKeyframes(keyframes: Keyframes) {
@@ -199,7 +204,7 @@ export const parseStyle = (
               subInjectHash = true;
             } else {
               // 注入 hashId
-              mergedKey = injectSelectorHash(key, hashId);
+              mergedKey = injectSelectorHash(key, hashId, hashPriority);
             }
           } else if (
             root &&
@@ -305,7 +310,8 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
-  const { autoClear, mock, defaultCache } = React.useContext(StyleContext);
+  const { autoClear, mock, defaultCache, hashPriority } =
+    React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
   const fullPath = [tokenKey, ...path];
@@ -325,6 +331,7 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(
         parseStyle(styleObj, {
           hashId,
+          hashPriority,
           layer,
           path: path.join('-'),
         }),

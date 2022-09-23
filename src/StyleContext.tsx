@@ -38,6 +38,8 @@ export function createCache() {
   return new CacheEntity();
 }
 
+export type HashPriority = 'low' | 'high';
+
 export interface StyleContextProps {
   autoClear?: boolean;
   /** @private Test only. Not work in production. */
@@ -49,9 +51,12 @@ export interface StyleContextProps {
   cache: CacheEntity;
   /** Tell children that this context is default generated context */
   defaultCache: boolean;
+  /** Use `:where` selector to reduce hashId css selector priority */
+  hashPriority?: HashPriority;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
+  hashPriority: 'low',
   cache: createCache(),
   defaultCache: true,
 });
@@ -61,12 +66,13 @@ export type StyleProviderProps = Partial<StyleContextProps> & {
 };
 
 export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
-  const { autoClear, mock, cache, children } = props;
+  const { autoClear, mock, cache, hashPriority, children } = props;
   const {
     cache: parentCache,
     autoClear: parentAutoClear,
     mock: parentMock,
     defaultCache: parentDefaultCache,
+    hashPriority: parentHashPriority,
   } = React.useContext(StyleContext);
 
   const context = React.useMemo<StyleContextProps>(
@@ -75,6 +81,7 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
       mock: mock ?? parentMock,
       cache: cache || parentCache || createCache(),
       defaultCache: !cache && parentDefaultCache,
+      hashPriority: hashPriority ?? parentHashPriority,
     }),
     [
       autoClear,
@@ -84,6 +91,8 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
       mock,
       cache,
       parentDefaultCache,
+      hashPriority,
+      parentHashPriority,
     ],
   );
 

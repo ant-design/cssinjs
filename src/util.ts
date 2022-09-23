@@ -182,19 +182,6 @@ function supportSelector(
   return false;
 }
 
-let canWhere: boolean | undefined = undefined;
-export function supportWhere(): boolean {
-  if (canWhere === undefined) {
-    canWhere = supportSelector(
-      `:where(.${layerKey}) { width: ${layerWidth}!important; }`,
-      (ele) => {
-        ele.className = layerKey;
-      },
-    );
-  }
-  return canWhere;
-}
-
 let canLayer: boolean | undefined = undefined;
 export function supportLayer(): boolean {
   if (canLayer === undefined) {

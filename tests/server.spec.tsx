@@ -17,6 +17,7 @@ import {
   CSS_IN_JS_INSTANCE_ID,
   ATTR_MARK,
 } from '../src/StyleContext';
+import classNames from 'classnames';
 
 interface DesignToken {
   primaryColor: string;
@@ -153,6 +154,43 @@ describe('SSR', () => {
     expect(document.head.querySelectorAll('style')).toHaveLength(2);
 
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('default hashPriority', () => {
+    // >>> SSR
+    const cache = createCache();
+
+    const MyBox = ({ children }: { children?: React.ReactNode }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [baseToken],
+        {
+          salt: 'hashPriority',
+        },
+      );
+
+      const wrapSSR = useStyleRegister(
+        { theme, token, hashId, path: ['.hashPriority'] },
+        () => [genStyle(token)],
+      );
+
+      return wrapSSR(
+        <div className={classNames(hashId, 'my-box')}>{children}</div>,
+      );
+    };
+
+    renderToString(
+      <StyleProvider cache={cache} hashPriority="high">
+        <MyBox>
+          <IdHolder />
+        </MyBox>
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache);
+    expect(style).toEqual(
+      '<style data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style>',
+    );
   });
 
   it('tricky ssr', () => {
