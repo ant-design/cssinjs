@@ -38,6 +38,8 @@ export function createCache() {
   return new CacheEntity();
 }
 
+export type HashPriority = 'low' | 'high';
+
 export interface StyleContextProps {
   autoClear?: boolean;
   /** @private Test only. Not work in production. */
@@ -50,7 +52,7 @@ export interface StyleContextProps {
   /** Tell children that this context is default generated context */
   defaultCache: boolean;
   /** Use `:where` selector to reduce hashId css selector priority */
-  hashPriority?: 'default' | 'low';
+  hashPriority?: HashPriority;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

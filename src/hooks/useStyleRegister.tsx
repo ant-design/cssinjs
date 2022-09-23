@@ -14,6 +14,7 @@ import StyleContext, {
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
 } from '../StyleContext';
+import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
@@ -85,7 +86,7 @@ export let animationStatistics: Record<string, boolean> = {};
 function injectSelectorHash(
   key: string,
   hashId: string,
-  hashPriority?: 'default' | 'low',
+  hashPriority?: HashPriority,
 ) {
   if (!hashId) {
     return key;
@@ -114,7 +115,7 @@ function injectSelectorHash(
 
 export interface ParseConfig {
   hashId?: string;
-  hashPriority?: 'default' | 'low';
+  hashPriority?: HashPriority;
   layer?: string;
   path?: string;
 }
