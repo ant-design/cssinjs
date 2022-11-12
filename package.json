@@ -82,11 +82,5 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
-  },
-  "cnpm": {
-    "mode": "npm"
-  },
-  "tnpm": {
-    "mode": "npm"
   }
 }
