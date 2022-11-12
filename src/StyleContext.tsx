@@ -12,11 +12,13 @@ export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 export function createCache() {
   if (typeof document !== 'undefined') {
     const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`);
+    const { firstChild } = document.head;
 
     Array.from(styles).forEach((style) => {
       (style as any)[CSS_IN_JS_INSTANCE] =
         (style as any)[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID;
-      document.head.appendChild(style);
+
+      document.head.insertBefore(style, firstChild);
     });
 
     // Deduplicate of moved styles
