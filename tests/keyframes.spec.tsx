@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import { Theme, useCacheToken, useStyleRegister, Keyframes } from '../src';
-import type { CSSInterpolation } from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -48,6 +47,14 @@ describe('animation', () => {
       useStyleRegister({ theme, token, hashId, path: ['.test'] }, () => ({
         '.test': {
           animationName: animation,
+        },
+      }));
+
+      useStyleRegister({ theme, token, hashId, path: ['.nest'] }, () => ({
+        '.nest': {
+          '.child': {
+            animationName: animation,
+          },
         },
       }));
 

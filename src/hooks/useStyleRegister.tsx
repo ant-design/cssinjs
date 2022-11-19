@@ -125,6 +125,10 @@ export interface ParseInfo {
   injectHash?: boolean;
 }
 
+// Global effect style will mount once and not removed
+// The effect will not save in SSR cache (e.g. keyframes)
+const globalEffectStyleKeys = new Set();
+
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
@@ -132,22 +136,27 @@ export const parseStyle = (
   { root, injectHash }: ParseInfo = {
     root: true,
   },
-) => {
+): [
+  parsedStr: string,
+  // Style content which should be unique on all of the style (e.g. Keyframes).
+  // Firefox will flick with same animation name when exist multiple same keyframes.
+  effectStyle: Record<string, string>,
+] => {
   const { hashId, layer, path, hashPriority } = config;
   let styleStr = '';
+  let effectStyle: Record<string, string> = {};
 
   function parseKeyframes(keyframes: Keyframes) {
-    if (animationStatistics[keyframes.getName(hashId)]) {
-      return '';
-    }
-    animationStatistics[keyframes.getName(hashId)] = true;
-    return `@keyframes ${keyframes.getName(hashId)}${parseStyle(
-      keyframes.style,
-      config,
-      {
+    const animationName = keyframes.getName(hashId);
+    if (!effectStyle[animationName]) {
+      const [parsedStr] = parseStyle(keyframes.style, config, {
         root: false,
-      },
-    )}`;
+      });
+
+      effectStyle[animationName] = `@keyframes ${keyframes.getName(
+        hashId,
+      )}${parsedStr}`;
+    }
   }
 
   function flattenList(
@@ -178,7 +187,7 @@ export const parseStyle = (
       styleStr += `${style}\n`;
     } else if ((style as any)._keyframe) {
       // Keyframe
-      styleStr += parseKeyframes(style as unknown as Keyframes);
+      parseKeyframes(style as unknown as Keyframes);
     } else {
       // Normal CSSObject
       Object.keys(style).forEach((key) => {
@@ -220,7 +229,7 @@ export const parseStyle = (
             nextRoot = true;
           }
 
-          styleStr += `${mergedKey}${parseStyle(
+          const [parsedStr, childEffectStyle] = parseStyle(
             value as any,
             {
               ...config,
@@ -230,7 +239,14 @@ export const parseStyle = (
               root: nextRoot,
               injectHash: subInjectHash,
             },
-          )}`;
+          );
+
+          effectStyle = {
+            ...effectStyle,
+            ...childEffectStyle,
+          };
+
+          styleStr += `${mergedKey}${parsedStr}`;
         } else {
           const actualValue = (value as any)?.value ?? value;
           if (
@@ -258,7 +274,7 @@ export const parseStyle = (
 
           // handle animationName & Keyframe value
           if (key === 'animationName' && (value as Keyframes)?._keyframe) {
-            styleStr += parseKeyframes(value as Keyframes);
+            parseKeyframes(value as Keyframes);
             formatValue = (value as Keyframes).getName(hashId);
           }
 
@@ -282,7 +298,7 @@ export const parseStyle = (
     }
   }
 
-  return styleStr;
+  return [styleStr, effectStyle];
 };
 
 // ============================================================================
@@ -328,15 +344,30 @@ export default function useStyleRegister(
     // Create cache if needed
     () => {
       const styleObj = styleFn();
-      const styleStr = normalizeStyle(
-        parseStyle(styleObj, {
-          hashId,
-          hashPriority,
-          layer,
-          path: path.join('-'),
-        }),
-      );
+      const [parsedStyle, effectStyle] = parseStyle(styleObj, {
+        hashId,
+        hashPriority,
+        layer,
+        path: path.join('-'),
+      });
+      const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
+
+      Object.keys(effectStyle).forEach((effectKey) => {
+        if (!globalEffectStyleKeys.has(effectKey)) {
+          globalEffectStyleKeys.add(effectKey);
+
+          // Inject
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey]),
+            `_effect-${effectKey}`,
+            {
+              mark: ATTR_MARK,
+              prepend: 'queue',
+            },
+          );
+        }
+      });
 
       // Clear animation statistics
       animationStatistics = {};
