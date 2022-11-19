@@ -129,6 +129,14 @@ export interface ParseInfo {
 // The effect will not save in SSR cache (e.g. keyframes)
 const globalEffectStyleKeys = new Set();
 
+/**
+ * @private Test only. Clear the global effect style keys.
+ */
+export const _cf =
+  process.env.NODE_ENV !== 'production'
+    ? () => globalEffectStyleKeys.clear()
+    : undefined;
+
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
@@ -353,22 +361,6 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
-      Object.keys(effectStyle).forEach((effectKey) => {
-        if (!globalEffectStyleKeys.has(effectKey)) {
-          globalEffectStyleKeys.add(effectKey);
-
-          // Inject
-          updateCSS(
-            normalizeStyle(effectStyle[effectKey]),
-            `_effect-${effectKey}`,
-            {
-              mark: ATTR_MARK,
-              prepend: 'queue',
-            },
-          );
-        }
-      });
-
       // Clear animation statistics
       animationStatistics = {};
 
@@ -387,6 +379,23 @@ export default function useStyleRegister(
         if (process.env.NODE_ENV !== 'production') {
           style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
         }
+
+        // Inject client side effect style
+        Object.keys(effectStyle).forEach((effectKey) => {
+          if (!globalEffectStyleKeys.has(effectKey)) {
+            globalEffectStyleKeys.add(effectKey);
+
+            // Inject
+            updateCSS(
+              normalizeStyle(effectStyle[effectKey]),
+              `_effect-${effectKey}`,
+              {
+                mark: ATTR_MARK,
+                prepend: 'queue',
+              },
+            );
+          }
+        });
       }
 
       return [styleStr, tokenKey, styleId];

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { Theme, useCacheToken, useStyleRegister, Keyframes } from '../src';
 import type { CSSInterpolation } from '../src';
+import { _cf } from '../src/hooks/useStyleRegister';
 
 interface DesignToken {
   primaryColor: string;
@@ -33,6 +34,8 @@ describe('animation', () => {
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
     });
+
+    _cf!();
   });
 
   describe('without hashed', () => {
@@ -60,11 +63,11 @@ describe('animation', () => {
       render(<Box />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        '.box{animation:anim 1s;}@keyframes anim{to{transform:rotate(360deg);}}',
+      expect(styles[0].innerHTML).toEqual('.box{animation:anim 1s;}');
+      expect(styles[1].innerHTML).toEqual(
+        '@keyframes anim{to{transform:rotate(360deg);}}',
       );
     });
   });
@@ -85,11 +88,13 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
+      expect(styles[0].innerHTML).toEqual(
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
+      );
+      expect(styles[1].innerHTML).toEqual(
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
 
@@ -108,11 +113,13 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      expect(styles[0].innerHTML).toEqual(
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
+      );
+      expect(styles[1].innerHTML).toEqual(
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
 
@@ -131,11 +138,13 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      expect(styles[0].innerHTML).toEqual(
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
+      );
+      expect(styles[1].innerHTML).toEqual(
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
 
@@ -155,11 +164,13 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
+      expect(styles[0].innerHTML).toEqual(
+        `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
+      );
+      expect(styles[1].innerHTML).toEqual(
+        `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
   });
