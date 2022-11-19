@@ -11,7 +11,7 @@ jest.mock('../src/util', () => {
 describe('util', () => {
   describe('parseStyle', () => {
     it('default', () => {
-      const str = parseStyle(
+      const [str] = parseStyle(
         {
           '.btn': {
             color: 'red',
@@ -38,7 +38,7 @@ describe('util', () => {
             },
           },
           { hashId: 'hashed' },
-        ),
+        )[0],
       );
 
       expect(str).toEqual(
@@ -47,7 +47,7 @@ describe('util', () => {
     });
 
     it('media', () => {
-      const str = parseStyle(
+      const [str] = parseStyle(
         {
           '@media (max-width: 12450px)': {
             '.btn': {
@@ -65,7 +65,7 @@ describe('util', () => {
 
     describe('layer', () => {
       it('basic', () => {
-        const str = parseStyle(
+        const [str] = parseStyle(
           [
             {
               p: {
@@ -90,7 +90,7 @@ describe('util', () => {
               },
             ],
             { hashId: 'hashed', layer: 'shared, test-layer' },
-          ),
+          )[0],
         );
 
         expect(str).toEqual(
@@ -99,7 +99,7 @@ describe('util', () => {
       });
 
       it('raw order', () => {
-        const str = parseStyle('@layer a, b, c', { hashId: 'hashed' });
+        const [str] = parseStyle('@layer a, b, c', { hashId: 'hashed' });
         expect(str).toEqual('@layer a, b, c\n');
       });
     });
