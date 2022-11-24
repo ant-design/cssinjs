@@ -18,6 +18,7 @@ import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
 import type { Theme } from '..';
 import type Keyframes from '../Keyframes';
+import type { TokenType } from '../theme/interface';
 import { styleValidate, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
@@ -29,18 +30,18 @@ export type CSSProperties = Omit<
   'animationName'
 > & {
   animationName?:
-    | CSS.PropertiesFallback<number | string>['animationName']
-    | Keyframes;
+  | CSS.PropertiesFallback<number | string>['animationName']
+  | Keyframes;
 };
 
 export type CSSPropertiesWithMultiValues = {
   [K in keyof CSSProperties]:
-    | CSSProperties[K]
-    | Extract<CSSProperties[K], string>[]
-    | {
-        [SKIP_CHECK]: boolean;
-        value: CSSProperties[K] | Extract<CSSProperties[K], string>[];
-      };
+  | CSSProperties[K]
+  | Extract<CSSProperties[K], string>[]
+  | {
+    [SKIP_CHECK]: boolean;
+    value: CSSProperties[K] | Extract<CSSProperties[K], string>[];
+  };
 };
 
 export type CSSPseudos = { [K in CSS.Pseudos]?: CSSObject };
@@ -64,7 +65,7 @@ export type CSSOthersObject = Record<string, CSSInterpolation>;
 
 export interface CSSObject
   extends CSSPropertiesWithMultiValues,
-    CSSPseudos,
+  CSSPseudos,
     CSSOthersObject {}
 
 // ============================================================================
@@ -145,11 +146,11 @@ export const parseStyle = (
     root: true,
   },
 ): [
-  parsedStr: string,
-  // Style content which should be unique on all of the style (e.g. Keyframes).
-  // Firefox will flick with same animation name when exist multiple same keyframes.
-  effectStyle: Record<string, string>,
-] => {
+    parsedStr: string,
+    // Style content which should be unique on all of the style (e.g. Keyframes).
+    // Firefox will flick with same animation name when exist multiple same keyframes.
+    effectStyle: Record<string, string>,
+  ] => {
   const { hashId, layer, path, hashPriority } = config;
   let styleStr = '';
   let effectStyle: Record<string, string> = {};
@@ -323,15 +324,14 @@ function Empty() {
 /**
  * Register a style to the global style sheet.
  */
-export default function useStyleRegister(
+export default function useStyleRegister<T extends TokenType>(
   info: {
-    theme: Theme<any, any>;
-    token: any;
+    token: T;
     path: string[];
     hashId?: string;
     layer?: string;
   },
-  styleFn: () => CSSInterpolation,
+  styleFn: (token: T) => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
   const { autoClear, mock, defaultCache, hashPriority } =
