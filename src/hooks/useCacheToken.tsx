@@ -6,6 +6,7 @@ import {
   CSS_IN_JS_INSTANCE_ID,
 } from '../StyleContext';
 import type Theme from '../theme/Theme';
+import type { TokenType } from '../theme/interface';
 import useGlobalCache from './useGlobalCache';
 import { flattenToken, token2key } from '../util';
 
@@ -37,6 +38,10 @@ export interface Option<DerivativeToken> {
    */
   formatToken?: (mergedToken: any) => DerivativeToken;
 }
+
+export type CacheToken<DerivativeToken> = DerivativeToken & {
+  readonly _tokenKey: string;
+};
 
 const tokenKeys = new Map<string, number>();
 function recordCleanToken(tokenKey: string) {
@@ -82,13 +87,13 @@ function cleanTokenStyle(tokenKey: string) {
  * @returns Call Theme.getDerivativeToken(tokenObject) to get token
  */
 export default function useCacheToken<
-  DerivativeToken = object,
+  DerivativeToken = TokenType,
   DesignToken = DerivativeToken,
 >(
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
   option: Option<DerivativeToken> = {},
-): [DerivativeToken & { _tokenKey: string }, string] {
+): [CacheToken<DerivativeToken>, string] {
   const { salt = '', override = EMPTY_OVERRIDE, formatToken } = option;
 
   // Basic - We do basic cache here
@@ -105,9 +110,7 @@ export default function useCacheToken<
     [override],
   );
 
-  const cachedToken = useGlobalCache<
-    [DerivativeToken & { _tokenKey: string }, string]
-  >(
+  const cachedToken = useGlobalCache<[CacheToken<DerivativeToken>, string]>(
     'token',
     [salt, theme.id, tokenStr, overrideTokenStr],
     () => {

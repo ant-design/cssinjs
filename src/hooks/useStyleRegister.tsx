@@ -18,6 +18,7 @@ import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
 import type Keyframes from '../Keyframes';
 import type { TokenType } from '../theme/interface';
+import type { CacheToken } from './useCacheToken';
 import { styleValidate, supportLayer } from '../util';
 
 const isClientSide = canUseDom();
@@ -323,19 +324,19 @@ function Empty() {
 /**
  * Register a style to the global style sheet.
  */
-export default function useStyleRegister<T extends TokenType>(
+export default function useStyleRegister<DerivativeToken extends TokenType>(
   info: {
-    token: T;
+    token: CacheToken<DerivativeToken>;
     path: string[];
     hashId?: string;
     layer?: string;
   },
-  styleFn: (token: T) => CSSInterpolation,
+  styleFn: (token: CacheToken<DerivativeToken>) => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
   const { autoClear, mock, defaultCache, hashPriority } =
     React.useContext(StyleContext);
-  const tokenKey = (token as any)._tokenKey as string;
+  const tokenKey = token._tokenKey;
 
   const fullPath = [tokenKey, ...path];
 
