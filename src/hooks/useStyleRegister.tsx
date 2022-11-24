@@ -66,7 +66,7 @@ export type CSSOthersObject = Record<string, CSSInterpolation>;
 export interface CSSObject
   extends CSSPropertiesWithMultiValues,
   CSSPseudos,
-    CSSOthersObject {}
+  CSSOthersObject { }
 
 // ============================================================================
 // ==                                 Parser                                 ==
@@ -351,7 +351,7 @@ export default function useStyleRegister<T extends TokenType>(
     fullPath,
     // Create cache if needed
     () => {
-      const styleObj = styleFn();
+      const styleObj = styleFn(token);
       const [parsedStyle, effectStyle] = parseStyle(styleObj, {
         hashId,
         hashPriority,
