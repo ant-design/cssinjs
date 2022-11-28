@@ -55,6 +55,8 @@ export interface StyleContextProps {
   defaultCache: boolean;
   /** Use `:where` selector to reduce hashId css selector priority */
   hashPriority?: HashPriority;
+  /** Tell cssinjs where to inject style in */
+  container?: Element | ShadowRoot;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
@@ -68,13 +70,14 @@ export type StyleProviderProps = Partial<StyleContextProps> & {
 };
 
 export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
-  const { autoClear, mock, cache, hashPriority, children } = props;
+  const { autoClear, mock, cache, hashPriority, container, children } = props;
   const {
     cache: parentCache,
     autoClear: parentAutoClear,
     mock: parentMock,
     defaultCache: parentDefaultCache,
     hashPriority: parentHashPriority,
+    container: parentContainer,
   } = React.useContext(StyleContext);
 
   const context = React.useMemo<StyleContextProps>(
@@ -84,6 +87,7 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
       cache: cache || parentCache || createCache(),
       defaultCache: !cache && parentDefaultCache,
       hashPriority: hashPriority ?? parentHashPriority,
+      container: container || parentContainer,
     }),
     [
       autoClear,
@@ -95,6 +99,8 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
       parentDefaultCache,
       hashPriority,
       parentHashPriority,
+      container,
+      parentContainer,
     ],
   );
 

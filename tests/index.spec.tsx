@@ -42,6 +42,26 @@ describe('csssinjs', () => {
     });
   });
 
+  const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+    '.box': {
+      width: 93,
+      lineHeight: 1,
+      backgroundColor: token.primaryColor,
+    },
+  });
+
+  interface BoxProps {
+    propToken?: DesignToken;
+  }
+
+  const Box = ({ propToken = baseToken }: BoxProps) => {
+    const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
+
+    useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
+
+    return <div className="box" />;
+  };
+
   it('theme', () => {
     expect(theme.getDerivativeToken(baseToken)).toEqual({
       ...baseToken,
@@ -50,28 +70,6 @@ describe('csssinjs', () => {
   });
 
   describe('Component', () => {
-    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
-      '.box': {
-        width: 93,
-        lineHeight: 1,
-        backgroundColor: token.primaryColor,
-      },
-    });
-
-    interface BoxProps {
-      propToken?: DesignToken;
-    }
-
-    const Box = ({ propToken = baseToken }: BoxProps) => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
-
-      useStyleRegister({ theme, token, path: ['.box'] }, () => [
-        genStyle(token),
-      ]);
-
-      return <div className="box" />;
-    };
-
     it('useToken', () => {
       // Multiple time only has one style instance
       const { unmount } = render(
@@ -140,7 +138,7 @@ describe('csssinjs', () => {
   });
 
   it('nest style', () => {
-    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+    const genNestStyle = (token: DerivativeToken): CSSInterpolation => ({
       '.parent': {
         '.child': {
           background: token.primaryColor,
@@ -156,7 +154,7 @@ describe('csssinjs', () => {
       const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
 
       useStyleRegister({ theme, token, path: ['.parent'] }, () => [
-        genStyle(token),
+        genNestStyle(token),
       ]);
 
       return null;
@@ -193,7 +191,7 @@ describe('csssinjs', () => {
   });
 
   it('hash', () => {
-    const genStyle = (): CSSInterpolation => ({
+    const genHashStyle = (): CSSInterpolation => ({
       '.a,.b, .c .d': {
         background: 'red',
       },
@@ -205,7 +203,7 @@ describe('csssinjs', () => {
       });
 
       useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
-        genStyle(),
+        genHashStyle(),
       ]);
 
       return <div className={classNames('box', hashId)} />;
@@ -235,7 +233,7 @@ describe('csssinjs', () => {
       color: string;
     }
 
-    const genStyle = (token: MyDerivativeToken): CSSInterpolation => ({
+    const genOverrideStyle = (token: MyDerivativeToken): CSSInterpolation => ({
       '.box': {
         width: 93,
         lineHeight: 1,
@@ -244,7 +242,7 @@ describe('csssinjs', () => {
       },
     });
 
-    const Box = ({
+    const OverBox = ({
       override,
     }: {
       propToken?: DesignToken;
@@ -259,7 +257,7 @@ describe('csssinjs', () => {
       });
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [
-        genStyle(token),
+        genOverrideStyle(token),
       ]);
 
       return <div className="box" />;
@@ -268,7 +266,7 @@ describe('csssinjs', () => {
     it('work', () => {
       const Demo = () => (
         <StyleProvider cache={createCache()}>
-          <Box
+          <OverBox
             override={{
               primaryColor: '#010203',
             }}
@@ -290,7 +288,7 @@ describe('csssinjs', () => {
   });
 
   it('style should contain instance id', () => {
-    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+    const genDemoStyle = (token: DerivativeToken): CSSInterpolation => ({
       div: {
         color: token.primaryColor,
       },
@@ -307,7 +305,7 @@ describe('csssinjs', () => {
 
       useStyleRegister(
         { theme, token, hashId, path: ['cssinjs-instance'] },
-        () => [genStyle(token)],
+        () => [genDemoStyle(token)],
       );
 
       return <div className={classNames('box', hashId)} />;
@@ -348,7 +346,7 @@ describe('csssinjs', () => {
   });
 
   it('style under hash should work without hash', () => {
-    const genStyle = (token: DerivativeToken): CSSInterpolation => ({
+    const genStyle1 = (token: DerivativeToken): CSSInterpolation => ({
       a: {
         color: token.primaryColor,
       },
@@ -373,7 +371,7 @@ describe('csssinjs', () => {
 
       useStyleRegister(
         { theme, token, path: ['cssinjs-style-directly-under-hash'] },
-        () => [{ '&': genStyle(token) }, { '': genStyle2() }],
+        () => [{ '&': genStyle1(token) }, { '': genStyle2() }],
       );
 
       useStyleRegister(
@@ -383,7 +381,7 @@ describe('csssinjs', () => {
           hashId,
           path: ['cssinjs-style-directly-under-hash-hashed'],
         },
-        () => [{ '&': genStyle(token) }, { '': genStyle2() }],
+        () => [{ '&': genStyle1(token) }, { '': genStyle2() }],
       );
 
       return <div className={classNames('box')} />;
@@ -397,5 +395,19 @@ describe('csssinjs', () => {
     expect(styles[1].innerHTML).toBe(
       `:where(.${hash}) a{color:red;}:where(.${hash}) div{color:blue;}`,
     );
+  });
+
+  // https://github.com/ant-design/ant-design/issues/38911
+  it('StyleProvider with target insert style container', () => {
+    const container = document.createElement('div');
+
+    // Multiple time only has one style instance
+    render(
+      <StyleProvider cache={createCache()} container={container}>
+        <Box />
+      </StyleProvider>,
+    );
+
+    expect(container.querySelectorAll('style')).toHaveLength(1);
   });
 });
