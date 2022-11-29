@@ -334,7 +334,7 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
-  const { autoClear, mock, defaultCache, hashPriority } =
+  const { autoClear, mock, defaultCache, hashPriority, container } =
     React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -368,6 +368,7 @@ export default function useStyleRegister(
         const style = updateCSS(styleStr, styleId, {
           mark: ATTR_MARK,
           prepend: 'queue',
+          attachTo: container,
         });
 
         (style as any)[CSS_IN_JS_INSTANCE] = CSS_IN_JS_INSTANCE_ID;
@@ -392,6 +393,7 @@ export default function useStyleRegister(
               {
                 mark: ATTR_MARK,
                 prepend: 'queue',
+                attachTo: container,
               },
             );
           }
