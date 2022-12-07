@@ -11,7 +11,7 @@ export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 
 export function createCache() {
   if (typeof document !== 'undefined' && document.head && document.body) {
-    const styles = document.querySelectorAll(`style[${ATTR_MARK}]`) || [];
+    const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`) || [];
     const { firstChild } = document.head;
 
     Array.from(styles).forEach((style) => {
@@ -19,7 +19,7 @@ export function createCache() {
         (style as any)[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID;
 
       // Not force move if no head
-      document.head?.insertBefore(style, firstChild);
+      document.head.insertBefore(style, firstChild);
     });
 
     // Deduplicate of moved styles
