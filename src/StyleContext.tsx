@@ -10,7 +10,7 @@ export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
 export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 
 export function createCache() {
-  if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined' && document.head && document.body) {
     const styles = document.querySelectorAll(`style[${ATTR_MARK}]`) || [];
     const { firstChild } = document.head;
 

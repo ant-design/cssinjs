@@ -161,13 +161,9 @@ export const parseStyle = (
         root: false,
       });
 
-      styleStr += `@keyframes ${keyframes.getName(
+      effectStyle[animationName] = `@keyframes ${keyframes.getName(
         hashId,
       )}${parsedStr}`;
-
-      // effectStyle[animationName] = `@keyframes ${keyframes.getName(
-      //   hashId,
-      // )}${parsedStr}`;
     }
   }
 
