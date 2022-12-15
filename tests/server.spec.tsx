@@ -195,7 +195,7 @@ describe('SSR', () => {
 
   it('tricky ssr', () => {
     const html = renderToString(
-      <StyleProvider>
+      <StyleProvider ssrInline>
         <IdHolder />
         <Box>
           <IdHolder />
@@ -245,6 +245,16 @@ describe('SSR', () => {
     expect(errorSpy).not.toHaveBeenCalled();
   });
 
+  it('!ssrInline', () => {
+    const html = renderToString(
+      <StyleProvider>
+        <Box />
+      </StyleProvider>,
+    );
+
+    expect(html).toEqual('<div class="box"></div>');
+  });
+
   describe('nest provider', () => {
     it('extract', () => {
       const cache = createCache();
@@ -273,7 +283,7 @@ describe('SSR', () => {
 
     it('tricky', () => {
       const html = renderToString(
-        <StyleProvider>
+        <StyleProvider ssrInline>
           <StyleProvider>
             <StyleProvider>
               <StyleProvider>
