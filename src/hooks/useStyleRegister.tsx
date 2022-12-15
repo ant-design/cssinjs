@@ -334,7 +334,7 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
-  const { autoClear, mock, defaultCache, hashPriority, container } =
+  const { autoClear, mock, defaultCache, hashPriority, container, ssrInline } =
     React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -413,7 +413,7 @@ export default function useStyleRegister(
   return (node: React.ReactElement) => {
     let styleNode: React.ReactElement;
 
-    if (isMergedClientSide || !defaultCache) {
+    if (!ssrInline || isMergedClientSide || !defaultCache) {
       styleNode = <Empty />;
     } else {
       styleNode = (
