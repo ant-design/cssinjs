@@ -1,4 +1,6 @@
 import * as React from 'react';
+import useMemo from 'rc-util/lib/hooks/useMemo';
+import shallowEqual from 'shallowequal';
 import CacheEntity from './Cache';
 
 export const ATTR_TOKEN = 'data-token-hash';
@@ -58,6 +60,8 @@ export interface StyleContextProps {
   hashPriority?: HashPriority;
   /** Tell cssinjs where to inject style in */
   container?: Element | ShadowRoot;
+  /** Component wil render inline  `<style />` for fallback in SSR. Not recommend. */
+  ssrInline?: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
@@ -71,38 +75,32 @@ export type StyleProviderProps = Partial<StyleContextProps> & {
 };
 
 export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
-  const { autoClear, mock, cache, hashPriority, container, children } = props;
-  const {
-    cache: parentCache,
-    autoClear: parentAutoClear,
-    mock: parentMock,
-    defaultCache: parentDefaultCache,
-    hashPriority: parentHashPriority,
-    container: parentContainer,
-  } = React.useContext(StyleContext);
+  const { children, ...restProps } = props;
 
-  const context = React.useMemo<StyleContextProps>(
-    () => ({
-      autoClear: autoClear ?? parentAutoClear,
-      mock: mock ?? parentMock,
-      cache: cache || parentCache || createCache(),
-      defaultCache: !cache && parentDefaultCache,
-      hashPriority: hashPriority ?? parentHashPriority,
-      container: container || parentContainer,
-    }),
-    [
-      autoClear,
-      parentAutoClear,
-      parentMock,
-      parentCache,
-      mock,
-      cache,
-      parentDefaultCache,
-      hashPriority,
-      parentHashPriority,
-      container,
-      parentContainer,
-    ],
+  const parentContext = React.useContext(StyleContext);
+
+  const context = useMemo<StyleContextProps>(
+    () => {
+      const mergedContext: StyleContextProps = {
+        ...parentContext,
+      };
+
+      (Object.keys(restProps) as (keyof StyleContextProps)[]).forEach((key) => {
+        const value = restProps[key];
+        if (restProps[key] !== undefined) {
+          (mergedContext as any)[key] = value;
+        }
+      });
+
+      const { cache } = restProps;
+      mergedContext.cache = mergedContext.cache || createCache();
+      mergedContext.defaultCache = !cache && parentContext.defaultCache;
+
+      return mergedContext;
+    },
+    [parentContext, restProps],
+    (prev, next) =>
+      !shallowEqual(prev[0], next[0]) || !shallowEqual(prev[1], next[1]),
   );
 
   return (
