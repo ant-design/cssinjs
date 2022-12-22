@@ -53,7 +53,7 @@ export const DesignTokenContext = React.createContext<{
 });
 
 export function useToken(): [Theme<any, any>, DerivativeToken, string] {
-  const { token: rootDesignToken = defaultDesignToken, hashed } =
+  const { token: rootDesignToken = {}, hashed } =
     React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 
