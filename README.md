@@ -1,13 +1,6 @@
 # @ant-design/cssinjs
 
-[![NPM version][npm-image]][npm-url]
-[![npm download][download-image]][download-url]
-[![dumi](https://img.shields.io/badge/docs%20by-dumi-blue?style=flat-square)](https://github.com/umijs/dumi)
-[![build status][github-actions-image]][github-actions-url]
-[![Codecov][codecov-image]][codecov-url]
-[![Dependencies][david-image]][david-url]
-[![DevDependencies][david-dev-image]][david-dev-url]
-[![bundle size][bundlephobia-image]][bundlephobia-url]
+[![NPM version][npm-image]][npm-url] [![npm download][download-image]][download-url] [![dumi](https://img.shields.io/badge/docs%20by-dumi-blue?style=flat-square)](https://github.com/umijs/dumi) [![build status][github-actions-image]][github-actions-url] [![Codecov][codecov-image]][codecov-url] [![Dependencies][david-image]][david-url] [![DevDependencies][david-dev-image]][david-dev-url] [![bundle size][bundlephobia-image]][bundlephobia-url]
 
 [npm-image]: http://img.shields.io/npm/v/@ant-design/cssinjs.svg?style=flat-square
 [npm-url]: http://npmjs.org/package/@ant-design/cssinjs
@@ -24,8 +17,7 @@
 [bundlephobia-url]: https://bundlephobia.com/result?p=@ant-design/cssinjs
 [bundlephobia-image]: https://badgen.net/bundlephobia/minzip/@ant-design/cssinjs
 
-Component level cssinjs solution used in [ant.design](https://ant.design).
-It's a subset of [Emotion](https://emotion.sh/) with design token logic wrapper. Please feel free to use emotion directly if you want to find a web cssinjs solution. cssinjs related dep packages:
+Component level cssinjs solution used in [ant.design](https://ant.design). It's a subset of [Emotion](https://emotion.sh/) with design token logic wrapper. Please feel free to use emotion directly if you want to find a web cssinjs solution. cssinjs related dep packages:
 
 - stylis
 - @emotion/hash
@@ -49,3 +41,27 @@ npm start
 ## License
 
 @ant-design/cssinjs is released under the MIT license.
+
+## API
+
+### StyleProvider
+
+| Prop | Desc | Type | Default |
+| --- | --- | --- | --- |
+| autoClear | Clear inject style element when component remove. | boolean | false |
+| cache | Config cssinjs cache entity. Only set when you need ssr to extract style on you own. | CacheEntity | - |
+| hashPriority | Use `:where` selector to reduce hashId css selector priority | `'low' \| 'high'` | `'low'` |
+| container | Tell cssinjs where to inject style in. | Element \| ShadowRoot | `document.head` |
+| ssrInline | Component wil render inline `<style />` for fallback in SSR. Not recommend. | boolean | false |
+
+### createCache
+
+return CacheEntity for StyleProvider.
+
+### createTheme
+
+Create theme object. When same algorithm provided, it will return same object.
+
+### Design Token related API
+
+Since `@ant-design/cssinjs` use strong constraints for cache hit performance, we recommend to view demo `basic.tsx` for usage and `animation.tsx` for animation usage.
