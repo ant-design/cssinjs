@@ -1,7 +1,7 @@
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { StyleProvider, createCache } from '../../src';
+import { StyleProvider, createCache } from '@ant-design/cssinjs';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -42,7 +42,7 @@ const Demo = () => {
   );
 };
 
-const Pre: React.FC = ({ children }) => (
+const Pre: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <pre
     style={{
       background: '#FFF',

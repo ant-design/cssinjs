@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from './components/Button';
-import { StyleProvider } from '../../src/';
+import { StyleProvider } from '@ant-design/cssinjs';
 
 export default function App() {
   const [show, setShow] = React.useState(true);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { StyleProvider } from '../../src';
+import { StyleProvider } from '@ant-design/cssinjs';
 import Button from './components/Button';
 
 export default function App() {

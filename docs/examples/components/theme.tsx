@@ -1,8 +1,7 @@
 import React from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import type { Theme } from '../../../src';
-import { createTheme, useCacheToken } from '../../../src';
-import type { CSSObject } from '../../../src';
+import type { CSSObject, Theme } from '@ant-design/cssinjs';
+import { createTheme, useCacheToken } from '@ant-design/cssinjs';
 
 export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 
@@ -54,7 +53,7 @@ export const DesignTokenContext = React.createContext<{
 });
 
 export function useToken(): [Theme<any, any>, DerivativeToken, string] {
-  const { token: rootDesignToken = defaultDesignToken, hashed } =
+  const { token: rootDesignToken = {}, hashed } =
     React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 

@@ -2,8 +2,8 @@ import React from 'react';
 import classNames from 'classnames';
 import { useToken } from './theme';
 import type { DerivativeToken } from './theme';
-import { useStyleRegister } from '../../../src/';
-import type { CSSInterpolation, CSSObject } from '../../../src/';
+import type { CSSInterpolation, CSSObject } from '@ant-design/cssinjs';
+import { useStyleRegister } from '@ant-design/cssinjs';
 
 // 通用框架
 const genSharedButtonStyle = (

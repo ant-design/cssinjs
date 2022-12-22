@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 import './layer.less';
-import { useStyleRegister, Theme } from '../../src';
+import { useStyleRegister, Theme } from '@ant-design/cssinjs';
 
 const theme = new Theme([() => ({})]);
 

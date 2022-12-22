@@ -2,8 +2,9 @@ import React from 'react';
 import classNames from 'classnames';
 import { useToken } from './theme';
 import type { DerivativeToken } from './theme';
-import { useStyleRegister, Keyframes } from '../../../src/';
-import type { CSSInterpolation } from '../../../src/';
+
+import type { CSSInterpolation } from '@ant-design/cssinjs';
+import { useStyleRegister, Keyframes } from '@ant-design/cssinjs';
 
 const animation = new Keyframes('loadingCircle', {
   to: {
@@ -29,7 +30,7 @@ const genSpinStyle = (
   animation,
 ];
 
-interface SpinProps extends React.HTMLAttributes<HTMLDivElement> {}
+type SpinProps = React.HTMLAttributes<HTMLDivElement>;
 
 const Spin = ({ className, ...restProps }: SpinProps) => {
   const prefixCls = 'ant-spin';
