@@ -2,7 +2,7 @@ import React from 'react';
 import Button from './components/Button';
 import { DesignTokenContext, ThemeContext } from './components/theme';
 import type { DesignToken, DerivativeToken } from './components/theme';
-import { createTheme } from '../../src';
+import { createTheme } from '@ant-design/cssinjs';
 
 function derivativeA(designToken: DesignToken): DerivativeToken {
   return {

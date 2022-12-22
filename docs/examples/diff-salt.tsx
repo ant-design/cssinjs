@@ -1,11 +1,9 @@
-import { CSSInterpolation, useStyleRegister } from '../../src';
+import type { CSSInterpolation } from '@ant-design/cssinjs';
+import { useStyleRegister } from '@ant-design/cssinjs';
 import classNames from 'classnames';
 import React from 'react';
-import {
-  DerivativeToken,
-  DesignTokenContext,
-  useToken,
-} from './components/theme';
+import type { DerivativeToken } from './components/theme';
+import { DesignTokenContext, useToken } from './components/theme';
 
 // Style 1
 const genStyle1 = (
