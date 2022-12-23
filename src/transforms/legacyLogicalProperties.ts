@@ -1,5 +1,5 @@
 import type { CSSObject } from '..';
-import type { Transform } from './interface';
+import type { Transformer } from './interface';
 
 function splitValues(value: string) {
   return value.split(/\s+/);
@@ -88,7 +88,7 @@ const keyMap: Record<string, MatchValue> = {
  * - padding
  * - border
  */
-const transform: Transform = {
+const transform: Transformer = {
   visit: (cssObj) => {
     const clone: CSSObject = {};
 

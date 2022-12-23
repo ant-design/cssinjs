@@ -5,7 +5,7 @@ import { StyleProvider, createCache } from './StyleContext';
 import Keyframes from './Keyframes';
 import type { TokenType, DerivativeFunc } from './theme';
 import { createTheme, Theme } from './theme';
-import type { Transform } from './transforms/interface';
+import type { Transformer } from './transforms/interface';
 
 export {
   Theme,
@@ -23,5 +23,5 @@ export type {
   CSSObject,
   CSSInterpolation,
   DerivativeFunc,
-  Transform,
+  Transformer as Transform,
 };

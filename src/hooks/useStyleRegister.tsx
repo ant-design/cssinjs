@@ -118,7 +118,7 @@ export interface ParseConfig {
   hashPriority?: HashPriority;
   layer?: string;
   path?: string;
-  transform?: Transform[];
+  transform?: Transformer[];
 }
 
 export interface ParseInfo {
@@ -347,7 +347,7 @@ export default function useStyleRegister(
     hashPriority,
     container,
     ssrInline,
-    transformCSS,
+    cssTransformers,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -370,7 +370,7 @@ export default function useStyleRegister(
         hashPriority,
         layer,
         path: path.join('-'),
-        transform: transformCSS,
+        transform: cssTransformers,
       });
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
