@@ -16,7 +16,7 @@ import StyleContext, {
 } from '../StyleContext';
 import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
-import type { Theme, Transform } from '..';
+import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import { styleValidate, supportLayer } from '../util';
 

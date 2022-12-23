@@ -23,5 +23,5 @@ export type {
   CSSObject,
   CSSInterpolation,
   DerivativeFunc,
-  Transformer as Transform,
+  Transformer,
 };

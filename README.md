@@ -53,7 +53,7 @@ npm start
 | hashPriority | Use `:where` selector to reduce hashId css selector priority | `'low' \| 'high'` | `'low'` |
 | container | Tell cssinjs where to inject style in. | Element \| ShadowRoot | `document.head` |
 | ssrInline | Component wil render inline `<style />` for fallback in SSR. Not recommend. | boolean | false |
-| cssTransformers | Transform css before inject in document. Please note that `cssTransformers` do not support dynamic update | Transform[] | - |
+| cssTransformers | Transform css before inject in document. Please note that `cssTransformers` do not support dynamic update | Transformer[] | - |
 
 ### createCache
 
