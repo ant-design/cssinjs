@@ -5,7 +5,8 @@ import { StyleProvider, createCache } from './StyleContext';
 import Keyframes from './Keyframes';
 import type { TokenType, DerivativeFunc } from './theme';
 import { createTheme, Theme } from './theme';
-import type { Transformer } from './transforms/interface';
+import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
+import type { Transformer } from './transformers/interface';
 
 export {
   Theme,
@@ -16,6 +17,9 @@ export {
   StyleProvider,
   Keyframes,
   extractStyle,
+
+  // Transformer
+  legacyLogicalPropertiesTransformer,
 };
 
 export type {

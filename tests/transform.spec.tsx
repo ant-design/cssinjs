@@ -5,9 +5,9 @@ import {
   createTheme,
   StyleProvider,
   createCache,
+  legacyLogicalPropertiesTransformer,
 } from '../src';
 import type { CSSInterpolation } from '../src';
-import legacyLogicalProperties from '../src/transforms/legacyLogicalProperties';
 // import { getStyleText } from './util';
 
 describe('transform', () => {
@@ -30,7 +30,7 @@ describe('transform', () => {
     const Wrapper = ({ css }: { css: CSSInterpolation }) => (
       <StyleProvider
         cache={createCache()}
-        cssTransformers={[legacyLogicalProperties]}
+        cssTransformers={[legacyLogicalPropertiesTransformer]}
       >
         <Demo css={css} />
       </StyleProvider>

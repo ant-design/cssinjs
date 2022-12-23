@@ -72,10 +72,13 @@ Since `@ant-design/cssinjs` use strong constraints for cache hit performance, we
 When you need transform CSSObject before inject style. You can use `cssTransformers` to handle this:
 
 ```tsx
-import legacyLogicalProperties from '@ant-design/cssinjs/lib/transform/legacyLogicalProperties';
+import {
+  legacyLogicalPropertiesTransformer,
+  StyleProvider,
+} from '@ant-design/cssinjs';
 
 export default () => (
-  <StyleProvider cssTransformers={[legacyLogicalProperties]}>
+  <StyleProvider cssTransformers={[legacyLogicalPropertiesTransformer]}>
     <MyApp />
   </StyleProvider>
 );
@@ -83,7 +86,7 @@ export default () => (
 
 Follow are the transform we provide:
 
-#### legacyLogicalProperties
+#### legacyLogicalPropertiesTransformer
 
 Convert logical properties to legacy properties. e.g. `marginBlockStart` to `marginTop`:
 

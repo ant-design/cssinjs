@@ -2,7 +2,7 @@ import * as React from 'react';
 import useMemo from 'rc-util/lib/hooks/useMemo';
 import shallowEqual from 'shallowequal';
 import CacheEntity from './Cache';
-import type { Transformer } from './transforms/interface';
+import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
