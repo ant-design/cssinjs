@@ -118,7 +118,7 @@ export interface ParseConfig {
   hashPriority?: HashPriority;
   layer?: string;
   path?: string;
-  transform?: Transformer[];
+  transformers?: Transformer[];
 }
 
 export interface ParseInfo {
@@ -151,7 +151,7 @@ export const parseStyle = (
   // Firefox will flick with same animation name when exist multiple same keyframes.
   effectStyle: Record<string, string>,
 ] => {
-  const { hashId, layer, path, hashPriority, transform = [] } = config;
+  const { hashId, layer, path, hashPriority, transformers = [] } = config;
   let styleStr = '';
   let effectStyle: Record<string, string> = {};
 
@@ -198,7 +198,7 @@ export const parseStyle = (
       // Keyframe
       parseKeyframes(style as unknown as Keyframes);
     } else {
-      const mergedStyle = transform.reduce(
+      const mergedStyle = transformers.reduce(
         (prev, trans) => trans?.visit?.(prev) || prev,
         style,
       );
@@ -370,7 +370,7 @@ export default function useStyleRegister(
         hashPriority,
         layer,
         path: path.join('-'),
-        transform: cssTransformers,
+        transformers: cssTransformers,
       });
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
