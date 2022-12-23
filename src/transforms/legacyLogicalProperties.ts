@@ -102,7 +102,12 @@ const transform: Transform = {
       ) {
         const values = splitValues(value.toString());
 
-        if (matchValue.length === 1) {
+        if (matchValue.length && matchValue.notSplit) {
+          // not split means always give same value like border
+          matchValue.forEach((matchKey) => {
+            clone[matchKey] = value;
+          });
+        } else if (matchValue.length === 1) {
           // Handle like `marginBlockStart` => `marginTop`
           clone[matchValue[0]] = value;
         } else if (matchValue.length === 2) {
@@ -113,14 +118,14 @@ const transform: Transform = {
         } else if (matchValue.length === 4) {
           // Handle like `inset` => `top` & `right` & `bottom` & `left`
           matchValue.forEach((matchKey, index) => {
-            clone[matchKey] = matchValue.notSplit
-              ? value
-              : values[index] ?? values[index - 2] ?? values[0];
+            clone[matchKey] = values[index] ?? values[index - 2] ?? values[0];
           });
+        } else {
+          clone[key] = value;
         }
+      } else {
+        clone[key] = value;
       }
-
-      clone[key] = value;
     });
 
     return clone;
