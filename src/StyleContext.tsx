@@ -63,8 +63,8 @@ export interface StyleContextProps {
   container?: Element | ShadowRoot;
   /** Component wil render inline  `<style />` for fallback in SSR. Not recommend. */
   ssrInline?: boolean;
-  /** Transform css before inject in document. Please note that `cssTransformers` do not support dynamic update */
-  cssTransformers?: Transformer[];
+  /** Transform css before inject in document. Please note that `transformers` do not support dynamic update */
+  transformers?: Transformer[];
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

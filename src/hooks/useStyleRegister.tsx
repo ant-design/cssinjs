@@ -347,7 +347,7 @@ export default function useStyleRegister(
     hashPriority,
     container,
     ssrInline,
-    cssTransformers,
+    transformers,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -370,7 +370,7 @@ export default function useStyleRegister(
         hashPriority,
         layer,
         path: path.join('-'),
-        transformers: cssTransformers,
+        transformers,
       });
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);

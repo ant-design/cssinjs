@@ -53,7 +53,7 @@ npm start
 | hashPriority | Use `:where` selector to reduce hashId css selector priority | `'low' \| 'high'` | `'low'` |
 | container | Tell cssinjs where to inject style in. | Element \| ShadowRoot | `document.head` |
 | ssrInline | Component wil render inline `<style />` for fallback in SSR. Not recommend. | boolean | false |
-| cssTransformers | Transform css before inject in document. Please note that `cssTransformers` do not support dynamic update | Transformer[] | - |
+| transformers | Transform css before inject in document. Please note that `transformers` do not support dynamic update | Transformer[] | - |
 
 ### createCache
 
@@ -69,7 +69,7 @@ Since `@ant-design/cssinjs` use strong constraints for cache hit performance, we
 
 ## Transform
 
-When you need transform CSSObject before inject style. You can use `cssTransformers` to handle this:
+When you need transform CSSObject before inject style. You can use `transformers` to handle this:
 
 ```tsx
 import {
@@ -78,7 +78,7 @@ import {
 } from '@ant-design/cssinjs';
 
 export default () => (
-  <StyleProvider cssTransformers={[legacyLogicalPropertiesTransformer]}>
+  <StyleProvider transformers={[legacyLogicalPropertiesTransformer]}>
     <MyApp />
   </StyleProvider>
 );

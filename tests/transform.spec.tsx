@@ -30,7 +30,7 @@ describe('transform', () => {
     const Wrapper = ({ css }: { css: CSSInterpolation }) => (
       <StyleProvider
         cache={createCache()}
-        cssTransformers={[legacyLogicalPropertiesTransformer]}
+        transformers={[legacyLogicalPropertiesTransformer]}
       >
         <Demo css={css} />
       </StyleProvider>
