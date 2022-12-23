@@ -16,7 +16,7 @@ import StyleContext, {
 } from '../StyleContext';
 import type { HashPriority } from '../StyleContext';
 import type Cache from '../Cache';
-import type { Theme } from '..';
+import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import { styleValidate, supportLayer } from '../util';
 
@@ -118,6 +118,7 @@ export interface ParseConfig {
   hashPriority?: HashPriority;
   layer?: string;
   path?: string;
+  transformers?: Transformer[];
 }
 
 export interface ParseInfo {
@@ -150,7 +151,7 @@ export const parseStyle = (
   // Firefox will flick with same animation name when exist multiple same keyframes.
   effectStyle: Record<string, string>,
 ] => {
-  const { hashId, layer, path, hashPriority } = config;
+  const { hashId, layer, path, hashPriority, transformers = [] } = config;
   let styleStr = '';
   let effectStyle: Record<string, string> = {};
 
@@ -197,9 +198,14 @@ export const parseStyle = (
       // Keyframe
       parseKeyframes(style as unknown as Keyframes);
     } else {
+      const mergedStyle = transformers.reduce(
+        (prev, trans) => trans?.visit?.(prev) || prev,
+        style,
+      );
+
       // Normal CSSObject
-      Object.keys(style).forEach((key) => {
-        const value = style[key];
+      Object.keys(mergedStyle).forEach((key) => {
+        const value = mergedStyle[key];
 
         if (
           typeof value === 'object' &&
@@ -334,8 +340,15 @@ export default function useStyleRegister(
   styleFn: () => CSSInterpolation,
 ) {
   const { token, path, hashId, layer } = info;
-  const { autoClear, mock, defaultCache, hashPriority, container, ssrInline } =
-    React.useContext(StyleContext);
+  const {
+    autoClear,
+    mock,
+    defaultCache,
+    hashPriority,
+    container,
+    ssrInline,
+    transformers,
+  } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
   const fullPath = [tokenKey, ...path];
@@ -357,6 +370,7 @@ export default function useStyleRegister(
         hashPriority,
         layer,
         path: path.join('-'),
+        transformers,
       });
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);

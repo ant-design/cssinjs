@@ -2,6 +2,7 @@ import * as React from 'react';
 import useMemo from 'rc-util/lib/hooks/useMemo';
 import shallowEqual from 'shallowequal';
 import CacheEntity from './Cache';
+import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
@@ -62,6 +63,8 @@ export interface StyleContextProps {
   container?: Element | ShadowRoot;
   /** Component wil render inline  `<style />` for fallback in SSR. Not recommend. */
   ssrInline?: boolean;
+  /** Transform css before inject in document. Please note that `transformers` do not support dynamic update */
+  transformers?: Transformer[];
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

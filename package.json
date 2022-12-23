@@ -35,8 +35,8 @@
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "pretty-quick": "pretty-quick",
-    "test": "father test",
-    "coverage": "father test --coverage"
+    "test": "rc-test",
+    "coverage": "rc-test --coverage"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@ctrl/tinycolor": "^3.4.0",
+    "@rc-component/father-plugin": "^1.0.1",
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^13.0.0",
     "@types/classnames": "^2.2.9",
@@ -65,13 +66,13 @@
     "cross-env": "^7.0.2",
     "dumi": "^1.1.0",
     "eslint": "^7.0.0",
-    "father": "^2.13.4",
-    "father-build": "^1.18.6",
+    "father": "^4.0.0",
     "gh-pages": "^3.1.0",
     "husky": "^4.2.5",
     "np": "^7.0.0",
     "prettier": "^2.0.5",
     "pretty-quick": "^3.0.0",
+    "rc-test": "^7.0.14",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "typescript": "^4.0.5"
