@@ -1,8 +1,12 @@
 import type { CSSObject } from '..';
 import type { Transformer } from './interface';
 
-function splitValues(value: string) {
-  return value.split(/\s+/);
+function splitValues(value: string | number) {
+  if (typeof value === 'number') {
+    return [value];
+  }
+
+  return String(value).split(/\s+/);
 }
 
 type MatchValue = string[] & {
@@ -79,6 +83,10 @@ const keyMap: Record<string, MatchValue> = {
   borderEndEndRadius: ['borderBottomRightRadius'],
 };
 
+function skipCheck(value: string | number) {
+  return { _skip_check_: true, value };
+}
+
 /**
  * Convert css logical properties to legacy properties.
  * Such as: `margin-block-start` to `margin-top`.
@@ -100,25 +108,25 @@ const transform: Transformer = {
         matchValue &&
         (typeof value === 'number' || typeof value === 'string')
       ) {
-        const values = splitValues(value.toString());
+        const values = splitValues(value);
 
         if (matchValue.length && matchValue.notSplit) {
           // not split means always give same value like border
           matchValue.forEach((matchKey) => {
-            clone[matchKey] = value;
+            clone[matchKey] = skipCheck(value);
           });
         } else if (matchValue.length === 1) {
           // Handle like `marginBlockStart` => `marginTop`
-          clone[matchValue[0]] = value;
+          clone[matchValue[0]] = skipCheck(value);
         } else if (matchValue.length === 2) {
           // Handle like `marginBlock` => `marginTop` & `marginBottom`
           matchValue.forEach((matchKey, index) => {
-            clone[matchKey] = values[index] ?? values[0];
+            clone[matchKey] = skipCheck(values[index] ?? values[0]);
           });
         } else if (matchValue.length === 4) {
           // Handle like `inset` => `top` & `right` & `bottom` & `left`
           matchValue.forEach((matchKey, index) => {
-            clone[matchKey] = values[index] ?? values[index - 2] ?? values[0];
+            clone[matchKey] = skipCheck(values[index] ?? values[index - 2] ?? values[0]);
           });
         } else {
           clone[key] = value;

@@ -62,7 +62,7 @@ describe('transform', () => {
         <Wrapper
           css={{
             '.box': {
-              marginBlock: '1px',
+              marginBlock: 1,
               marginInline: '2px',
               marginInlineEnd: '3px',
             },
