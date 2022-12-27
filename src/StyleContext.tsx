@@ -1,6 +1,6 @@
 import * as React from 'react';
 import useMemo from 'rc-util/lib/hooks/useMemo';
-import shallowEqual from 'shallowequal';
+import isEqual from 'rc-util/lib/isEqual';
 import CacheEntity from './Cache';
 import type { Transformer } from './transformers/interface';
 
@@ -103,7 +103,7 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
     },
     [parentContext, restProps],
     (prev, next) =>
-      !shallowEqual(prev[0], next[0]) || !shallowEqual(prev[1], next[1]),
+      !isEqual(prev[0], next[0], true) || !isEqual(prev[1], next[1], true),
   );
 
   return (
