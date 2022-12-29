@@ -1,13 +1,13 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
-import {
-  useStyleRegister,
-  createTheme,
-  StyleProvider,
-  createCache,
-  legacyLogicalPropertiesTransformer,
-} from '../src';
+import * as React from 'react';
 import type { CSSInterpolation } from '../src';
+import {
+  createCache,
+  createTheme,
+  legacyLogicalPropertiesTransformer,
+  StyleProvider,
+  useStyleRegister,
+} from '../src';
 // import { getStyleText } from './util';
 
 describe('transform', () => {
@@ -122,6 +122,27 @@ describe('transform', () => {
         borderLeft: '3px solid yellow',
         borderRight: '2px solid green',
         borderTopLeftRadius: '4px',
+      });
+    });
+
+    it('should not split calc', () => {
+      const { container } = render(
+        <Wrapper
+          css={{
+            '.box': {
+              marginBlock: 'calc(2px + 3px)',
+              marginInline: 'calc(2px + 1px)',
+              marginInlineEnd: '3px',
+            },
+          }}
+        />,
+      );
+
+      expect(container.querySelector('.box')).toHaveStyle({
+        marginTop: 'calc(2px + 3px)',
+        marginBottom: 'calc(2px + 3px)',
+        marginLeft: 'calc(2px + 1px)',
+        marginRight: '3px',
       });
     });
   });
