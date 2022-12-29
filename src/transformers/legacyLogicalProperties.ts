@@ -6,7 +6,29 @@ function splitValues(value: string | number) {
     return [value];
   }
 
-  return String(value).split(/\s+/);
+  const splitStyle = String(value).split(/\s+/);
+
+  // Combine styles split in brackets, like `calc(1px + 2px)`
+  let temp = '';
+  let brackets = 0;
+  return splitStyle.reduce<string[]>((list, item) => {
+    if (item.includes('(')) {
+      temp += item;
+      brackets += item.split('(').length - 1;
+    } else if (item.includes(')')) {
+      temp += item;
+      brackets -= item.split(')').length - 1;
+      if (brackets === 0) {
+        list.push(temp);
+        temp = '';
+      }
+    } else if (brackets > 0) {
+      temp += item;
+    } else {
+      list.push(item);
+    }
+    return list;
+  }, []);
 }
 
 type MatchValue = string[] & {
@@ -126,7 +148,9 @@ const transform: Transformer = {
         } else if (matchValue.length === 4) {
           // Handle like `inset` => `top` & `right` & `bottom` & `left`
           matchValue.forEach((matchKey, index) => {
-            clone[matchKey] = skipCheck(values[index] ?? values[index - 2] ?? values[0]);
+            clone[matchKey] = skipCheck(
+              values[index] ?? values[index - 2] ?? values[0],
+            );
           });
         } else {
           clone[key] = value;
