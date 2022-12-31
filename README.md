@@ -25,7 +25,7 @@ Component level cssinjs solution used in [ant.design](https://ant.design). It's 
 
 ## Live Demo
 
-https://cssinjs.vercel.app/
+https://ant-design.github.io/cssinjs/
 
 ## Install
 
