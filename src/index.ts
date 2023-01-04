@@ -1,12 +1,14 @@
-import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
-import type { CSSObject, CSSInterpolation } from './hooks/useStyleRegister';
 import useCacheToken from './hooks/useCacheToken';
-import { StyleProvider, createCache } from './StyleContext';
+import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
+import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
-import type { TokenType, DerivativeFunc } from './theme';
+import type { Linter } from './linters';
+import { logicalPropertiesLinter } from './linters';
+import { createCache, StyleProvider } from './StyleContext';
+import type { DerivativeFunc, TokenType } from './theme';
 import { createTheme, Theme } from './theme';
-import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import type { Transformer } from './transformers/interface';
+import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 
 export {
   Theme,
@@ -20,12 +22,15 @@ export {
 
   // Transformer
   legacyLogicalPropertiesTransformer,
-};
 
+  // Linters
+  logicalPropertiesLinter,
+};
 export type {
   TokenType,
   CSSObject,
   CSSInterpolation,
   DerivativeFunc,
   Transformer,
+  Linter,
 };
