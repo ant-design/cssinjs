@@ -1,7 +1,8 @@
-import * as React from 'react';
 import useMemo from 'rc-util/lib/hooks/useMemo';
 import isEqual from 'rc-util/lib/isEqual';
+import * as React from 'react';
 import CacheEntity from './Cache';
+import type { Linter } from './linters/interface';
 import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
@@ -65,6 +66,12 @@ export interface StyleContextProps {
   ssrInline?: boolean;
   /** Transform css before inject in document. Please note that `transformers` do not support dynamic update */
   transformers?: Transformer[];
+  /**
+   * Linters to lint css before inject in document.
+   * Styles will be linted after transforming.
+   * Please note that `linters` do not support dynamic update.
+   */
+  linters?: Linter[];
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

@@ -1,24 +1,26 @@
-import * as React from 'react';
-import type * as CSS from 'csstype';
-import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import hash from '@emotion/hash';
+import type * as CSS from 'csstype';
+import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
-import useGlobalCache from './useGlobalCache';
+import type { Theme, Transformer } from '..';
+import type Cache from '../Cache';
+import type Keyframes from '../Keyframes';
+import type { Linter } from '../linters';
+import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
+import type { HashPriority } from '../StyleContext';
 import StyleContext, {
+  ATTR_DEV_CACHE_PATH,
   ATTR_MARK,
   ATTR_TOKEN,
-  ATTR_DEV_CACHE_PATH,
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
 } from '../StyleContext';
-import type { HashPriority } from '../StyleContext';
-import type Cache from '../Cache';
-import type { Theme, Transformer } from '..';
-import type Keyframes from '../Keyframes';
-import { styleValidate, supportLayer } from '../util';
+import { supportLayer } from '../util';
+import useGlobalCache from './useGlobalCache';
 
 const isClientSide = canUseDom();
 
@@ -80,8 +82,6 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
   return typeof value === 'object' && value && SKIP_CHECK in value;
 }
 
-export let animationStatistics: Record<string, boolean> = {};
-
 // 注入 hash 值
 function injectSelectorHash(
   key: string,
@@ -119,11 +119,13 @@ export interface ParseConfig {
   layer?: string;
   path?: string;
   transformers?: Transformer[];
+  linters?: Linter[];
 }
 
 export interface ParseInfo {
   root?: boolean;
   injectHash?: boolean;
+  parentSelectors: string[];
 }
 
 // Global effect style will mount once and not removed
@@ -142,8 +144,9 @@ export const _cf =
 export const parseStyle = (
   interpolation: CSSInterpolation,
   config: ParseConfig = {},
-  { root, injectHash }: ParseInfo = {
+  { root, injectHash, parentSelectors }: ParseInfo = {
     root: true,
+    parentSelectors: [],
   },
 ): [
   parsedStr: string,
@@ -151,7 +154,14 @@ export const parseStyle = (
   // Firefox will flick with same animation name when exist multiple same keyframes.
   effectStyle: Record<string, string>,
 ] => {
-  const { hashId, layer, path, hashPriority, transformers = [] } = config;
+  const {
+    hashId,
+    layer,
+    path,
+    hashPriority,
+    transformers = [],
+    linters = [],
+  } = config;
   let styleStr = '';
   let effectStyle: Record<string, string> = {};
 
@@ -160,6 +170,7 @@ export const parseStyle = (
     if (!effectStyle[animationName]) {
       const [parsedStr] = parseStyle(keyframes.style, config, {
         root: false,
+        parentSelectors,
       });
 
       effectStyle[animationName] = `@keyframes ${keyframes.getName(
@@ -245,13 +256,11 @@ export const parseStyle = (
 
           const [parsedStr, childEffectStyle] = parseStyle(
             value as any,
-            {
-              ...config,
-              path: `${path} -> ${mergedKey}`,
-            },
+            config,
             {
               root: nextRoot,
               injectHash: subInjectHash,
+              parentSelectors: [...parentSelectors, mergedKey],
             },
           );
 
@@ -267,7 +276,10 @@ export const parseStyle = (
             process.env.NODE_ENV !== 'production' &&
             (typeof value !== 'object' || !(value as any)?.[SKIP_CHECK])
           ) {
-            styleValidate(key, actualValue, { path, hashId });
+            [contentQuotesLinter, hashedAnimationLinter, ...linters].forEach(
+              (linter) =>
+                linter(key, actualValue, { path, hashId, parentSelectors }),
+            );
           }
 
           // 如果是样式则直接插入
@@ -348,6 +360,7 @@ export default function useStyleRegister(
     container,
     ssrInline,
     transformers,
+    linters,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -371,12 +384,10 @@ export default function useStyleRegister(
         layer,
         path: path.join('-'),
         transformers,
+        linters,
       });
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
-
-      // Clear animation statistics
-      animationStatistics = {};
 
       if (isMergedClientSide) {
         const style = updateCSS(styleStr, styleId, {
