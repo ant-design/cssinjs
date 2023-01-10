@@ -1,23 +1,23 @@
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import { render } from '@testing-library/react';
+import type { CSSInterpolation } from '../src';
 import {
+  createCache,
+  extractStyle,
+  extractStyleNode,
+  StyleProvider,
   Theme,
   useCacheToken,
   useStyleRegister,
-  StyleProvider,
-  extractStyle,
-  createCache,
 } from '../src';
-import type { CSSInterpolation } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import classNames from 'classnames';
 import {
+  ATTR_MARK,
   CSS_IN_JS_INSTANCE,
   CSS_IN_JS_INSTANCE_ID,
-  ATTR_MARK,
 } from '../src/StyleContext';
-import classNames from 'classnames';
 
 interface DesignToken {
   primaryColor: string;
@@ -154,6 +154,32 @@ describe('SSR', () => {
     expect(document.head.querySelectorAll('style')).toHaveLength(2);
 
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('ssr extract style node', () => {
+    // >>> SSR
+    const cache = createCache();
+
+    const html = renderToString(
+      <StyleProvider cache={cache}>
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
+      </StyleProvider>,
+    );
+
+    const styleNode = extractStyleNode(cache);
+    const styleText = extractStyle(cache);
+
+    const style = renderToString(<>{styleNode}</>);
+
+    expect(html).toEqual(
+      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
+    );
+
+    expect(style).toEqual(styleText);
   });
 
   it('default hashPriority', () => {
