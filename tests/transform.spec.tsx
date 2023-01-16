@@ -125,6 +125,27 @@ describe('transform', () => {
         borderTopLeftRadius: '4px',
       });
     });
+
+    it('should not split calc', () => {
+      const { container } = render(
+        <Wrapper
+          css={{
+            '.box': {
+              marginBlock: 'calc(2px + 3px)',
+              marginInline: 'calc(2px + 1px)',
+              marginInlineEnd: '3px',
+            },
+          }}
+        />,
+      );
+
+      expect(container.querySelector('.box')).toHaveStyle({
+        marginTop: 'calc(2px + 3px)',
+        marginBottom: 'calc(2px + 3px)',
+        marginLeft: 'calc(2px + 1px)',
+        marginRight: '3px',
+      });
+    });
   });
 
   describe('legacyLogicalProperties', () => {

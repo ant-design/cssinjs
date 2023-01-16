@@ -1,8 +1,9 @@
-import type { CSSObject } from '../src/useStyleRegister';
-import { Theme, useCacheToken, useStyleRegister } from '../src';
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import { StyleProvider, Theme, useCacheToken, useStyleRegister } from '../src';
+import type { CSSObject } from '../src/hooks/useStyleRegister';
 import Keyframes from '../src/Keyframes';
+import { logicalPropertiesLinter } from '../src/linters';
 
 interface DesignToken {
   primaryColor: string;
@@ -62,7 +63,11 @@ describe('style warning', () => {
           ]);
           return <div />;
         };
-        render(<Demo />);
+        render(
+          <StyleProvider linters={[logicalPropertiesLinter]}>
+            <Demo />
+          </StyleProvider>,
+        );
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining(
             `You seem to be using non-logical property '${prop}'`,
@@ -99,7 +104,11 @@ describe('style warning', () => {
         useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
         return <div />;
       };
-      render(<Demo />);
+      render(
+        <StyleProvider linters={[logicalPropertiesLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `You seem to be using '${prop}' property with different left ${prop} and right ${prop},`,
@@ -118,7 +127,11 @@ describe('style warning', () => {
         useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
         return <div />;
       };
-      render(<Demo />);
+      render(
+        <StyleProvider linters={[logicalPropertiesLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `You seem to be using non-logical value 'left' of ${prop},`,
@@ -146,7 +159,11 @@ describe('style warning', () => {
         );
         return <div />;
       };
-      render(<Demo />);
+      render(
+        <StyleProvider linters={[logicalPropertiesLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `You seem to be using non-logical value '${value}' of borderRadius`,
@@ -202,7 +219,7 @@ describe('style warning', () => {
     };
     render(<Demo />);
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('selector-in-warning -> .demo'),
+      expect.stringContaining('Selector info: .demo'),
     );
   });
 
