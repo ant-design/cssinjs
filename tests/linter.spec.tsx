@@ -1,9 +1,18 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { StyleProvider, Theme, useCacheToken, useStyleRegister } from '../src';
+import {
+  createCache,
+  StyleProvider,
+  Theme,
+  useCacheToken,
+  useStyleRegister,
+} from '../src';
 import type { CSSObject } from '../src/hooks/useStyleRegister';
 import Keyframes from '../src/Keyframes';
-import { logicalPropertiesLinter } from '../src/linters';
+import {
+  legacyNotSelectorLinter,
+  logicalPropertiesLinter,
+} from '../src/linters';
 
 interface DesignToken {
   primaryColor: string;
@@ -252,6 +261,35 @@ describe('style warning', () => {
     render(<Demo />);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(`You seem to be using hashed animation`),
+    );
+  });
+
+  it(':not selector check legacy browsers', () => {
+    const genStyle = (): CSSObject => ({
+      '.ant-btn': {
+        '&&-primary': {
+          ':not(&-default)': {
+            color: 'red',
+            background: 'blue',
+          },
+        },
+      },
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+      return <div />;
+    };
+    render(
+      <StyleProvider cache={createCache()} linters={[legacyNotSelectorLinter]}>
+        <Demo />
+      </StyleProvider>,
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Concat ':not' selector not support in legacy browsers`,
+      ),
     );
   });
 });
