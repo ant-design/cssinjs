@@ -1,7 +1,15 @@
 import hash from '@emotion/hash';
-import devWarning from 'rc-util/lib/warning';
-import { updateCSS, removeCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import devWarning from 'rc-util/lib/warning';
+
+/**
+ * Convert selector to array. e.g.
+ * `#a.b.c` to [`#a`, `.b`, `.c`]
+ */
+export function splitSelector(selector: string): string[] {
+  return selector.split(/(?=[.#])/);
+}
 
 export function flattenToken(token: any) {
   let str = '';

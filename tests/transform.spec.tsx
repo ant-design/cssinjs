@@ -1,14 +1,15 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
-import {
-  useStyleRegister,
-  createTheme,
-  StyleProvider,
-  createCache,
-  legacyLogicalPropertiesTransformer,
-} from '../src';
+import * as React from 'react';
 import type { CSSInterpolation } from '../src';
-// import { getStyleText } from './util';
+import {
+  createCache,
+  createTheme,
+  legacyLogicalPropertiesTransformer,
+  legacyNotSelectorTransformer,
+  StyleProvider,
+  useStyleRegister,
+} from '../src';
+import { getStyleText } from './util';
 
 describe('transform', () => {
   beforeEach(() => {
@@ -123,6 +124,49 @@ describe('transform', () => {
         borderRight: '2px solid green',
         borderTopLeftRadius: '4px',
       });
+    });
+  });
+
+  describe('legacyLogicalProperties', () => {
+    const Demo = ({ css }: { css: CSSInterpolation }) => {
+      useStyleRegister(
+        { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
+        () => css,
+      );
+      return <div className="box" />;
+    };
+
+    const Wrapper = ({ css }: { css: CSSInterpolation }) => (
+      <StyleProvider
+        cache={createCache()}
+        transformers={[legacyNotSelectorTransformer]}
+      >
+        <Demo css={css} />
+      </StyleProvider>
+    );
+
+    it('concat', () => {
+      render(
+        <Wrapper
+          css={{
+            '.box:not(h1#id-start.cls-1.cls_2#id_end)': {
+              color: 'red',
+            },
+
+            '.not-change': {
+              color: 'blue',
+            },
+          }}
+        />,
+      );
+
+      const text = getStyleText(0);
+      expect(text).toEqual(
+        [
+          `.box:not(h1):not(#id-start):not(.cls-1):not(.cls_2):not(#id_end){color:red;}`,
+          `.not-change{color:blue;}`,
+        ].join(''),
+      );
     });
   });
 });

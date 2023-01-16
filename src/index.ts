@@ -6,6 +6,7 @@ import Keyframes from './Keyframes';
 import type { TokenType, DerivativeFunc } from './theme';
 import { createTheme, Theme } from './theme';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
+import legacyNotSelectorTransformer from './transformers/legacyNotSelector';
 import type { Transformer } from './transformers/interface';
 
 export {
@@ -20,6 +21,7 @@ export {
 
   // Transformer
   legacyLogicalPropertiesTransformer,
+  legacyNotSelectorTransformer,
 };
 
 export type {
