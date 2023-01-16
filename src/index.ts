@@ -3,7 +3,7 @@ import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
 import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
 import type { Linter } from './linters';
-import { logicalPropertiesLinter } from './linters';
+import { legacyNotSelectorLinter, logicalPropertiesLinter } from './linters';
 import { createCache, StyleProvider } from './StyleContext';
 import type { DerivativeFunc, TokenType } from './theme';
 import { createTheme, Theme } from './theme';
@@ -25,6 +25,7 @@ export {
 
   // Linters
   logicalPropertiesLinter,
+  legacyNotSelectorLinter,
 };
 export type {
   TokenType,
