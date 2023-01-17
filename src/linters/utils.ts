@@ -8,7 +8,7 @@ export function lintWarning(message: string, info: LinterInfo) {
     false,
     `[Ant Design CSS-in-JS] ${path ? `Error in '${path}': ` : ''}${message}${
       parentSelectors.length
-        ? ` Selector info: ${parentSelectors.join(' -> ')})`
+        ? ` Selector info: ${parentSelectors.join(' -> ')}`
         : ''
     }`,
   );

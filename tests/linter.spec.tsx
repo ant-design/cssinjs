@@ -264,32 +264,70 @@ describe('style warning', () => {
     );
   });
 
-  it(':not selector check legacy browsers', () => {
-    const genStyle = (): CSSObject => ({
-      '.ant-btn': {
-        '&&-primary': {
-          ':not(&-default)': {
-            color: 'red',
-            background: 'blue',
+  describe(':not selector check legacy browsers', () => {
+    it('should work', () => {
+      const genStyle = (): CSSObject => ({
+        '.ant-btn': {
+          '&&-primary': {
+            ':not(&-default)': {
+              color: 'red',
+              background: 'blue',
+            },
           },
         },
-      },
-    });
-    const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
-      return <div />;
-    };
-    render(
-      <StyleProvider cache={createCache()} linters={[legacyNotSelectorLinter]}>
-        <Demo />
-      </StyleProvider>,
-    );
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: ['content'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(
+        <StyleProvider
+          cache={createCache()}
+          linters={[legacyNotSelectorLinter]}
+        >
+          <Demo />
+        </StyleProvider>,
+      );
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Concat ':not' selector not support in legacy browsers`,
-      ),
-    );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Concat ':not' selector not support in legacy browsers`,
+        ),
+      );
+    });
+
+    it('should check attribute selector correctly', () => {
+      const genStyle = (): CSSObject => ({
+        '.ant-btn:not([class*=".ant-default"])': {
+          color: 'red',
+          background: 'blue',
+        },
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister(
+          { theme, token, path: ['attribute selector in :not'] },
+          () => [genStyle()],
+        );
+        return <div />;
+      };
+      render(
+        <StyleProvider
+          cache={createCache()}
+          linters={[legacyNotSelectorLinter]}
+        >
+          <Demo />
+        </StyleProvider>,
+      );
+
+      expect(errorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Concat ':not' selector not support in legacy browsers`,
+        ),
+      );
+    });
   });
 });
