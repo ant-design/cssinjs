@@ -6,7 +6,9 @@ function isConcatSelector(selector: string) {
 
   // split selector. e.g.
   // `h1#a.b` => ['h1', #a', '.b']
-  const splitCells = notContent.split(/(?=[.#])/);
+  const splitCells = notContent
+    .split(/(\[[^[]*])|(?=[.#])/)
+    .filter((str) => str);
 
   return splitCells.length > 1;
 }
@@ -17,7 +19,7 @@ function parsePath(info: LinterInfo) {
       return cur;
     }
 
-    return cur.includes('&') ? cur.replace(/\&/g, prev) : `${prev} ${cur}`;
+    return cur.includes('&') ? cur.replace(/&/g, prev) : `${prev} ${cur}`;
   }, '');
 }
 
