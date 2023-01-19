@@ -229,7 +229,7 @@ describe('style warning', () => {
     };
     render(<Demo />);
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Selector info: .demo'),
+      expect.stringContaining('Selector: .demo'),
     );
   });
 
@@ -383,6 +383,36 @@ describe('style warning', () => {
       );
 
       expect(errorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Should not use more than one \`&\` in a selector.`,
+        ),
+      );
+    });
+
+    it('should check selector which has no style', () => {
+      const genStyle = (): CSSObject => ({
+        '.ant': {
+          '&&-test': {
+            '&-btn': {
+              color: 'red',
+            },
+          },
+        },
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: ['parent selector3'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(
+        <StyleProvider cache={createCache()} linters={[parentSelectorLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
+
+      expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           `Should not use more than one \`&\` in a selector.`,
         ),
