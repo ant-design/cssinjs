@@ -12,6 +12,7 @@ import Keyframes from '../src/Keyframes';
 import {
   legacyNotSelectorLinter,
   logicalPropertiesLinter,
+  parentSelectorLinter,
 } from '../src/linters';
 
 interface DesignToken {
@@ -329,5 +330,33 @@ describe('style warning', () => {
         ),
       );
     });
+  });
+
+  it('parent selector linter should work', () => {
+    const genStyle = (): CSSObject => ({
+      '.ant': {
+        '&&-btn': {
+          color: 'red',
+        },
+      },
+    });
+    const Demo = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      useStyleRegister({ theme, token, path: ['parent selector'] }, () => [
+        genStyle(),
+      ]);
+      return <div />;
+    };
+    render(
+      <StyleProvider cache={createCache()} linters={[parentSelectorLinter]}>
+        <Demo />
+      </StyleProvider>,
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Should not use more than one \`&\` in a selector.`,
+      ),
+    );
   });
 });
