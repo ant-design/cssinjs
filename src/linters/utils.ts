@@ -6,9 +6,9 @@ export function lintWarning(message: string, info: LinterInfo) {
 
   devWarning(
     false,
-    `[Ant Design CSS-in-JS] ${path ? `Error in '${path}': ` : ''}${message}${
+    `[Ant Design CSS-in-JS] ${path ? `Error in ${path}: ` : ''}${message}${
       parentSelectors.length
-        ? ` Selector info: ${parentSelectors.join(' -> ')}`
+        ? ` Selector: ${parentSelectors[parentSelectors.length - 1]}`
         : ''
     }`,
   );
