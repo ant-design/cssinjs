@@ -1,6 +1,6 @@
 {
   "name": "@ant-design/cssinjs",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Component level cssinjs resolution for antd",
   "keywords": [
     "react",
