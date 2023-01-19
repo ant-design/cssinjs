@@ -332,31 +332,61 @@ describe('style warning', () => {
     });
   });
 
-  it('parent selector linter should work', () => {
-    const genStyle = (): CSSObject => ({
-      '.ant': {
-        '&&-btn': {
-          color: 'red',
+  describe('parentSelectorLinter', () => {
+    it('parent selector linter should work', () => {
+      const genStyle = (): CSSObject => ({
+        '.ant': {
+          '&&-btn': {
+            color: 'red',
+          },
         },
-      },
-    });
-    const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister({ theme, token, path: ['parent selector'] }, () => [
-        genStyle(),
-      ]);
-      return <div />;
-    };
-    render(
-      <StyleProvider cache={createCache()} linters={[parentSelectorLinter]}>
-        <Demo />
-      </StyleProvider>,
-    );
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: ['parent selector'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(
+        <StyleProvider cache={createCache()} linters={[parentSelectorLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Should not use more than one \`&\` in a selector.`,
-      ),
-    );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Should not use more than one \`&\` in a selector.`,
+        ),
+      );
+    });
+
+    it('should split by comma', () => {
+      const genStyle = (): CSSObject => ({
+        '.ant': {
+          '&-test, &-btn': {
+            color: 'red',
+          },
+        },
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        useStyleRegister({ theme, token, path: ['parent selector2'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(
+        <StyleProvider cache={createCache()} linters={[parentSelectorLinter]}>
+          <Demo />
+        </StyleProvider>,
+      );
+
+      expect(errorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Should not use more than one \`&\` in a selector.`,
+        ),
+      );
+    });
   });
 });
