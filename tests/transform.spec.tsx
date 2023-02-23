@@ -5,6 +5,7 @@ import {
   createCache,
   createTheme,
   legacyLogicalPropertiesTransformer,
+  px2remTransformer,
   StyleProvider,
   useStyleRegister,
 } from '../src';
@@ -144,6 +145,71 @@ describe('transform', () => {
         marginLeft: 'calc(2px + 1px)',
         marginRight: '3px',
       });
+    });
+  });
+
+  describe.only('px2rem', () => {
+    beforeEach(() => {
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      styles.forEach((style) => {
+        style.parentNode?.removeChild(style);
+      });
+    });
+
+    const Demo = ({ css }: { css: CSSInterpolation }) => {
+      useStyleRegister(
+        { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
+        () => css,
+      );
+      return <div className="box" />;
+    };
+
+    function testPx2rem(
+      options: Parameters<typeof px2remTransformer>[0],
+      css: CSSInterpolation,
+      expected: string,
+    ) {
+      render(
+        <StyleProvider
+          cache={createCache()}
+          transformers={[px2remTransformer()]}
+        >
+          <Demo css={css} />
+        </StyleProvider>,
+      );
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      expect(styles[0].innerHTML).toEqual(expected);
+    }
+
+    const basicCSS: CSSInterpolation = {
+      '.rule': {
+        fontSize: '15px',
+      },
+    };
+
+    it('should work simple example', () => {
+      const css: CSSInterpolation = {
+        '.box': {
+          margin: '0 0 20px',
+          fontSize: '32px',
+          lineHeight: 1.2,
+          letterSpacing: '1px',
+        },
+      };
+
+      const expected =
+        '.box{margin:0 0 1.25rem;font-size:2rem;line-height:1.2;letter-spacing:0.0625rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should replace the px unit with rem', function () {
+      const expected = '.rule{font-size:0.9375rem;}';
+
+      testPx2rem(undefined, basicCSS, expected);
     });
   });
 });
