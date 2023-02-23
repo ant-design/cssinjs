@@ -148,7 +148,7 @@ describe('transform', () => {
     });
   });
 
-  describe.only('px2rem', () => {
+  describe('px2rem', () => {
     const Demo = ({ css }: { css: CSSInterpolation }) => {
       useStyleRegister(
         { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
