@@ -149,13 +149,6 @@ describe('transform', () => {
   });
 
   describe.only('px2rem', () => {
-    beforeEach(() => {
-      const styles = Array.from(document.head.querySelectorAll('style'));
-      styles.forEach((style) => {
-        style.parentNode?.removeChild(style);
-      });
-    });
-
     const Demo = ({ css }: { css: CSSInterpolation }) => {
       useStyleRegister(
         { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
