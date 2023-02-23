@@ -293,5 +293,26 @@ describe('transform', () => {
         testPx2rem(options, basicCSS, expected);
       });
     });
+
+    describe('mediaQuery', () => {
+      it('should replace px in media queries', () => {
+        const options = {
+          mediaQuery: true,
+        };
+
+        const css: CSSInterpolation = {
+          '@media only screen and (max-width: 600px)': {
+            '.rule': {
+              fontSize: '16px',
+            },
+          },
+        };
+
+        const expected =
+          '@media only screen and (max-width: 37.5rem){.rule{font-size:1rem;}}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
   });
 });
