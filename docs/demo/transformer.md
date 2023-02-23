@@ -2,7 +2,7 @@
 
 ### logicalProperties
 
-TODO
+<code src="../examples/logicalProperties.tsx" />
 
 ### px2rem
 

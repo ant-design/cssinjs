@@ -13,17 +13,19 @@ const Demo = () => {
       '.px2rem-box': {
         width: '400px',
         backgroundColor: 'green',
-        fontSize: '20px',
+        fontSize: '32px',
+        border: '10PX solid #f0f',
         color: 'white',
+      },
+      '@media only screen and (max-width: 600px)': {
+        '.px2rem-box': {
+          backgroundColor: 'red',
+        },
       },
     }),
   );
 
-  return (
-    <div className="px2rem-box">
-      <h1>Test</h1>
-    </div>
-  );
+  return <div className="px2rem-box">px2rem</div>;
 };
 
 const App = () => (
