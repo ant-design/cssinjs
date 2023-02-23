@@ -314,5 +314,25 @@ describe('transform', () => {
         testPx2rem(options, css, expected);
       });
     });
+
+    describe('minPixelValue', function () {
+      it('should not replace values below minPixelValue', function () {
+        const options = {
+          minPixelValue: 2,
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            border: '1px solid #000',
+            fontSize: '16px',
+            margin: '1px 10px',
+          },
+        };
+        const expected =
+          '.rule{border:1px solid #000;font-size:1rem;margin:1px 0.625rem;}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
   });
 });
