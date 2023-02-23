@@ -20,6 +20,11 @@ interface Options {
    * @default 0
    */
   minPixelValue?: number;
+  /**
+   * Whether to allow px to be converted in media queries.
+   * @default false
+   */
+  mediaQuery?: boolean;
 }
 
 const pxRegex = /url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)px/g;
@@ -31,7 +36,12 @@ function toFixed(number: number, precision: number) {
 }
 
 const transform = (options: Options = {}): Transformer => {
-  const { rootValue = 16, unitPrecision = 5, minPixelValue = 0 } = options;
+  const {
+    rootValue = 16,
+    unitPrecision = 5,
+    minPixelValue = 0,
+    mediaQuery = false,
+  } = options;
 
   const pxReplace = (m: string, $1: any) => {
     if (!$1) return m;
@@ -44,26 +54,24 @@ const transform = (options: Options = {}): Transformer => {
   const visit = (cssObj: CSSObject): CSSObject => {
     const clone: CSSObject = { ...cssObj };
 
-    console.log(`debug,${'+'.repeat(10)}`, {
-      rootValue,
-    });
-
     Object.entries(cssObj).forEach(([key, value]) => {
-      console.log(`debug,${'-'.repeat(20)}`, {
-        key,
-        value,
-      });
-
       if (typeof value === 'string' && value.includes('px')) {
         const newValue = value.replace(pxRegex, pxReplace);
 
-        console.log(`debug,${'-?'.repeat(20)}`, {
-          key,
-          value,
-          newValue,
-        });
-
         clone[key] = newValue;
+      }
+
+      // Media queries
+      if (
+        typeof key === 'string' &&
+        // TODO: is there an unknown bug in the keyword judgment method???
+        ['@media', 'px'].every((keyword) => key.includes(keyword)) &&
+        mediaQuery
+      ) {
+        const newKey = key.replace(pxRegex, pxReplace);
+
+        clone[newKey] = clone[key];
+        delete clone[key];
       }
     });
 
