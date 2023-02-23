@@ -228,5 +228,18 @@ describe('transform', () => {
 
       testPx2rem(undefined, css, expected);
     });
+
+    it('should remain unitless if 0', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          fontSize: 0,
+          borderWidth: '0px',
+        },
+      };
+
+      const expected = '.rule{font-size:0;border-width:0;}';
+
+      testPx2rem(undefined, css, expected);
+    });
   });
 });
