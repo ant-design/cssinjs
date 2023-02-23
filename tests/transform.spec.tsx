@@ -216,5 +216,17 @@ describe('transform', () => {
 
       testPx2rem(undefined, css, expected);
     });
+
+    it('should handle < 1 values and values without a leading 0', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          margin: '0.5rem .5px -0.2px -.2em',
+        },
+      };
+
+      const expected = '.rule{margin:0.5rem 0.03125rem -0.0125rem -.2em;}';
+
+      testPx2rem(undefined, css, expected);
+    });
   });
 });
