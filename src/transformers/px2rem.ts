@@ -22,10 +22,7 @@ interface Options {
   minPixelValue?: number;
 }
 
-/**
- * form https://github.com/cuth/postcss-pxtorem/blob/122649015322214f8e9d1ac852eb11c0791b634b/lib/pixel-unit-regex.js
- */
-const pxRegex = /"[^"]+"|'[^']+'|url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)px/g;
+const pxRegex = /url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)px/g;
 
 function toFixed(number: number, precision: number) {
   const multiplier = Math.pow(10, precision + 1),
