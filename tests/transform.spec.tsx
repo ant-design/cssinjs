@@ -241,5 +241,34 @@ describe('transform', () => {
 
       testPx2rem(undefined, css, expected);
     });
+
+    it('should not replace values in `url()`', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          backgroundImage: 'url(16px.jpg)',
+          fontSize: '16px',
+        },
+      };
+
+      const expected = '.rule{background-image:url(16px.jpg);font-size:1rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should not replace values with an uppercase P or X', function () {
+      const css: CSSInterpolation = {
+        '.rule': {
+          margin: '12px calc(100% - 14PX)',
+          height: 'calc(100% - 20px)',
+          fontSize: '12Px',
+          lineHeight: '16px',
+        },
+      };
+
+      const expected =
+        '.rule{margin:0.75rem calc(100% - 14PX);height:calc(100% - 1.25rem);font-size:12Px;line-height:1rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
   });
 });
