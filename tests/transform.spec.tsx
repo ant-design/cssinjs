@@ -282,5 +282,16 @@ describe('transform', () => {
         testPx2rem(options, basicCSS, expected);
       });
     });
+
+    describe('unitPrecision', () => {
+      it('should replace using a decimal of 2 places', function () {
+        const options = {
+          unitPrecision: 2,
+        };
+        const expected = '.rule{font-size:0.94rem;}';
+
+        testPx2rem(options, basicCSS, expected);
+      });
+    });
   });
 });
