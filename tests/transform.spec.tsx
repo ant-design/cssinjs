@@ -204,5 +204,17 @@ describe('transform', () => {
 
       testPx2rem(undefined, basicCSS, expected);
     });
+
+    it('should ignore non px properties', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          fontSize: '2em',
+        },
+      };
+
+      const expected = '.rule{font-size:2em;}';
+
+      testPx2rem(undefined, css, expected);
+    });
   });
 });
