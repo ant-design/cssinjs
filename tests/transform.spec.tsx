@@ -165,7 +165,7 @@ describe('transform', () => {
       render(
         <StyleProvider
           cache={createCache()}
-          transformers={[px2remTransformer()]}
+          transformers={[px2remTransformer(options)]}
         >
           <Demo css={css} />
         </StyleProvider>,
@@ -269,6 +269,18 @@ describe('transform', () => {
         '.rule{margin:0.75rem calc(100% - 14PX);height:calc(100% - 1.25rem);font-size:12Px;line-height:1rem;}';
 
       testPx2rem(undefined, css, expected);
+    });
+
+    describe('rootValue', () => {
+      it('should replace using a root value of 10', function () {
+        const options = {
+          rootValue: 10,
+        };
+
+        const expected = '.rule{font-size:1.5rem;}';
+
+        testPx2rem(options, basicCSS, expected);
+      });
     });
   });
 });
