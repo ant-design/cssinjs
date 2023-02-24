@@ -67,7 +67,7 @@ Since `@ant-design/cssinjs` use strong constraints for cache hit performance, we
 
 When you need transform CSSObject before inject style. You can use `transformers` to handle this:
 
-```tsx
+```tsx | pure
 import {
   legacyLogicalPropertiesTransformer,
   StyleProvider,
