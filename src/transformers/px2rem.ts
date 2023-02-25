@@ -68,12 +68,8 @@ const transform = (options: Options = {}): Transformer => {
       }
 
       // Media queries
-      if (
-        typeof key === 'string' &&
-        // TODO: is there an unknown bug in the keyword judgment method???
-        ['@media', 'px'].every((keyword) => key.includes(keyword)) &&
-        mediaQuery
-      ) {
+      const mergedKey = key.trim();
+      if (mergedKey.startsWith('@') && mergedKey.includes('px') && mediaQuery) {
         const newKey = key.replace(pxRegex, pxReplace);
 
         clone[newKey] = clone[key];
