@@ -15,7 +15,7 @@ interface Options {
    * The decimal numbers to allow the REM units to grow to.
    * @default 5
    */
-  unitPrecision?: number;
+  precision?: number;
   /**
    * The minimum pixel value to replace.
    * @default 0
@@ -39,7 +39,7 @@ function toFixed(number: number, precision: number) {
 const transform = (options: Options = {}): Transformer => {
   const {
     rootValue = 16,
-    unitPrecision = 5,
+    precision = 5,
     minPixelValue = 0,
     mediaQuery = false,
   } = options;
@@ -48,7 +48,7 @@ const transform = (options: Options = {}): Transformer => {
     if (!$1) return m;
     const pixels = parseFloat($1);
     if (pixels < minPixelValue) return m;
-    const fixedVal = toFixed(pixels / rootValue, unitPrecision);
+    const fixedVal = toFixed(pixels / rootValue, precision);
     return fixedVal === 0 ? '0' : fixedVal + 'rem';
   };
 

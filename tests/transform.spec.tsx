@@ -296,10 +296,10 @@ describe('transform', () => {
       });
     });
 
-    describe('unitPrecision', () => {
+    describe('precision', () => {
       it('should replace using a decimal of 2 places', function () {
         const options = {
-          unitPrecision: 2,
+          precision: 2,
         };
         const expected = '.rule{font-size:0.94rem;}';
 
