@@ -229,6 +229,19 @@ describe('transform', () => {
       testPx2rem(undefined, css, expected);
     });
 
+    it('should be converted when it is a number', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          height: 160,
+          flex: 1,
+        },
+      };
+
+      const expected = '.rule{height:10rem;flex:1;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
     it('should remain unitless if 0', () => {
       const css: CSSInterpolation = {
         '.rule': {
