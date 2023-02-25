@@ -1,6 +1,7 @@
 /**
  * respect https://github.com/cuth/postcss-pxtorem
  */
+import unitless from '@emotion/unitless';
 import type { CSSObject } from '..';
 import type { Transformer } from './interface';
 
@@ -59,6 +60,11 @@ const transform = (options: Options = {}): Transformer => {
         const newValue = value.replace(pxRegex, pxReplace);
 
         clone[key] = newValue;
+      }
+
+      // no unit
+      if (!unitless[key] && typeof value === 'number' && value !== 0) {
+        clone[key] = `${value}px`.replace(pxRegex, pxReplace);
       }
 
       // Media queries
