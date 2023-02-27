@@ -5,6 +5,7 @@ import {
   createCache,
   createTheme,
   legacyLogicalPropertiesTransformer,
+  px2remTransformer,
   StyleProvider,
   useStyleRegister,
 } from '../src';
@@ -143,6 +144,191 @@ describe('transform', () => {
         marginBottom: 'calc(2px + 3px)',
         marginLeft: 'calc(2px + 1px)',
         marginRight: '3px',
+      });
+    });
+  });
+
+  describe('px2rem', () => {
+    const Demo = ({ css }: { css: CSSInterpolation }) => {
+      useStyleRegister(
+        { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
+        () => css,
+      );
+      return <div className="box" />;
+    };
+
+    function testPx2rem(
+      options: Parameters<typeof px2remTransformer>[0],
+      css: CSSInterpolation,
+      expected: string,
+    ) {
+      render(
+        <StyleProvider
+          cache={createCache()}
+          transformers={[px2remTransformer(options)]}
+        >
+          <Demo css={css} />
+        </StyleProvider>,
+      );
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      expect(styles[0].innerHTML).toEqual(expected);
+    }
+
+    const basicCSS: CSSInterpolation = {
+      '.rule': {
+        fontSize: '15px',
+      },
+    };
+
+    it('should work simple example', () => {
+      const css: CSSInterpolation = {
+        '.box': {
+          margin: '0 0 20px',
+          fontSize: '32px',
+          lineHeight: 1.2,
+          letterSpacing: '1px',
+        },
+      };
+
+      const expected =
+        '.box{margin:0 0 1.25rem;font-size:2rem;line-height:1.2;letter-spacing:1px;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should replace the px unit with rem', function () {
+      const expected = '.rule{font-size:0.9375rem;}';
+
+      testPx2rem(undefined, basicCSS, expected);
+    });
+
+    it('should ignore non px properties', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          fontSize: '2em',
+        },
+      };
+
+      const expected = '.rule{font-size:2em;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should handle values without a leading 0', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          margin: '0.5rem -0.2px -.2em .2px',
+        },
+      };
+
+      const expected = '.rule{margin:0.5rem -0.2px -.2em .2px;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should be converted when it is a number', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          height: 160,
+          flex: 1,
+        },
+      };
+
+      const expected = '.rule{height:10rem;flex:1;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should not replace values in `url()`', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          backgroundImage: 'url(16px.jpg)',
+          fontSize: '16px',
+        },
+      };
+
+      const expected = '.rule{background-image:url(16px.jpg);font-size:1rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should not replace values with an uppercase P or X', function () {
+      const css: CSSInterpolation = {
+        '.rule': {
+          margin: '12px calc(100% - 14PX)',
+          height: 'calc(100% - 20px)',
+          fontSize: '12Px',
+          lineHeight: '16px',
+        },
+      };
+
+      const expected =
+        '.rule{margin:0.75rem calc(100% - 14PX);height:calc(100% - 1.25rem);font-size:12Px;line-height:1rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should not transform when the value <= 0', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          top: '-1px',
+          left: '0px',
+          right: '1px',
+          bottom: 2,
+          width: 'calc(.1px + 2px)',
+        },
+      };
+
+      const expected =
+        '.rule{top:-1px;left:0px;right:1px;bottom:0.125rem;width:calc(.1px + 0.125rem);}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    describe('rootValue', () => {
+      it('should replace using a root value of 10', function () {
+        const options = {
+          rootValue: 10,
+        };
+
+        const expected = '.rule{font-size:1.5rem;}';
+
+        testPx2rem(options, basicCSS, expected);
+      });
+    });
+
+    describe('precision', () => {
+      it('should replace using a decimal of 2 places', function () {
+        const options = {
+          precision: 2,
+        };
+        const expected = '.rule{font-size:0.94rem;}';
+
+        testPx2rem(options, basicCSS, expected);
+      });
+    });
+
+    describe('mediaQuery', () => {
+      it('should replace px in media queries', () => {
+        const options = {
+          mediaQuery: true,
+        };
+
+        const css: CSSInterpolation = {
+          '@media only screen and (max-width: 600px)': {
+            '.rule': {
+              fontSize: '16px',
+            },
+          },
+        };
+
+        const expected =
+          '@media only screen and (max-width: 37.5rem){.rule{font-size:1rem;}}';
+
+        testPx2rem(options, css, expected);
       });
     });
   });
