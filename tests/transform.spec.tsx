@@ -194,7 +194,7 @@ describe('transform', () => {
       };
 
       const expected =
-        '.box{margin:0 0 1.25rem;font-size:2rem;line-height:1.2;letter-spacing:0.0625rem;}';
+        '.box{margin:0 0 1.25rem;font-size:2rem;line-height:1.2;letter-spacing:1px;}';
 
       testPx2rem(undefined, css, expected);
     });
@@ -217,14 +217,14 @@ describe('transform', () => {
       testPx2rem(undefined, css, expected);
     });
 
-    it('should handle < 1 values and values without a leading 0', () => {
+    it('should handle values without a leading 0', () => {
       const css: CSSInterpolation = {
         '.rule': {
-          margin: '0.5rem .5px -0.2px -.2em',
+          margin: '0.5rem -0.2px -.2em .2px',
         },
       };
 
-      const expected = '.rule{margin:0.5rem 0.03125rem -0.0125rem -.2em;}';
+      const expected = '.rule{margin:0.5rem -0.2px -.2em .2px;}';
 
       testPx2rem(undefined, css, expected);
     });
@@ -238,19 +238,6 @@ describe('transform', () => {
       };
 
       const expected = '.rule{height:10rem;flex:1;}';
-
-      testPx2rem(undefined, css, expected);
-    });
-
-    it('should remain unitless if 0', () => {
-      const css: CSSInterpolation = {
-        '.rule': {
-          fontSize: 0,
-          borderWidth: '0px',
-        },
-      };
-
-      const expected = '.rule{font-size:0;border-width:0;}';
 
       testPx2rem(undefined, css, expected);
     });
@@ -280,6 +267,23 @@ describe('transform', () => {
 
       const expected =
         '.rule{margin:0.75rem calc(100% - 14PX);height:calc(100% - 1.25rem);font-size:12Px;line-height:1rem;}';
+
+      testPx2rem(undefined, css, expected);
+    });
+
+    it('should not transform when the value <= 0', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          top: '-1px',
+          left: '0px',
+          right: '1px',
+          bottom: 2,
+          width: 'calc(.1px + 2px)',
+        },
+      };
+
+      const expected =
+        '.rule{top:-1px;left:0px;right:1px;bottom:0.125rem;width:calc(.1px + 0.125rem);}';
 
       testPx2rem(undefined, css, expected);
     });
@@ -326,21 +330,6 @@ describe('transform', () => {
 
         testPx2rem(options, css, expected);
       });
-    });
-
-    // https://github.com/cuth/postcss-pxtorem/issues/81
-    it('calc expressions with `0px` should retain rem units', () => {
-      const css: CSSInterpolation = {
-        '.rule': {
-          width: 'calc(100% - 0px)',
-          left: 'calc(0 - 10px)', // Developers need to avoid this error in writing
-        },
-      };
-
-      const expected =
-        '.rule{width:calc(100% - 0rem);left:calc(0 - 0.625rem);}';
-
-      testPx2rem(undefined, css, expected);
     });
   });
 });
