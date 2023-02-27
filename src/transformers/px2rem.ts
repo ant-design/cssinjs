@@ -31,20 +31,6 @@ function toFixed(number: number, precision: number) {
   return (Math.round(wholeNumber / 10) * 10) / multiplier;
 }
 
-function createPxReplace(
-  rootValue: number,
-  precision: number,
-  addUnitForZero = false,
-) {
-  return (m: string, $1: any) => {
-    if (!$1) return m;
-    const pixels = parseFloat($1);
-    const fixedVal = toFixed(pixels / rootValue, precision);
-    if (!addUnitForZero && fixedVal === 0) return '0';
-    return fixedVal + 'rem';
-  };
-}
-
 const transform = (options: Options = {}): Transformer => {
   const { rootValue = 16, precision = 5, mediaQuery = false } = options;
 
@@ -54,7 +40,7 @@ const transform = (options: Options = {}): Transformer => {
     // covenant: pixels <= 1, not transform to rem @zombieJ
     if (pixels <= 1) return m;
     const fixedVal = toFixed(pixels / rootValue, precision);
-    return fixedVal === 0 ? '0' : `${fixedVal}rem`;
+    return `${fixedVal}rem`;
   };
 
   const visit = (cssObj: CSSObject): CSSObject => {
