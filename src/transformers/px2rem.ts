@@ -36,28 +36,39 @@ function toFixed(number: number, precision: number) {
   return (Math.round(wholeNumber / 10) * 10) / multiplier;
 }
 
+function createPxReplace(rootValue: number, precision: number, addUnitForZero = false) {
+  return (m: string, $1: any) => {
+    if (!$1) return m;
+    const pixels = parseFloat($1);
+    const fixedVal = toFixed(pixels / rootValue, precision);
+    if (!addUnitForZero && fixedVal === 0) return '0';
+    return fixedVal + 'rem';
+  };
+}
+
 const transform = (options: Options = {}): Transformer => {
   const {
     rootValue = 16,
     precision = 5,
-    minPixelValue = 0,
     mediaQuery = false,
   } = options;
 
-  const pxReplace = (m: string, $1: any) => {
-    if (!$1) return m;
-    const pixels = parseFloat($1);
-    if (pixels < minPixelValue) return m;
-    const fixedVal = toFixed(pixels / rootValue, precision);
-    return fixedVal === 0 ? '0' : fixedVal + 'rem';
-  };
+  const pxReplace = createPxReplace(rootValue, precision);
+  const pxReplaceZero = createPxReplace(rootValue, precision, true);
 
   const visit = (cssObj: CSSObject): CSSObject => {
     const clone: CSSObject = { ...cssObj };
 
     Object.entries(cssObj).forEach(([key, value]) => {
       if (typeof value === 'string' && value.includes('px')) {
-        const newValue = value.replace(pxRegex, pxReplace);
+        const mergedValue = value.trim();
+        let newValue = ''
+
+        if (mergedValue.startsWith('calc')) {
+          newValue = value.replace(pxRegex, pxReplaceZero);
+        } else {
+          newValue = value.replace(pxRegex, pxReplace);
+        }
 
         clone[key] = newValue;
       }
