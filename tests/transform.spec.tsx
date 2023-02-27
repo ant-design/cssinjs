@@ -347,5 +347,20 @@ describe('transform', () => {
         testPx2rem(options, css, expected);
       });
     });
+
+    // https://github.com/cuth/postcss-pxtorem/issues/81
+    it('calc expressions with `0px` should retain rem units', () => {
+      const css: CSSInterpolation = {
+        '.rule': {
+          width: 'calc(100% - 0px)',
+          left: 'calc(0 - 10px)', // Developers need to avoid this error in writing
+        },
+      };
+
+      const expected =
+        '.rule{width:calc(100% - 0rem);left:calc(0 - 0.625rem);}';
+
+      testPx2rem(undefined, css, expected);
+    });
   });
 });
