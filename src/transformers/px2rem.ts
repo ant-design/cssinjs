@@ -17,11 +17,6 @@ interface Options {
    */
   precision?: number;
   /**
-   * The minimum pixel value to replace.
-   * @default 0
-   */
-  minPixelValue?: number;
-  /**
    * Whether to allow px to be converted in media queries.
    * @default false
    */
@@ -36,7 +31,11 @@ function toFixed(number: number, precision: number) {
   return (Math.round(wholeNumber / 10) * 10) / multiplier;
 }
 
-function createPxReplace(rootValue: number, precision: number, addUnitForZero = false) {
+function createPxReplace(
+  rootValue: number,
+  precision: number,
+  addUnitForZero = false,
+) {
   return (m: string, $1: any) => {
     if (!$1) return m;
     const pixels = parseFloat($1);
@@ -47,11 +46,7 @@ function createPxReplace(rootValue: number, precision: number, addUnitForZero = 
 }
 
 const transform = (options: Options = {}): Transformer => {
-  const {
-    rootValue = 16,
-    precision = 5,
-    mediaQuery = false,
-  } = options;
+  const { rootValue = 16, precision = 5, mediaQuery = false } = options;
 
   const pxReplace = createPxReplace(rootValue, precision);
   const pxReplaceZero = createPxReplace(rootValue, precision, true);
@@ -62,7 +57,7 @@ const transform = (options: Options = {}): Transformer => {
     Object.entries(cssObj).forEach(([key, value]) => {
       if (typeof value === 'string' && value.includes('px')) {
         const mergedValue = value.trim();
-        let newValue = ''
+        let newValue = '';
 
         if (mergedValue.startsWith('calc')) {
           newValue = value.replace(pxRegex, pxReplaceZero);
