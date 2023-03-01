@@ -113,6 +113,9 @@ const keyMap: Record<string, MatchValue> = {
   borderStartEndRadius: ['borderTopRightRadius'],
   borderEndStartRadius: ['borderBottomLeftRadius'],
   borderEndEndRadius: ['borderBottomRightRadius'],
+  
+  // add some prefix
+  userSelect: ['MsUserSelect', 'WebkitUserSelect', 'MozUserSelect', 'userSelect'],
 };
 
 function wrapImportantAndSkipCheck(value: string | number, important: boolean) {
