@@ -115,8 +115,6 @@ describe('transform', () => {
         />,
       );
 
-      // console.log(getStyleText());
-
       expect(container.querySelector('.box')).toHaveStyle({
         borderTop: '1px solid red',
         borderBottom: '1px solid red',
@@ -145,6 +143,21 @@ describe('transform', () => {
         marginLeft: 'calc(2px + 1px)',
         marginRight: '3px',
       });
+    });
+
+    it('!important', () => {
+      render(
+        <Wrapper
+          css={{
+            '.box': {
+              paddingInline: '33px !important',
+            },
+          }}
+        />,
+      );
+
+      const styleText = document.head.querySelector('style')?.innerHTML;
+      expect(styleText).toContain('33px!important');
     });
   });
 
