@@ -28,7 +28,7 @@
     "docs:build": "dumi build",
     "docs:deploy": "gh-pages -d .doc",
     "compile": "father build",
-    "gh-pages": "npm run docs:build && npm run docs:deploy",
+    "gh-pages": "PREVIEW=true npm run docs:build",
     "prepublishOnly": "npm run compile && np --yolo --no-publish",
     "postpublish": "npm run gh-pages",
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
