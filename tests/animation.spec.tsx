@@ -1,15 +1,14 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import type { CSSInterpolation } from '../src';
 import {
   createCache,
-  CSSInterpolation,
   Keyframes,
   StyleProvider,
   Theme,
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import { _cf } from '../src/hooks/useStyleRegister';
 
 interface DesignToken {
   primaryColor: string;
@@ -41,8 +40,6 @@ describe('animation', () => {
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
     });
-
-    _cf!();
   });
 
   describe('without hashed', () => {
