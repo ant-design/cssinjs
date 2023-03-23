@@ -182,9 +182,13 @@ describe('animation', () => {
   it('re-mount should not missing animation style', () => {
     function genComp(cls: string) {
       return () => {
-        const [token] = useCacheToken(theme, [baseToken]);
+        const [token, hashId] = useCacheToken(theme, [baseToken], {
+          salt: 're-mount',
+        });
 
-        useStyleRegister({ theme, token, path: [cls] }, () => [animation]);
+        useStyleRegister({ theme, token, path: [cls], hashId }, () => [
+          animation,
+        ]);
 
         return <div className="box" />;
       };

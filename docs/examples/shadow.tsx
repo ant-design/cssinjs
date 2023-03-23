@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Button from './components/Button';
 import Spin from './components/Spin';
+import { DesignTokenContext } from './components/theme';
 
 export default function App() {
   const [visible, setVisible] = React.useState(true);
@@ -24,13 +25,15 @@ export default function App() {
 
     root.render(
       <React.StrictMode>
-        <StyleProvider container={shadowRoot} cache={createCache()}>
-          <div style={{ border: '6px solid #000', padding: 8 }}>
-            <h1>Shadow Root!</h1>
-            <Button type="primary">Hello World!</Button>
-            <Spin />
-          </div>
-        </StyleProvider>
+        <DesignTokenContext.Provider value={{ hashed: true }}>
+          <StyleProvider container={shadowRoot} cache={createCache()}>
+            <div style={{ border: '6px solid #000', padding: 8 }}>
+              <h1>Shadow Root!</h1>
+              <Button type="primary">Hello World!</Button>
+              <Spin />
+            </div>
+          </StyleProvider>
+        </DesignTokenContext.Provider>
       </React.StrictMode>,
     );
 
