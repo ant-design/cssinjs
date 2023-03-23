@@ -1,8 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
-import { Theme, useCacheToken, useStyleRegister, Keyframes } from '../src';
+import * as React from 'react';
 import type { CSSInterpolation } from '../src';
-import { _cf } from '../src/hooks/useStyleRegister';
+import {
+  createCache,
+  Keyframes,
+  StyleProvider,
+  Theme,
+  useCacheToken,
+  useStyleRegister,
+} from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -34,8 +40,6 @@ describe('animation', () => {
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
     });
-
-    _cf!();
   });
 
   describe('without hashed', () => {
@@ -173,5 +177,46 @@ describe('animation', () => {
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
+  });
+
+  it('re-mount should not missing animation style', () => {
+    function genComp(cls: string) {
+      return () => {
+        const [token, hashId] = useCacheToken(theme, [baseToken], {
+          salt: 're-mount',
+        });
+
+        useStyleRegister({ theme, token, path: [cls], hashId }, () => [
+          animation,
+        ]);
+
+        return <div className="box" />;
+      };
+    }
+
+    const Box1 = genComp('box1');
+    const Box2 = genComp('box2');
+
+    // Fist render
+    render(
+      <StyleProvider cache={createCache()}>
+        <Box1 />
+        <Box2 />
+      </StyleProvider>,
+    );
+
+    expect(document.querySelectorAll('style')).toHaveLength(3);
+
+    // Clean up
+    document.head.innerHTML = '';
+
+    // Render again
+    render(
+      <StyleProvider cache={createCache()}>
+        <Box1 />
+        <Box2 />
+      </StyleProvider>,
+    );
+    expect(document.querySelectorAll('style')).toHaveLength(3);
   });
 });

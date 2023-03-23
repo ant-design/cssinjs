@@ -128,18 +128,6 @@ export interface ParseInfo {
   parentSelectors: string[];
 }
 
-// Global effect style will mount once and not removed
-// The effect will not save in SSR cache (e.g. keyframes)
-const globalEffectStyleKeys = new Set();
-
-/**
- * @private Test only. Clear the global effect style keys.
- */
-export const _cf =
-  process.env.NODE_ENV !== 'production'
-    ? () => globalEffectStyleKeys.clear()
-    : undefined;
-
 // Parse CSSObject to style content
 export const parseStyle = (
   interpolation: CSSInterpolation,
@@ -408,20 +396,15 @@ export default function useStyleRegister(
 
         // Inject client side effect style
         Object.keys(effectStyle).forEach((effectKey) => {
-          if (!globalEffectStyleKeys.has(effectKey)) {
-            globalEffectStyleKeys.add(effectKey);
-
-            // Inject
-            updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
-              `_effect-${effectKey}`,
-              {
-                mark: ATTR_MARK,
-                prepend: 'queue',
-                attachTo: container,
-              },
-            );
-          }
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey]),
+            `_effect-${effectKey}`,
+            {
+              mark: ATTR_MARK,
+              prepend: 'queue',
+              attachTo: container,
+            },
+          );
         });
       }
 
