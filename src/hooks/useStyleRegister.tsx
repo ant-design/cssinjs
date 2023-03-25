@@ -475,13 +475,11 @@ export function extractStyleNode(cache: Cache) {
   return styleKeys.map((key) => {
     const [styleStr, tokenKey, styleId]: [string, string, string] =
       cache.cache.get(key)![1];
-    return (
-      <style
-        key={styleId}
-        data-token-hash={tokenKey}
-        data-css-hash={styleId}
-        dangerouslySetInnerHTML={{ __html: styleStr }}
-      />
-    );
+    const props = {
+      [ATTR_TOKEN]: tokenKey,
+      [ATTR_MARK]: styleId,
+      dangerouslySetInnerHTML: { __html: styleStr },
+    };
+    return <style key={styleId} {...props} />;
   });
 }
