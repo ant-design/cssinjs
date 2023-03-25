@@ -466,3 +466,22 @@ export function extractStyle(cache: Cache) {
 
   return styleText;
 }
+
+export function extractStyleNode(cache: Cache) {
+  const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
+    key.startsWith('style%')
+  );
+
+  return styleKeys.map((key) => {
+    const [styleStr, tokenKey, styleId]: [string, string, string] =
+      cache.cache.get(key)![1];
+    return (
+      <style
+        key={styleId}
+        data-token-hash={tokenKey}
+        data-css-hash={styleId}
+        dangerouslySetInnerHTML={{ __html: styleStr }}
+      />
+    );
+  });
+}
