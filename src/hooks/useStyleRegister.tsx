@@ -336,7 +336,7 @@ export default function useStyleRegister(
     path: string[];
     hashId?: string;
     layer?: string;
-    nonce?: string;
+    nonce?: string | (() => string);
   },
   styleFn: () => CSSInterpolation,
 ) {
@@ -385,8 +385,10 @@ export default function useStyleRegister(
           attachTo: container,
         };
 
-        if (nonce) {
-          mergedCSSConfig.csp = { nonce };
+        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+
+        if (nonceStr) {
+          mergedCSSConfig.csp = { nonce: nonceStr };
         }
 
         const style = updateCSS(styleStr, styleId, mergedCSSConfig);

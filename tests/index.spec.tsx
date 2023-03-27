@@ -411,24 +411,31 @@ describe('csssinjs', () => {
     expect(container.querySelectorAll('style')).toHaveLength(1);
   });
 
-  it('nonce', () => {
-    const NonceBox = () => {
-      useStyleRegister(
-        { theme, token: {}, path: ['.nonce'], nonce: 'bamboo' },
-        () => [],
-      );
+  describe('nonce', () => {
+    function test(name: string, nonce: string | (() => string)) {
+      it(name, () => {
+        const NonceBox = () => {
+          useStyleRegister(
+            { theme, token: {}, path: ['.nonce'], nonce },
+            () => [],
+          );
 
-      return <div />;
-    };
+          return <div />;
+        };
 
-    render(
-      <StyleProvider cache={createCache()}>
-        <NonceBox />
-      </StyleProvider>,
-    );
+        render(
+          <StyleProvider cache={createCache()}>
+            <NonceBox />
+          </StyleProvider>,
+        );
 
-    const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(1);
-    expect(styles[0].nonce).toBe('bamboo');
+        const styles = Array.from(document.head.querySelectorAll('style'));
+        expect(styles).toHaveLength(1);
+        expect(styles[0].nonce).toBe('bamboo');
+      });
+    }
+
+    test('string', 'bamboo');
+    test('function', () => 'bamboo');
   });
 });
