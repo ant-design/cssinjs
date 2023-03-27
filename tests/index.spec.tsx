@@ -1,14 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
+import * as React from 'react';
+import type { CSSInterpolation } from '../src';
 import {
+  createCache,
+  StyleProvider,
   Theme,
   useCacheToken,
   useStyleRegister,
-  StyleProvider,
-  createCache,
 } from '../src';
-import type { CSSInterpolation } from '../src';
 import {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
@@ -409,5 +409,26 @@ describe('csssinjs', () => {
     );
 
     expect(container.querySelectorAll('style')).toHaveLength(1);
+  });
+
+  it('nonce', () => {
+    const NonceBox = () => {
+      useStyleRegister(
+        { theme, token: {}, path: ['.nonce'], nonce: 'bamboo' },
+        () => [],
+      );
+
+      return <div />;
+    };
+
+    render(
+      <StyleProvider cache={createCache()}>
+        <NonceBox />
+      </StyleProvider>,
+    );
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+    expect(styles[0].nonce).toBe('bamboo');
   });
 });
