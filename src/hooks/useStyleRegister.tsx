@@ -336,10 +336,11 @@ export default function useStyleRegister(
     path: string[];
     hashId?: string;
     layer?: string;
+    nonce?: string;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer } = info;
+  const { token, path, hashId, layer, nonce } = info;
   const {
     autoClear,
     mock,
@@ -378,11 +379,17 @@ export default function useStyleRegister(
       const styleId = uniqueHash(fullPath, styleStr);
 
       if (isMergedClientSide) {
-        const style = updateCSS(styleStr, styleId, {
+        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
           prepend: 'queue',
           attachTo: container,
-        });
+        };
+
+        if (nonce) {
+          mergedCSSConfig.csp = { nonce };
+        }
+
+        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
         (style as any)[CSS_IN_JS_INSTANCE] = CSS_IN_JS_INSTANCE_ID;
 
@@ -399,11 +406,7 @@ export default function useStyleRegister(
           updateCSS(
             normalizeStyle(effectStyle[effectKey]),
             `_effect-${effectKey}`,
-            {
-              mark: ATTR_MARK,
-              prepend: 'queue',
-              attachTo: container,
-            },
+            mergedCSSConfig,
           );
         });
       }
