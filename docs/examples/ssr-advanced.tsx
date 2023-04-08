@@ -1,7 +1,7 @@
+import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-import { StyleProvider, createCache, extractStyle } from '@ant-design/cssinjs';
 import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
@@ -58,7 +58,7 @@ const Pre: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
 export default function App() {
   const cacheRef = React.useRef(createCache());
 
-  const [ssrHTML, ssrStyle] = React.useMemo(() => {
+  const [ssrHTML, ssrStyle, plainStyle] = React.useMemo(() => {
     const html = renderToString(
       <StyleProvider
         // Tell cssinjs not insert dom style. No need in real world
@@ -70,8 +70,9 @@ export default function App() {
     );
 
     const style = extractStyle(cacheRef.current);
+    const plainStyle = extractStyle(cacheRef.current, true);
 
-    return [html, style];
+    return [html, style, plainStyle];
   }, []);
 
   // 模拟一个空白文档，并且注水
@@ -97,6 +98,7 @@ export default function App() {
     <div style={{ background: 'rgba(0,0,0,0.1)', padding: 16 }}>
       <h3>服务端渲染提前获取所有样式</h3>
 
+      <Pre>{plainStyle}</Pre>
       <Pre>{ssrStyle}</Pre>
       <Pre>{ssrHTML}</Pre>
 
