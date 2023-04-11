@@ -31,7 +31,7 @@ function splitValues(
           temp = '';
         }
       } else if (brackets > 0) {
-        temp += item;
+        temp += ` ${item} `;
       } else {
         list.push(item);
       }
