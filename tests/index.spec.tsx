@@ -464,8 +464,6 @@ describe('csssinjs', () => {
       );
     };
 
-    console.log('render 1');
-
     const styleTag = document.createElement('style');
     styleTag.innerHTML = `.app { color: red }`;
     styleTag.setAttribute(ATTR_MARK, 'test');
