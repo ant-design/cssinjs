@@ -483,4 +483,34 @@ describe('csssinjs', () => {
       `.app { color: red }`,
     );
   });
+
+  it('support multi value', () => {
+    const genDemoStyle = (): CSSInterpolation => ({
+      div: {
+        color: {
+          _multi_value_: true,
+          value: ['red', 'blue'],
+        },
+      },
+    });
+
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-multi-value'] },
+        () => [genDemoStyle()],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    render(<Demo />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+    expect(styles[0].innerHTML).toContain('color:red;color:blue;');
+  });
 });
