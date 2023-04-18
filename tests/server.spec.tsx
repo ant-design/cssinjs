@@ -12,11 +12,7 @@ import {
 } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import classNames from 'classnames';
-import {
-  ATTR_MARK,
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-} from '../src/StyleContext';
+import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -214,9 +210,10 @@ describe('SSR', () => {
     // >>> Hydrate
     mockCanUseDom = true;
     document.body.appendChild(root);
+    const cache = createCache();
     render(
       <StyleProvider
-        cache={createCache()}
+        cache={cache}
         // Force insert style since we hack `canUseDom` to false
         mock="client"
       >
@@ -241,7 +238,7 @@ describe('SSR', () => {
       (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
         CSS_IN_JS_INSTANCE
       ],
-    ).toBe(CSS_IN_JS_INSTANCE_ID);
+    ).toBe(cache.instanceId);
 
     expect(errorSpy).not.toHaveBeenCalled();
   });

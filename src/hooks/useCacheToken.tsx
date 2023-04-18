@@ -1,13 +1,10 @@
-import * as React from 'react';
 import hash from '@emotion/hash';
-import {
-  ATTR_TOKEN,
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-} from '../StyleContext';
+import * as React from 'react';
+import { useContext } from 'react';
+import StyleContext, { ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../StyleContext';
 import type Theme from '../theme/Theme';
-import useGlobalCache from './useGlobalCache';
 import { flattenToken, token2key } from '../util';
+import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
 
@@ -43,12 +40,12 @@ function recordCleanToken(tokenKey: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) + 1);
 }
 
-function removeStyleTags(key: string) {
+function removeStyleTags(key: string, instanceId: string) {
   if (typeof document !== 'undefined') {
     const styles = document.querySelectorAll(`style[${ATTR_TOKEN}="${key}"]`);
 
     styles.forEach((style) => {
-      if ((style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+      if ((style as any)[CSS_IN_JS_INSTANCE] === instanceId) {
         style.parentNode?.removeChild(style);
       }
     });
@@ -56,7 +53,7 @@ function removeStyleTags(key: string) {
 }
 
 // Remove will check current keys first
-function cleanTokenStyle(tokenKey: string) {
+function cleanTokenStyle(tokenKey: string, instanceId: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
 
   const tokenKeyList = Array.from(tokenKeys.keys());
@@ -68,7 +65,7 @@ function cleanTokenStyle(tokenKey: string) {
 
   if (cleanableKeyList.length < tokenKeyList.length) {
     cleanableKeyList.forEach((key) => {
-      removeStyleTags(key);
+      removeStyleTags(key, instanceId);
       tokenKeys.delete(key);
     });
   }
@@ -89,6 +86,9 @@ export default function useCacheToken<
   tokens: Partial<DesignToken>[],
   option: Option<DerivativeToken> = {},
 ): [DerivativeToken & { _tokenKey: string }, string] {
+  const {
+    cache: { instanceId },
+  } = useContext(StyleContext);
   const { salt = '', override = EMPTY_OVERRIDE, formatToken } = option;
 
   // Basic - We do basic cache here
@@ -136,7 +136,7 @@ export default function useCacheToken<
     },
     (cache) => {
       // Remove token will remove all related style
-      cleanTokenStyle(cache[0]._tokenKey);
+      cleanTokenStyle(cache[0]._tokenKey, instanceId);
     },
   );
 

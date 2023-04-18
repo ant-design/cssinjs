@@ -9,11 +9,7 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import {
-  ATTR_TOKEN,
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-} from '../src/StyleContext';
+import { ATTR_MARK, ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -317,7 +313,7 @@ describe('csssinjs', () => {
     expect(
       Array.from(styles).some((style) => style.innerHTML.includes('color:red')),
     ).toBeTruthy();
-    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+    const instanceId = (styles[0] as any)[CSS_IN_JS_INSTANCE];
 
     rerender(<Demo colorPrimary="blue" />);
     const stylesRe = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
@@ -327,7 +323,7 @@ describe('csssinjs', () => {
         style.innerHTML.includes('color:blue'),
       ),
     ).toBeTruthy();
-    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(instanceId);
     (stylesRe[0] as any)[CSS_IN_JS_INSTANCE] = '123';
 
     rerender(<Demo colorPrimary="yellow" />);
@@ -437,5 +433,54 @@ describe('csssinjs', () => {
 
     test('string', 'bamboo');
     test('function', () => 'bamboo');
+  });
+
+  it('should not insert style with different instanceId', () => {
+    const genDemoStyle = (token: DerivativeToken): CSSInterpolation => ({
+      div: {
+        color: token.primaryColor,
+      },
+    });
+
+    const Demo = ({ colorPrimary = 'red' }) => {
+      const cache = createCache();
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: colorPrimary }],
+        {
+          salt: 'test',
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-instance-should-not-insert'] },
+        () => [genDemoStyle(token)],
+      );
+
+      return (
+        <StyleProvider cache={cache}>
+          <div className={classNames('box', hashId)} />
+        </StyleProvider>
+      );
+    };
+
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `.app { color: red }`;
+    styleTag.setAttribute(ATTR_MARK, 'test');
+    (styleTag as any)[CSS_IN_JS_INSTANCE] = '123';
+    document.body.appendChild(styleTag);
+    const childContainer = document.createElement('div');
+    childContainer.className = 'test';
+    document.body.appendChild(childContainer);
+
+    render(<Demo />, { container: childContainer });
+    expect(document.body);
+    expect(document.querySelectorAll(`style[${ATTR_MARK}]`).length).toBe(2);
+    expect(document.body.querySelectorAll(`style[${ATTR_MARK}]`).length).toBe(
+      1,
+    );
+    expect(document.body.querySelector(`style[${ATTR_MARK}]`)?.innerHTML).toBe(
+      `.app { color: red }`,
+    );
   });
 });
