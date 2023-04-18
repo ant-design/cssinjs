@@ -17,7 +17,6 @@ import StyleContext, {
   ATTR_MARK,
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
 } from '../StyleContext';
 import { supportLayer } from '../util';
 import useGlobalCache from './useGlobalCache';
@@ -350,6 +349,7 @@ export default function useStyleRegister(
     ssrInline,
     transformers,
     linters,
+    cache,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -393,7 +393,7 @@ export default function useStyleRegister(
 
         const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
-        (style as any)[CSS_IN_JS_INSTANCE] = CSS_IN_JS_INSTANCE_ID;
+        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
 
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);
