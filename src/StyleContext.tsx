@@ -11,7 +11,6 @@ export const ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
 
 // Mark css-in-js instance in style element
 export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
-// export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 
 export function createCache() {
   console.log('createCache');
