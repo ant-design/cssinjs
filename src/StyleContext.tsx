@@ -13,7 +13,6 @@ export const ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
 export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
 
 export function createCache() {
-  console.log('createCache');
   const cssinjsInstanceId = Math.random().toString(12).slice(2);
 
   if (typeof document !== 'undefined' && document.head && document.body) {
