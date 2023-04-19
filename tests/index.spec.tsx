@@ -513,4 +513,27 @@ describe('csssinjs', () => {
     expect(styles).toHaveLength(1);
     expect(styles[0].innerHTML).toContain('color:red;color:blue;');
   });
+
+  it('should support undefined value', () => {
+    const genDemoStyle = (): CSSInterpolation => ({
+      div: {
+        color: undefined,
+      },
+    });
+
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-undefined-value'] },
+        () => [genDemoStyle()],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    render(<Demo />);
+  });
 });

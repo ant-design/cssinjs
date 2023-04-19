@@ -304,7 +304,11 @@ export const parseStyle = (
           }
 
           const actualValue = (value as any)?.value ?? value;
-          if ((value as any)[MULTI_VALUE] && Array.isArray(actualValue)) {
+          if (
+            typeof value === 'object' &&
+            (value as any)?.[MULTI_VALUE] &&
+            Array.isArray(actualValue)
+          ) {
             actualValue.forEach((item) => {
               appendStyle(key, item);
             });
