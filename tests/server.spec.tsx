@@ -33,11 +33,10 @@ const baseToken: DesignToken = {
 
 const theme = new Theme(derivative);
 
-let mockCanUseDom = false;
-
+const canUseDom = vi.hoisted(() => vi.fn(() => false));
 vi.mock('rc-util/lib/Dom/canUseDom', () => {
   return {
-    default: () => mockCanUseDom,
+    default: canUseDom,
   };
 });
 
@@ -49,7 +48,7 @@ describe('SSR', () => {
   });
 
   beforeEach(() => {
-    mockCanUseDom = false;
+    canUseDom.mockReturnValue(false);
 
     errorSpy.mockReset();
 
@@ -132,7 +131,7 @@ describe('SSR', () => {
 
     // >>> Hydrate
     prepareEnv();
-    mockCanUseDom = true;
+    canUseDom.mockReturnValue(true);
     render(
       <StyleProvider
         cache={cache}
@@ -212,7 +211,7 @@ describe('SSR', () => {
     expect(root.querySelectorAll('style')).toHaveLength(1);
 
     // >>> Hydrate
-    mockCanUseDom = true;
+    canUseDom.mockReturnValue(true);
     document.body.appendChild(root);
     const cache = createCache();
     render(

@@ -21,6 +21,8 @@ import StyleContext, {
 import { supportLayer } from '../util';
 import useGlobalCache from './useGlobalCache';
 
+const isClientSide = canUseDom();
+
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
 
@@ -372,7 +374,6 @@ export default function useStyleRegister(
     linters,
     cache,
   } = React.useContext(StyleContext);
-  const isClientSide = React.useMemo(() => canUseDom(), []);
   const tokenKey = token._tokenKey as string;
 
   const fullPath = [tokenKey, ...path];
