@@ -31,7 +31,7 @@ const derivative = (designToken: DesignToken): DerivativeToken => ({
 const theme = new Theme(derivative);
 
 describe('style warning', () => {
-  const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
   afterEach(() => {
     errorSpy.mockReset();

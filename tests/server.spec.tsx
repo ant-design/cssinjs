@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react';
+import classNames from 'classnames';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
+import type { SpyInstance } from 'vitest';
 import type { CSSInterpolation } from '../src';
 import {
   createCache,
@@ -10,8 +12,6 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import classNames from 'classnames';
 import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
 
 interface DesignToken {
@@ -35,13 +35,17 @@ const theme = new Theme(derivative);
 
 let mockCanUseDom = false;
 
-jest.mock('rc-util/lib/Dom/canUseDom', () => () => mockCanUseDom);
+vi.mock('rc-util/es/Dom/canUseDom', () => {
+  return {
+    default: () => mockCanUseDom,
+  };
+});
 
 describe('SSR', () => {
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: SpyInstance;
 
   beforeAll(() => {
-    errorSpy = jest.spyOn(console, 'error');
+    errorSpy = vi.spyOn(console, 'error');
   });
 
   beforeEach(() => {
