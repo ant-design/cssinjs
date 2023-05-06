@@ -1,7 +1,7 @@
 import hash from '@emotion/hash';
 import type * as CSS from 'csstype';
-import canUseDom from 'rc-util/es/Dom/canUseDom';
-import { removeCSS, updateCSS } from 'rc-util/es/Dom/dynamicCSS';
+import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';

@@ -35,7 +35,7 @@ const theme = new Theme(derivative);
 
 let mockCanUseDom = false;
 
-vi.mock('rc-util/es/Dom/canUseDom', () => {
+vi.mock('rc-util/lib/Dom/canUseDom', () => {
   return {
     default: () => mockCanUseDom,
   };
