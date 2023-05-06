@@ -35,8 +35,7 @@
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "pretty-quick": "pretty-quick",
     "test": "vitest",
-    "test:ci": "vitest run --coverage",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
