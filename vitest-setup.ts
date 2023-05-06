@@ -8,5 +8,4 @@ declare module 'vitest' {
       TestingLibraryMatchers<T, void> {}
 }
 
-import '@testing-library/jest-dom';
 expect.extend(matchers);
