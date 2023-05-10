@@ -34,8 +34,8 @@
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "pretty-quick": "pretty-quick",
-    "test": "rc-test",
-    "coverage": "rc-test --coverage"
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
@@ -53,12 +53,13 @@
     "@testing-library/react": "^13.0.0",
     "@types/classnames": "^2.2.9",
     "@types/enzyme": "^3.10.11",
-    "@types/jest": "^27.4.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/responselike": "^1.0.0",
     "@types/stylis": "^4.0.2",
+    "@types/testing-library__jest-dom": "^5.14.5",
     "@umijs/fabric": "^2.0.8",
+    "@vitest/coverage-c8": "^0.31.0",
     "coveralls": "^3.0.6",
     "cross-env": "^7.0.2",
     "dumi": "^2.1.13",
@@ -66,13 +67,14 @@
     "father": "^4.0.0",
     "gh-pages": "^3.1.0",
     "husky": "^4.2.5",
+    "jsdom": "^22.0.0",
     "np": "^7.0.0",
     "prettier": "^2.0.5",
     "pretty-quick": "^3.0.0",
-    "rc-test": "^7.0.14",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "vitest": "^0.31.0"
   },
   "peerDependencies": {
     "react": ">=16.0.0",
