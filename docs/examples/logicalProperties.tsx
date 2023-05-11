@@ -21,7 +21,7 @@ const Demo = () => {
         border: '1px solid #000',
         position: 'relative',
         // css logical-properties
-        paddingInline: 10,
+        paddingInline: 'calc(10px - 2px)',
         borderBlockEndWidth: 3,
         marginBlock: 10,
         borderEndEndRadius: '50%',
