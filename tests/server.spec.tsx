@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react';
+import classNames from 'classnames';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
+import type { SpyInstance } from 'vitest';
 import type { CSSInterpolation } from '../src';
 import {
   createCache,
@@ -10,13 +12,7 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import classNames from 'classnames';
-import {
-  ATTR_MARK,
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-} from '../src/StyleContext';
+import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -37,19 +33,22 @@ const baseToken: DesignToken = {
 
 const theme = new Theme(derivative);
 
-let mockCanUseDom = false;
-
-jest.mock('rc-util/lib/Dom/canUseDom', () => () => mockCanUseDom);
+const canUseDom = vi.hoisted(() => vi.fn(() => false));
+vi.mock('rc-util/lib/Dom/canUseDom', () => {
+  return {
+    default: canUseDom,
+  };
+});
 
 describe('SSR', () => {
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: SpyInstance;
 
   beforeAll(() => {
-    errorSpy = jest.spyOn(console, 'error');
+    errorSpy = vi.spyOn(console, 'error');
   });
 
   beforeEach(() => {
-    mockCanUseDom = false;
+    canUseDom.mockReturnValue(false);
 
     errorSpy.mockReset();
 
@@ -132,7 +131,7 @@ describe('SSR', () => {
 
     // >>> Hydrate
     prepareEnv();
-    mockCanUseDom = true;
+    canUseDom.mockReturnValue(true);
     render(
       <StyleProvider
         cache={cache}
@@ -212,11 +211,12 @@ describe('SSR', () => {
     expect(root.querySelectorAll('style')).toHaveLength(1);
 
     // >>> Hydrate
-    mockCanUseDom = true;
+    canUseDom.mockReturnValue(true);
     document.body.appendChild(root);
+    const cache = createCache();
     render(
       <StyleProvider
-        cache={createCache()}
+        cache={cache}
         // Force insert style since we hack `canUseDom` to false
         mock="client"
       >
@@ -241,7 +241,7 @@ describe('SSR', () => {
       (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
         CSS_IN_JS_INSTANCE
       ],
-    ).toBe(CSS_IN_JS_INSTANCE_ID);
+    ).toBe(cache.instanceId);
 
     expect(errorSpy).not.toHaveBeenCalled();
   });

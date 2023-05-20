@@ -1,7 +1,7 @@
 import { normalizeStyle, parseStyle } from '../src/hooks/useStyleRegister';
 
-jest.mock('../src/util', () => {
-  const origin = jest.requireActual('../src/util');
+vi.mock('../src/util', () => {
+  const origin = vi.importActual('../src/util');
   return {
     ...origin,
     supportLayer: () => true,
