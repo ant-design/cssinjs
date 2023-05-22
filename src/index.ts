@@ -1,6 +1,6 @@
 import useCacheToken from './hooks/useCacheToken';
 import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
-import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
+import useStyleRegister, { extractStyle, extractStyleNode } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
 import type { Linter } from './linters';
 import {
@@ -24,6 +24,7 @@ export {
   StyleProvider,
   Keyframes,
   extractStyle,
+  extractStyleNode,
 
   // Transformer
   legacyLogicalPropertiesTransformer,
