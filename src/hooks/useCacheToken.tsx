@@ -71,6 +71,31 @@ function cleanTokenStyle(tokenKey: string, instanceId: string) {
   }
 }
 
+export const getComputedToken = <
+  DerivativeToken = object,
+  DesignToken = DerivativeToken,
+>(
+  originToken: DesignToken,
+  overrideToken: DesignToken,
+  theme: Theme<any, any>,
+  format?: (token: DesignToken) => DerivativeToken,
+) => {
+  const derivativeToken = theme.getDerivativeToken(originToken);
+
+  // Merge with override
+  let mergedDerivativeToken = {
+    ...derivativeToken,
+    ...overrideToken,
+  };
+
+  // Format if needed
+  if (format) {
+    mergedDerivativeToken = format(mergedDerivativeToken);
+  }
+
+  return mergedDerivativeToken;
+};
+
 /**
  * Cache theme derivative token as global shared one
  * @param theme Theme entity
@@ -111,18 +136,12 @@ export default function useCacheToken<
     'token',
     [salt, theme.id, tokenStr, overrideTokenStr],
     () => {
-      const derivativeToken = theme.getDerivativeToken(mergedToken);
-
-      // Merge with override
-      let mergedDerivativeToken = {
-        ...derivativeToken,
-        ...override,
-      };
-
-      // Format if needed
-      if (formatToken) {
-        mergedDerivativeToken = formatToken(mergedDerivativeToken);
-      }
+      const mergedDerivativeToken = getComputedToken(
+        mergedToken,
+        override,
+        theme,
+        formatToken,
+      );
 
       // Optimize for `useStyleRegister` performance
       const tokenKey = token2key(mergedDerivativeToken, salt);
