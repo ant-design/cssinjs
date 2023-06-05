@@ -71,7 +71,7 @@ function cleanTokenStyle(tokenKey: string, instanceId: string) {
   }
 }
 
-export const calculateToken = <
+export const getComputedToken = <
   DerivativeToken = object,
   DesignToken = DerivativeToken,
 >(
@@ -136,7 +136,7 @@ export default function useCacheToken<
     'token',
     [salt, theme.id, tokenStr, overrideTokenStr],
     () => {
-      const mergedDerivativeToken = calculateToken(
+      const mergedDerivativeToken = getComputedToken(
         mergedToken,
         override,
         theme,

@@ -1,4 +1,4 @@
-import useCacheToken, { calculateToken } from './hooks/useCacheToken';
+import useCacheToken, { getComputedToken } from './hooks/useCacheToken';
 import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
 import useStyleRegister, { extractStyle } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
@@ -24,7 +24,7 @@ export {
   StyleProvider,
   Keyframes,
   extractStyle,
-  calculateToken,
+  getComputedToken,
 
   // Transformer
   legacyLogicalPropertiesTransformer,
