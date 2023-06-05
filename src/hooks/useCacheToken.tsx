@@ -76,7 +76,7 @@ export const getComputedToken = <
   DesignToken = DerivativeToken,
 >(
   originToken: DesignToken,
-  overrideToken: DesignToken,
+  overrideToken: object,
   theme: Theme<any, any>,
   format?: (token: DesignToken) => DerivativeToken,
 ) => {
