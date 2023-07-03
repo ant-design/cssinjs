@@ -1,4 +1,3 @@
-import useLayoutEffect from 'rc-util/lib/hooks/useLayoutEffect';
 import * as React from 'react';
 import type { KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
@@ -41,7 +40,7 @@ export default function useClientCache<CacheType>(
   );
 
   // Remove if no need anymore
-  useLayoutEffect(() => {
+  React.useEffect(() => {
     // It's bad to call build again in effect.
     // But we have to do this since StrictMode will call effect twice
     // which will clear cache on the first time.
