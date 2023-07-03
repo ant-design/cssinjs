@@ -402,43 +402,6 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
-      /*
-      if (isMergedClientSide) {
-        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
-          mark: ATTR_MARK,
-          prepend: 'queue',
-          attachTo: container,
-        };
-
-        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-
-        if (nonceStr) {
-          mergedCSSConfig.csp = { nonce: nonceStr };
-        }
-
-        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
-
-        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
-
-        // Used for `useCacheToken` to remove on batch when token removed
-        style.setAttribute(ATTR_TOKEN, tokenKey);
-
-        // Dev usage to find which cache path made this easily
-        if (process.env.NODE_ENV !== 'production') {
-          style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
-        }
-
-        // Inject client side effect style
-        Object.keys(effectStyle).forEach((effectKey) => {
-          updateCSS(
-            normalizeStyle(effectStyle[effectKey]),
-            `_effect-${effectKey}`,
-            mergedCSSConfig,
-          );
-        });
-      }
-      */
-
       return [styleStr, tokenKey, styleId, effectStyle];
     },
 
