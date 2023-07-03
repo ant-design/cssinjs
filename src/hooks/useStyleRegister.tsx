@@ -398,9 +398,22 @@ export default function useStyleRegister(
         transformers,
         linters,
       });
+
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
+      return [styleStr, tokenKey, styleId, effectStyle];
+    },
+
+    // Remove cache if no need
+    ([, , styleId], fromHMR) => {
+      if ((fromHMR || autoClear) && isClientSide) {
+        removeCSS(styleId, { mark: ATTR_MARK });
+      }
+    },
+
+    // Inject style here
+    ([styleStr, _, styleId, effectStyle]) => {
       if (isMergedClientSide) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
@@ -434,14 +447,6 @@ export default function useStyleRegister(
             mergedCSSConfig,
           );
         });
-      }
-
-      return [styleStr, tokenKey, styleId];
-    },
-    // Remove cache if no need
-    ([, , styleId], fromHMR) => {
-      if ((fromHMR || autoClear) && isClientSide) {
-        removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
   );

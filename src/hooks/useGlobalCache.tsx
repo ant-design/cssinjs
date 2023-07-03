@@ -2,15 +2,19 @@ import * as React from 'react';
 import type { KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
 import useHMR from './useHMR';
+import useInsertionEffect from './useInsertionEffect';
 
-export default function useClientCache<CacheType>(
+export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
   cacheFn: () => CacheType,
   onCacheRemove?: (cache: CacheType, fromHMR: boolean) => void,
+  // Add additional effect trigger by `useInsertionEffect`
+  onCacheEffect?: (cachedValue: CacheType) => void,
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
+  const deps = fullPath.join('_');
 
   const HMRUpdate = useHMR();
 
@@ -40,12 +44,16 @@ export default function useClientCache<CacheType>(
   React.useMemo(
     () => buildCache(),
     /* eslint-disable react-hooks/exhaustive-deps */
-    [fullPath.join('_')],
+    [deps],
     /* eslint-enable */
   );
 
+  const cacheContent = globalCache.get(fullPath)![1];
+
   // Remove if no need anymore
-  React.useEffect(() => {
+  useInsertionEffect(() => {
+    onCacheEffect?.(cacheContent);
+
     // It's bad to call build again in effect.
     // But we have to do this since StrictMode will call effect twice
     // which will clear cache on the first time.
@@ -64,7 +72,7 @@ export default function useClientCache<CacheType>(
         return [times - 1, cache];
       });
     };
-  }, fullPath);
+  }, [deps]);
 
-  return globalCache.get(fullPath)![1];
+  return cacheContent;
 }
