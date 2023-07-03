@@ -1,6 +1,7 @@
+import useLayoutEffect from 'rc-util/lib/hooks/useLayoutEffect';
 import * as React from 'react';
-import StyleContext from '../StyleContext';
 import type { KeyType } from '../Cache';
+import StyleContext from '../StyleContext';
 import useHMR from './useHMR';
 
 export default function useClientCache<CacheType>(
@@ -29,7 +30,7 @@ export default function useClientCache<CacheType>(
 
         const mergedCache = tmpCache || cacheFn();
 
-        return [times + 1, mergedCache];
+        return [times, mergedCache];
       });
     },
     /* eslint-disable react-hooks/exhaustive-deps */
@@ -38,8 +39,14 @@ export default function useClientCache<CacheType>(
   );
 
   // Remove if no need anymore
-  React.useEffect(
-    () => () => {
+  useLayoutEffect(() => {
+    globalCache.update(fullPath, (prevCache) => {
+      const [times = 0, cache] = prevCache || [];
+
+      return [times + 1, cache];
+    });
+
+    return () => {
       globalCache.update(fullPath, (prevCache) => {
         const [times = 0, cache] = prevCache || [];
         const nextCount = times - 1;
@@ -51,9 +58,8 @@ export default function useClientCache<CacheType>(
 
         return [times - 1, cache];
       });
-    },
-    fullPath,
-  );
+    };
+  }, fullPath);
 
   return globalCache.get(fullPath)![1];
 }
