@@ -398,9 +398,16 @@ export default function useStyleRegister(
         transformers,
         linters,
       });
-      const styleStr = normalizeStyle(parsedStyle);
+
+      const mergedParsedStyle = Object.values(effectStyle).reduce(
+        (prev, next) => `${prev}\n${normalizeStyle(next)}`,
+        parsedStyle,
+      );
+
+      const styleStr = normalizeStyle(mergedParsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
+      /*
       if (isMergedClientSide) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
@@ -435,13 +442,44 @@ export default function useStyleRegister(
           );
         });
       }
+      */
 
       return [styleStr, tokenKey, styleId];
     },
+
     // Remove cache if no need
     ([, , styleId], fromHMR) => {
       if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
+      }
+    },
+
+    // Inject style here
+    ([styleStr, _, styleId]) => {
+      if (isMergedClientSide) {
+        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+          mark: ATTR_MARK,
+          prepend: 'queue',
+          attachTo: container,
+        };
+
+        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+
+        if (nonceStr) {
+          mergedCSSConfig.csp = { nonce: nonceStr };
+        }
+
+        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
+
+        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
+
+        // Used for `useCacheToken` to remove on batch when token removed
+        style.setAttribute(ATTR_TOKEN, tokenKey);
+
+        // Dev usage to find which cache path made this easily
+        if (process.env.NODE_ENV !== 'production') {
+          style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
+        }
       }
     },
   );
