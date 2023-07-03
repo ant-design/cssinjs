@@ -15,24 +15,26 @@ export default function useClientCache<CacheType>(
 
   const HMRUpdate = useHMR();
 
+  const buildCache = () => {
+    globalCache.update(fullPath, (prevCache) => {
+      const [times = 0, cache] = prevCache || [];
+
+      // HMR should always ignore cache since developer may change it
+      let tmpCache = cache;
+      if (process.env.NODE_ENV !== 'production' && cache && HMRUpdate) {
+        onCacheRemove?.(tmpCache, HMRUpdate);
+        tmpCache = null;
+      }
+
+      const mergedCache = tmpCache || cacheFn();
+
+      return [times, mergedCache];
+    });
+  };
+
   // Create cache
   React.useMemo(
-    () => {
-      globalCache.update(fullPath, (prevCache) => {
-        const [times = 0, cache] = prevCache || [];
-
-        // HMR should always ignore cache since developer may change it
-        let tmpCache = cache;
-        if (process.env.NODE_ENV !== 'production' && cache && HMRUpdate) {
-          onCacheRemove?.(tmpCache, HMRUpdate);
-          tmpCache = null;
-        }
-
-        const mergedCache = tmpCache || cacheFn();
-
-        return [times, mergedCache];
-      });
-    },
+    buildCache,
     /* eslint-disable react-hooks/exhaustive-deps */
     [fullPath.join('_')],
     /* eslint-enable */
@@ -40,6 +42,11 @@ export default function useClientCache<CacheType>(
 
   // Remove if no need anymore
   useLayoutEffect(() => {
+    // It's bad to call build again in effect.
+    // But we have to do this since StrictMode will call effect twice
+    // which will clear cache on the first time.
+    buildCache();
+
     globalCache.update(fullPath, (prevCache) => {
       const [times = 0, cache] = prevCache || [];
 
