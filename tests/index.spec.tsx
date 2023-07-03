@@ -91,31 +91,46 @@ describe('csssinjs', () => {
 
     // We will not remove style immediately,
     // but remove when second style patched.
-    it('remove old style to ensure style set only exist one', () => {
-      const getBox = (props?: BoxProps) => <Box {...props} />;
+    describe('remove old style to ensure style set only exist one', () => {
+      function test(
+        name: string,
+        wrapperFn?: (node: React.ReactElement) => React.ReactElement,
+      ) {
+        it(name, () => {
+          const getBox = (props?: BoxProps) => {
+            const box: React.ReactElement = <Box {...props} />;
 
-      const { rerender } = render(getBox());
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+            return wrapperFn?.(box) || box;
+          };
 
-      // First change
-      rerender(
-        getBox({
-          propToken: {
-            primaryColor: 'red',
-          },
-        }),
-      );
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+          const { rerender } = render(getBox());
+          expect(document.head.querySelectorAll('style')).toHaveLength(1);
 
-      // Second change
-      rerender(
-        getBox({
-          propToken: {
-            primaryColor: 'green',
-          },
-        }),
-      );
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+          // First change
+          rerender(
+            getBox({
+              propToken: {
+                primaryColor: 'red',
+              },
+            }),
+          );
+          expect(document.head.querySelectorAll('style')).toHaveLength(1);
+
+          // Second change
+          rerender(
+            getBox({
+              propToken: {
+                primaryColor: 'green',
+              },
+            }),
+          );
+          expect(document.head.querySelectorAll('style')).toHaveLength(1);
+        });
+      }
+
+      test('normal');
+
+      test('StrictMode', (ele) => <React.StrictMode>{ele}</React.StrictMode>);
     });
 
     it('remove style when unmount', () => {
