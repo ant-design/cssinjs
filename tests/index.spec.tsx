@@ -30,8 +30,23 @@ const baseToken: DesignToken = {
 
 const theme = new Theme(derivative);
 
+(global as any).SUPPORT_USE_INSERTION_EFFECT = true;
+
+vi.mock('react', async () => {
+  const { useInsertionEffect, ...rest }: any = await vi.importActual('react');
+
+  return {
+    ...rest,
+    useInsertionEffect: (global as any).SUPPORT_USE_INSERTION_EFFECT
+      ? useInsertionEffect
+      : undefined,
+  };
+});
+
 describe('csssinjs', () => {
   beforeEach(() => {
+    (global as any).SUPPORT_USE_INSERTION_EFFECT = true;
+
     const styles = Array.from(document.head.querySelectorAll('style'));
     styles.forEach((style) => {
       style.parentNode?.removeChild(style);
@@ -95,8 +110,11 @@ describe('csssinjs', () => {
       function test(
         name: string,
         wrapperFn?: (node: React.ReactElement) => React.ReactElement,
+        beforeFn?: () => void,
       ) {
         it(name, () => {
+          beforeFn?.();
+
           const getBox = (props?: BoxProps) => {
             const box: React.ReactElement = <Box {...props} />;
 
@@ -131,6 +149,19 @@ describe('csssinjs', () => {
       test('normal');
 
       test('StrictMode', (ele) => <React.StrictMode>{ele}</React.StrictMode>);
+
+      // Lower React version which not support `useInsertionEffect`
+      test('no useInsertionEffect', undefined, () => {
+        (global as any).SUPPORT_USE_INSERTION_EFFECT = false;
+      });
+
+      test(
+        'no useInsertionEffect in StrictMode',
+        (ele) => <React.StrictMode>{ele}</React.StrictMode>,
+        () => {
+          (global as any).SUPPORT_USE_INSERTION_EFFECT = false;
+        },
+      );
     });
 
     it('remove style when unmount', () => {
