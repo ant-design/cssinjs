@@ -14,7 +14,9 @@ export default function useClientCache<CacheType>(
 
   const HMRUpdate = useHMR();
 
-  const buildCache = () => {
+  type UpdaterArgs = [times: number, cache: CacheType];
+
+  const buildCache = (updater?: (data: UpdaterArgs) => UpdaterArgs) => {
     globalCache.update(fullPath, (prevCache) => {
       const [times = 0, cache] = prevCache || [];
 
@@ -27,13 +29,16 @@ export default function useClientCache<CacheType>(
 
       const mergedCache = tmpCache || cacheFn();
 
-      return [times, mergedCache];
+      const data: UpdaterArgs = [times, mergedCache];
+
+      // Call updater if need additional logic
+      return updater ? updater(data) : data;
     });
   };
 
   // Create cache
   React.useMemo(
-    buildCache,
+    () => buildCache(),
     /* eslint-disable react-hooks/exhaustive-deps */
     [fullPath.join('_')],
     /* eslint-enable */
@@ -44,13 +49,7 @@ export default function useClientCache<CacheType>(
     // It's bad to call build again in effect.
     // But we have to do this since StrictMode will call effect twice
     // which will clear cache on the first time.
-    buildCache();
-
-    globalCache.update(fullPath, (prevCache) => {
-      const [times = 0, cache] = prevCache || [];
-
-      return [times + 1, cache];
-    });
+    buildCache(([times, cache]) => [times + 1, cache]);
 
     return () => {
       globalCache.update(fullPath, (prevCache) => {
