@@ -399,12 +399,7 @@ export default function useStyleRegister(
         linters,
       });
 
-      const mergedParsedStyle = Object.values(effectStyle).reduce(
-        (prev, next) => `${prev}\n${normalizeStyle(next)}`,
-        parsedStyle,
-      );
-
-      const styleStr = normalizeStyle(mergedParsedStyle);
+      const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
       /*
@@ -444,7 +439,7 @@ export default function useStyleRegister(
       }
       */
 
-      return [styleStr, tokenKey, styleId];
+      return [styleStr, tokenKey, styleId, effectStyle];
     },
 
     // Remove cache if no need
@@ -455,7 +450,7 @@ export default function useStyleRegister(
     },
 
     // Inject style here
-    ([styleStr, _, styleId]) => {
+    ([styleStr, _, styleId, effectStyle]) => {
       if (isMergedClientSide) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
@@ -480,6 +475,15 @@ export default function useStyleRegister(
         if (process.env.NODE_ENV !== 'production') {
           style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
         }
+
+        // Inject client side effect style
+        Object.keys(effectStyle).forEach((effectKey) => {
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey]),
+            `_effect-${effectKey}`,
+            mergedCSSConfig,
+          );
+        });
       }
     },
   );
