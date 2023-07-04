@@ -10,20 +10,27 @@ const fullClone = {
 };
 const { useInsertionEffect } = fullClone;
 
-type PolyfillEffectCallback = (
-  polyfill?: boolean,
-) => ReturnType<EffectCallback>;
 type UseMergedInsertionEffect = (
-  effect: PolyfillEffectCallback,
+  renderEffect: EffectCallback,
+  effect: EffectCallback,
   deps?: React.DependencyList,
 ) => void;
 
-const useInsertionEffectPolyfill: UseMergedInsertionEffect = (effect, deps) => {
-  const callback = React.useMemo(() => effect(true), deps);
-  useLayoutEffect(() => callback, deps);
+const useInsertionEffectPolyfill: UseMergedInsertionEffect = (
+  renderEffect,
+  effect,
+  deps,
+) => {
+  React.useMemo(renderEffect, deps);
+  useLayoutEffect(effect, deps);
 };
 
-const useMergedInsertionEffect: UseMergedInsertionEffect =
-  useInsertionEffect || useInsertionEffectPolyfill;
+const useMergedInsertionEffect: UseMergedInsertionEffect = useInsertionEffect
+  ? (renderEffect, effect, deps) =>
+      useInsertionEffect(() => {
+        renderEffect();
+        return effect();
+      }, deps)
+  : useInsertionEffectPolyfill;
 
 export default useMergedInsertionEffect;
