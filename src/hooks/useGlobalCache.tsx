@@ -51,28 +51,33 @@ export default function useGlobalCache<CacheType>(
   const cacheContent = globalCache.get(fullPath)![1];
 
   // Remove if no need anymore
-  useInsertionEffect(() => {
-    onCacheEffect?.(cacheContent);
+  useInsertionEffect(
+    (polyfill) => {
+      onCacheEffect?.(cacheContent);
 
-    // It's bad to call build again in effect.
-    // But we have to do this since StrictMode will call effect twice
-    // which will clear cache on the first time.
-    buildCache(([times, cache]) => [times + 1, cache]);
+      // It's bad to call build again in effect.
+      // But we have to do this since StrictMode will call effect twice
+      // which will clear cache on the first time.
+      if (!polyfill) {
+        buildCache(([times, cache]) => [times + 1, cache]);
+      }
 
-    return () => {
-      globalCache.update(fullPath, (prevCache) => {
-        const [times = 0, cache] = prevCache || [];
-        const nextCount = times - 1;
+      return () => {
+        globalCache.update(fullPath, (prevCache) => {
+          const [times = 0, cache] = prevCache || [];
+          const nextCount = times - 1;
 
-        if (nextCount === 0) {
-          onCacheRemove?.(cache, false);
-          return null;
-        }
+          if (nextCount === 0) {
+            onCacheRemove?.(cache, false);
+            return null;
+          }
 
-        return [times - 1, cache];
-      });
-    };
-  }, [deps]);
+          return [times - 1, cache];
+        });
+      };
+    },
+    [deps],
+  );
 
   return cacheContent;
 }
