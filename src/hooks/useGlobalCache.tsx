@@ -1,8 +1,8 @@
 import * as React from 'react';
 import type { KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
+import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useHMR from './useHMR';
-import useInsertionEffect from './useInsertionEffect';
 
 export default function useGlobalCache<CacheType>(
   prefix: string,
@@ -51,7 +51,7 @@ export default function useGlobalCache<CacheType>(
   const cacheContent = globalCache.get(fullPath)![1];
 
   // Remove if no need anymore
-  useInsertionEffect(
+  useCompatibleInsertionEffect(
     () => {
       onCacheEffect?.(cacheContent);
     },
