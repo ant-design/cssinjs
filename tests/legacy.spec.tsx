@@ -1,5 +1,7 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import { useLayoutEffect } from 'react';
+import { expect } from 'vitest';
 import type { CSSInterpolation } from '../src';
 import { Theme, useCacheToken, useStyleRegister } from '../src';
 
@@ -50,14 +52,15 @@ describe('legacy React version', () => {
 
   interface BoxProps {
     propToken?: DesignToken;
+    children?: React.ReactNode;
   }
 
-  const Box = ({ propToken = baseToken }: BoxProps) => {
+  const Box = ({ propToken = baseToken, children }: BoxProps) => {
     const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
 
     useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
-    return <div className="box" />;
+    return <div className="box">{children}</div>;
   };
 
   // We will not remove style immediately,
@@ -105,5 +108,28 @@ describe('legacy React version', () => {
     test('normal');
 
     test('StrictMode', (ele) => <React.StrictMode>{ele}</React.StrictMode>);
+  });
+
+  it('should not race with other useLayoutEffect', () => {
+    let styleCount = 0;
+
+    const Child = () => {
+      useLayoutEffect(() => {
+        styleCount = document.head.querySelectorAll('style').length;
+      }, []);
+
+      return null;
+    };
+    const Demo = () => {
+      return (
+        <Box>
+          <Child />
+        </Box>
+      );
+    };
+
+    render(<Demo />);
+
+    expect(styleCount).toBe(1);
   });
 });
