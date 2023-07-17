@@ -132,4 +132,29 @@ describe('legacy React version', () => {
 
     expect(styleCount).toBe(1);
   });
+
+  it('should keep style when remounted', () => {
+    const A = () => {
+      return <Box />;
+    };
+
+    const B = () => {
+      return <Box />;
+    };
+
+    const Demo = ({ show }: { show: boolean }) => {
+      return (
+        <>
+          <Box propToken={{ primaryColor: 'red' }} />
+          {show ? <A /> : <B />}
+        </>
+      );
+    };
+
+    const { rerender } = render(<Demo show={true} />);
+    expect(document.head.querySelectorAll('style')).toHaveLength(2);
+
+    rerender(<Demo show={false} />);
+    expect(document.head.querySelectorAll('style')).toHaveLength(2);
+  });
 });
