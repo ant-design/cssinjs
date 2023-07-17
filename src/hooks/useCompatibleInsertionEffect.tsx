@@ -16,6 +16,12 @@ type UseCompatibleInsertionEffect = (
   deps?: React.DependencyList,
 ) => void;
 
+/**
+ * Polyfill `useInsertionEffect` for React < 18
+ * @param renderEffect will be executed in `useMemo`, and do not have callback
+ * @param effect will be executed in `useLayoutEffect`
+ * @param deps
+ */
 const useInsertionEffectPolyfill: UseCompatibleInsertionEffect = (
   renderEffect,
   effect,
@@ -25,6 +31,11 @@ const useInsertionEffectPolyfill: UseCompatibleInsertionEffect = (
   useLayoutEffect(() => effect(true), deps);
 };
 
+/**
+ * Compatible `useInsertionEffect`
+ * will use `useInsertionEffect` if React version >= 18,
+ * otherwise use `useInsertionEffectPolyfill`.
+ */
 const useCompatibleInsertionEffect: UseCompatibleInsertionEffect =
   useInsertionEffect
     ? (renderEffect, effect, deps) =>
