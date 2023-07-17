@@ -55,11 +55,16 @@ export default function useGlobalCache<CacheType>(
     () => {
       onCacheEffect?.(cacheContent);
     },
-    () => {
+    (polyfill) => {
       // It's bad to call build again in effect.
       // But we have to do this since StrictMode will call effect twice
       // which will clear cache on the first time.
-      buildCache(([times, cache]) => [times + 1, cache]);
+      buildCache(([times, cache]) => {
+        if (polyfill && times === 0) {
+          onCacheEffect?.(cacheContent);
+        }
+        return [times + 1, cache];
+      });
 
       return () => {
         globalCache.update(fullPath, (prevCache) => {

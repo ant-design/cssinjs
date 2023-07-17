@@ -52,6 +52,8 @@ function removeStyleTags(key: string, instanceId: string) {
   }
 }
 
+const TOKEN_THRESHOLD = 0;
+
 // Remove will check current keys first
 function cleanTokenStyle(tokenKey: string, instanceId: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
@@ -63,7 +65,8 @@ function cleanTokenStyle(tokenKey: string, instanceId: string) {
     return count <= 0;
   });
 
-  if (cleanableKeyList.length < tokenKeyList.length) {
+  // Should keep tokens under threshold for not to insert style too often
+  if (tokenKeyList.length - cleanableKeyList.length > TOKEN_THRESHOLD) {
     cleanableKeyList.forEach((key) => {
       removeStyleTags(key, instanceId);
       tokenKeys.delete(key);
