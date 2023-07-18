@@ -14,6 +14,7 @@ import { createTheme, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
+import { supportLogicProps, supportWhere } from './util';
 
 export {
   Theme,
@@ -42,4 +43,8 @@ export type {
   DerivativeFunc,
   Transformer,
   Linter,
+};
+
+export const _experimental = {
+  supportModernCSS: () => supportWhere() && supportLogicProps(),
 };
