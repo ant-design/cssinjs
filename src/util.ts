@@ -23,7 +23,7 @@ export function token2key(token: any, salt: string): string {
   return hash(`${salt}_${flattenToken(token)}`);
 }
 
-const randomSelectorKey = `layer-${Date.now()}-${Math.random()}`.replace(
+const randomSelectorKey = `random-${Date.now()}-${Math.random()}`.replace(
   /\./g,
   '',
 );
