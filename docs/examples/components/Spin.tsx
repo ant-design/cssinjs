@@ -1,10 +1,10 @@
-import React from 'react';
 import classNames from 'classnames';
-import { useToken } from './theme';
+import React from 'react';
 import type { DerivativeToken } from './theme';
+import { useToken } from './theme';
 
 import type { CSSInterpolation } from '@ant-design/cssinjs';
-import { useStyleRegister, Keyframes } from '@ant-design/cssinjs';
+import { Keyframes, useStyleRegister } from '@ant-design/cssinjs';
 
 const animation = new Keyframes('loadingCircle', {
   to: {
@@ -16,7 +16,6 @@ const animation = new Keyframes('loadingCircle', {
 const genSpinStyle = (
   prefixCls: string,
   token: DerivativeToken,
-  hashId: string,
 ): CSSInterpolation => [
   {
     [`.${prefixCls}`]: {
@@ -24,7 +23,10 @@ const genSpinStyle = (
       height: 20,
       backgroundColor: token.primaryColor,
 
-      animation: `${animation.getName(hashId)} 1s infinite linear`,
+      animationName: animation,
+      animationDuration: '1s',
+      animationTimingFunction: 'linear',
+      animationIterationCount: 'infinite',
     },
   },
   animation,

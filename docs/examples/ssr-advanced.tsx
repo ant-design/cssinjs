@@ -1,6 +1,6 @@
 import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
 import React from 'react';
-import { hydrate } from 'react-dom';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import Button from './components/Button';
 import Spin from './components/Spin';
@@ -70,14 +70,19 @@ export default function App() {
     );
 
     const style = extractStyle(cacheRef.current);
-    const plainStyle = extractStyle(cacheRef.current, true);
+    const rawStyle = extractStyle(cacheRef.current, true);
 
-    return [html, style, plainStyle];
+    return [html, style, rawStyle];
   }, []);
 
   // 模拟一个空白文档，并且注水
   React.useEffect(() => {
     console.log('Prepare env...');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = ssrHTML;
+
     setTimeout(() => {
       const styles = document.createElement('div');
       styles.innerHTML = ssrStyle;
@@ -88,10 +93,20 @@ export default function App() {
 
       setTimeout(() => {
         console.log('Hydrate...');
-        const container = document.getElementById('ssr');
-        hydrate(<Demo />, container);
+
+        // const container = document.getElementById('ssr');
+        hydrateRoot(
+          container!,
+          <StyleProvider cache={createCache()}>
+            <Demo />
+          </StyleProvider>,
+        );
       }, 500);
     }, 50);
+
+    return () => {
+      document.body.removeChild(container);
+    };
   }, []);
 
   return (
