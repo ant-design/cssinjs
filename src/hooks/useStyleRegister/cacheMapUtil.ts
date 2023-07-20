@@ -1,4 +1,4 @@
-import { ATTR_MARK } from '@/StyleContext';
+import { ATTR_MARK } from '../../StyleContext';
 
 export const ATTR_CACHE_MAP = 'data-ant-cssinjs-cache-path';
 
