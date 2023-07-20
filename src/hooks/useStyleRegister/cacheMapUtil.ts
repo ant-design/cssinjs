@@ -20,6 +20,14 @@ export function serialize(cachePathMap: Record<string, string>) {
 let cachePathMap: Record<string, string>;
 let fromCSSFile = true;
 
+/**
+ * @private Test usage only. Can save remove if no need.
+ */
+export function reset(mockCache?: Record<string, string>, from = true) {
+  cachePathMap = mockCache!;
+  fromCSSFile = from;
+}
+
 export function prepare() {
   if (!cachePathMap) {
     const div = document.createElement('div');
