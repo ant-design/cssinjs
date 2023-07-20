@@ -6,20 +6,27 @@ import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
-import type { Theme, Transformer } from '..';
-import type Cache from '../Cache';
-import type Keyframes from '../Keyframes';
-import type { Linter } from '../linters';
-import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
-import type { HashPriority } from '../StyleContext';
+import type { Theme, Transformer } from '../..';
+import type Cache from '../../Cache';
+import type Keyframes from '../../Keyframes';
+import type { Linter } from '../../linters';
+import { contentQuotesLinter, hashedAnimationLinter } from '../../linters';
+import type { HashPriority } from '../../StyleContext';
 import StyleContext, {
-  ATTR_DEV_CACHE_PATH,
+  ATTR_CACHE_PATH,
   ATTR_MARK,
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
-} from '../StyleContext';
-import { supportLayer } from '../util';
-import useGlobalCache from './useGlobalCache';
+} from '../../StyleContext';
+import { supportLayer } from '../../util';
+import useGlobalCache from '../useGlobalCache';
+import {
+  ATTR_CACHE_MAP,
+  CSS_FILE_STYLE,
+  existPath,
+  getStyleAndHash,
+  serialize as serializeCacheMap,
+} from './cacheMapUtil';
 
 const isClientSide = canUseDom();
 
@@ -384,11 +391,29 @@ export default function useStyleRegister(
     isMergedClientSide = mock === 'client';
   }
 
-  const [cachedStyleStr, cachedTokenKey, cachedStyleId] = useGlobalCache(
+  const [cachedStyleStr, cachedTokenKey, cachedStyleId] = useGlobalCache<
+    [
+      styleStr: string,
+      tokenKey: string,
+      styleId: string,
+      effectStyle: Record<string, string>,
+    ]
+  >(
     'style',
     fullPath,
     // Create cache if needed
     () => {
+      const cachePath = fullPath.join('|');
+
+      // Get style from SSR inline style directly
+      if (existPath(cachePath)) {
+        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
+        if (inlineCacheStyleStr) {
+          return [inlineCacheStyleStr, tokenKey, styleHash, {}];
+        }
+      }
+
+      // Generate style
       const styleObj = styleFn();
       const [parsedStyle, effectStyle] = parseStyle(styleObj, {
         hashId,
@@ -414,7 +439,7 @@ export default function useStyleRegister(
 
     // Effect: Inject style here
     ([styleStr, _, styleId, effectStyle]) => {
-      if (isMergedClientSide) {
+      if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
           prepend: 'queue',
@@ -434,9 +459,9 @@ export default function useStyleRegister(
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);
 
-        // Dev usage to find which cache path made this easily
+        // Debug usage. Dev only
         if (process.env.NODE_ENV !== 'production') {
-          style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
+          style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
         }
 
         // Inject client side effect style
@@ -481,22 +506,48 @@ export default function useStyleRegister(
 // ==                                  SSR                                   ==
 // ============================================================================
 export function extractStyle(cache: Cache, plain = false) {
+  const matchPrefix = `style%`;
+
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
-    key.startsWith('style%'),
+    key.startsWith(matchPrefix),
   );
 
+  // Common effect styles like animation
   const effectStyles: Record<string, boolean> = {};
+
+  // Mapping of cachePath to style hash
+  const cachePathMap: Record<string, string> = {};
 
   let styleText = '';
 
-  function toStyleStr(style: string, tokenKey: string, styleId: string) {
-    return plain
-      ? style
-      : `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${style}</style>`;
+  function toStyleStr(
+    style: string,
+    tokenKey?: string,
+    styleId?: string,
+    customizeAttrs: Record<string, string> = {},
+  ) {
+    const attrs: Record<string, string | undefined> = {
+      ...customizeAttrs,
+      [ATTR_TOKEN]: tokenKey,
+      [ATTR_MARK]: styleId,
+    };
+
+    const attrStr = Object.keys(attrs)
+      .map((attr) => {
+        const val = attrs[attr];
+        return val ? `${attr}="${val}"` : null;
+      })
+      .filter((v) => v)
+      .join(' ');
+
+    return plain ? style : `<style ${attrStr}>${style}</style>`;
   }
 
+  // ====================== Fill Style ======================
   styleKeys.forEach((key) => {
+    const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
+
     const [styleStr, tokenKey, styleId, effectStyle]: [
       string,
       string,
@@ -504,9 +555,13 @@ export function extractStyle(cache: Cache, plain = false) {
       Record<string, string>,
     ] = cache.cache.get(key)![1];
 
+    // ====================== Style ======================
     styleText += toStyleStr(styleStr, tokenKey, styleId);
 
-    // Create effect style
+    // Save cache path with hash mapping
+    cachePathMap[cachePath] = styleId;
+
+    // =============== Create effect style ===============
     if (effectStyle) {
       Object.keys(effectStyle).forEach((effectKey) => {
         // Effect style can be reused
@@ -521,6 +576,16 @@ export function extractStyle(cache: Cache, plain = false) {
       });
     }
   });
+
+  // ==================== Fill Cache Path ====================
+  styleText += toStyleStr(
+    `.${ATTR_CACHE_MAP}{content:"${serializeCacheMap(cachePathMap)}";}`,
+    undefined,
+    undefined,
+    {
+      [ATTR_CACHE_MAP]: ATTR_CACHE_MAP,
+    },
+  );
 
   return styleText;
 }

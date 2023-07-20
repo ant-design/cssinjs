@@ -121,6 +121,7 @@ export default function App() {
 
       <h4>SSR Style</h4>
       <div id="ssr" dangerouslySetInnerHTML={{ __html: ssrHTML }} />
+      <div className="ant-cssinjs-cache-path" />
     </div>
   );
 }

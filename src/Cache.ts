@@ -1,6 +1,8 @@
 export type KeyType = string | number;
 type ValueType = [number, any]; // [times, realValue]
 
+const SPLIT = '%';
+
 class Entity {
   instanceId: string;
   constructor(instanceId: string) {
@@ -11,14 +13,14 @@ class Entity {
   cache = new Map<string, ValueType>();
 
   get(keys: KeyType[]): ValueType | null {
-    return this.cache.get(keys.join('%')) || null;
+    return this.cache.get(keys.join(SPLIT)) || null;
   }
 
   update(
     keys: KeyType[],
     valueFn: (origin: ValueType | null) => ValueType | null,
   ) {
-    const path = keys.join('%');
+    const path = keys.join(SPLIT);
     const prevValue = this.cache.get(path)!;
     const nextValue = valueFn(prevValue);
 
