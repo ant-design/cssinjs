@@ -1,0 +1,237 @@
+.ant-btn-default {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.ant-btn-default:hover {
+  opacity: 0.6;
+}
+.ant-btn-default:active {
+  opacity: 0.3;
+}
+.ant-btn-default {
+  color: #333333;
+  background-color: #ffffff;
+}
+.ant-btn-default:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+.ant-btn-primary {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.ant-btn-primary:hover {
+  opacity: 0.6;
+}
+.ant-btn-primary:active {
+  opacity: 0.3;
+}
+.ant-btn-primary {
+  color: #ffffff;
+  background-color: #1890ff;
+  border: 1px solid #1890ff;
+}
+.ant-btn-primary:hover {
+  background-color: rgba(24, 144, 255, 0.5);
+}
+.ant-btn-ghost {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.ant-btn-ghost:hover {
+  opacity: 0.6;
+}
+.ant-btn-ghost:active {
+  opacity: 0.3;
+}
+.ant-btn-ghost {
+  color: #1890ff;
+  background-color: transparent;
+  border: 1px solid #1890ff;
+}
+.ant-btn-ghost:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+.ant-spin {
+  width: 20px;
+  height: 20px;
+  background-color: #1890ff;
+  animation-name: loadingCircle;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes loadingCircle {
+  to {
+    transform: rotate(360deg);
+  }
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-default {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-default:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-default:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-default {
+  color: #333333;
+  background-color: #ffffff;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-default:hover {
+  color: red;
+  border-color: red;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-primary {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-primary:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-primary:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-primary {
+  color: #ffffff;
+  background-color: red;
+  border: 1px solid red;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-primary:hover {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-ghost {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-ghost:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-ghost:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-ghost {
+  color: red;
+  background-color: transparent;
+  border: 1px solid red;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-btn-ghost:hover {
+  color: red;
+  border-color: red;
+}
+:where(.css-dev-only-do-not-override-11z9nrm).ant-spin {
+  width: 20px;
+  height: 20px;
+  background-color: red;
+  animation-name: css-dev-only-do-not-override-11z9nrm-loadingCircle;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes css-dev-only-do-not-override-11z9nrm-loadingCircle {
+  to {
+    transform: rotate(360deg);
+  }
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-default {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-default:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-default:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-default {
+  color: #333333;
+  background-color: #ffffff;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-default:hover {
+  color: green;
+  border-color: green;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-primary {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-primary:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-primary:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-primary {
+  color: #ffffff;
+  background-color: green;
+  border: 1px solid green;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-primary:hover {
+  background-color: rgba(0, 128, 0, 0.5);
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-ghost {
+  border-color: black;
+  border-width: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-ghost:hover {
+  opacity: 0.6;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-ghost:active {
+  opacity: 0.3;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-ghost {
+  color: green;
+  background-color: transparent;
+  border: 1px solid green;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-btn-ghost:hover {
+  color: green;
+  border-color: green;
+}
+:where(.css-dev-only-do-not-override-s8g2cg).ant-spin {
+  width: 20px;
+  height: 20px;
+  background-color: green;
+  animation-name: css-dev-only-do-not-override-s8g2cg-loadingCircle;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes css-dev-only-do-not-override-s8g2cg-loadingCircle {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.data-ant-cssinjs-cache-path {
+  content: '4ztxvs|ant-btn:5d348p;4ztxvs|ant-spin:3dk1gi;1hednoc|ant-btn:tqroew;1hednoc|ant-spin:5avnn1;xhw1a7|ant-btn:521jz7;xhw1a7|ant-spin:1talicu';
+}

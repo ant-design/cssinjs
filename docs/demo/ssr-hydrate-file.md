@@ -1,5 +1,5 @@
 ---
-title: SSR Advanced Hydrate
+title: Hydrate File
 nav:
   title: Demo
   path: /demo
@@ -7,4 +7,4 @@ nav:
 
 用 `ssr-advanced` 中的内容进行注水：
 
-<code src="../examples/ssr-advanced-hydrate.tsx"></code>
+<code src="../examples/ssr-hydrate-file.tsx"></code>

@@ -1,9 +1,9 @@
-import React from 'react';
-import classNames from 'classnames';
-import { useToken } from './theme';
-import type { DerivativeToken } from './theme';
 import type { CSSInterpolation, CSSObject } from '@ant-design/cssinjs';
 import { useStyleRegister } from '@ant-design/cssinjs';
+import classNames from 'classnames';
+import React from 'react';
+import type { DerivativeToken } from './theme';
+import { useToken } from './theme';
 
 // 通用框架
 const genSharedButtonStyle = (
@@ -18,6 +18,14 @@ const genSharedButtonStyle = (
     cursor: 'pointer',
 
     transition: 'background 0.3s',
+
+    '&:hover': {
+      opacity: 0.6,
+    },
+
+    '&:active': {
+      opacity: 0.3,
+    },
   },
 });
 
