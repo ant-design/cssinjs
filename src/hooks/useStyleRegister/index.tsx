@@ -380,7 +380,6 @@ export default function useStyleRegister(
     transformers,
     linters,
     cache,
-    recycling,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -407,7 +406,7 @@ export default function useStyleRegister(
       const cachePath = fullPath.join('|');
 
       // Get style from SSR inline style directly
-      if (recycling && existPath(cachePath)) {
+      if (existPath(cachePath)) {
         const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
         if (inlineCacheStyleStr) {
           return [inlineCacheStyleStr, tokenKey, styleHash, {}];
@@ -460,7 +459,7 @@ export default function useStyleRegister(
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);
 
-        // Set cache path. `recycling` will rebuild cache by this attr
+        // Debug usage. Dev only
         if (process.env.NODE_ENV !== 'production') {
           style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
         }
