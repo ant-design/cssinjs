@@ -1,3 +1,4 @@
+import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { ATTR_MARK } from '../../StyleContext';
 
 export const ATTR_CACHE_MAP = 'data-ant-cssinjs-cache-path';
@@ -30,28 +31,31 @@ export function reset(mockCache?: Record<string, string>, from = true) {
 
 export function prepare() {
   if (!cachePathMap) {
-    const div = document.createElement('div');
-    div.className = ATTR_CACHE_MAP;
-    document.body.appendChild(div);
-
-    let content = getComputedStyle(div).content || '';
-    content = content.replace(/^"/, '').replace(/"$/, '');
-
-    // Fill data
     cachePathMap = {};
-    content.split(';').forEach((item) => {
-      const [path, hash] = item.split(':');
-      cachePathMap[path] = hash;
-    });
 
-    // Remove inline record style
-    const inlineMapStyle = document.querySelector(`style[${ATTR_CACHE_MAP}]`);
-    if (inlineMapStyle) {
-      fromCSSFile = false;
-      inlineMapStyle.parentNode?.removeChild(inlineMapStyle);
+    if (canUseDom()) {
+      const div = document.createElement('div');
+      div.className = ATTR_CACHE_MAP;
+      document.body.appendChild(div);
+
+      let content = getComputedStyle(div).content || '';
+      content = content.replace(/^"/, '').replace(/"$/, '');
+
+      // Fill data
+      content.split(';').forEach((item) => {
+        const [path, hash] = item.split(':');
+        cachePathMap[path] = hash;
+      });
+
+      // Remove inline record style
+      const inlineMapStyle = document.querySelector(`style[${ATTR_CACHE_MAP}]`);
+      if (inlineMapStyle) {
+        fromCSSFile = false;
+        inlineMapStyle.parentNode?.removeChild(inlineMapStyle);
+      }
+
+      document.body.removeChild(div);
     }
-
-    document.body.removeChild(div);
   }
 }
 
@@ -67,7 +71,7 @@ export function getStyleAndHash(
   const hash = cachePathMap[path];
   let styleStr: string | null = CSS_FILE_STYLE;
 
-  if (!fromCSSFile) {
+  if (!fromCSSFile && hash && canUseDom()) {
     const style = document.querySelector(
       `style[${ATTR_MARK}="${cachePathMap[path]}"]`,
     );
