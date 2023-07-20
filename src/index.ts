@@ -9,6 +9,7 @@ import {
   parentSelectorLinter,
 } from './linters';
 import { createCache, StyleProvider } from './StyleContext';
+import type {StyleProviderProps} from './StyleContext';
 import type { DerivativeFunc, TokenType } from './theme';
 import { createTheme, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
@@ -43,6 +44,7 @@ export type {
   DerivativeFunc,
   Transformer,
   Linter,
+  StyleProviderProps,
 };
 
 export const _experimental = {
