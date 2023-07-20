@@ -15,6 +15,8 @@ export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
 export function createCache() {
   const cssinjsInstanceId = Math.random().toString(12).slice(2);
 
+  // Tricky SSR: Move all inline style to the head.
+  // PS: We do not recommend tricky mode.
   if (typeof document !== 'undefined' && document.head && document.body) {
     const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`) || [];
     const { firstChild } = document.head;

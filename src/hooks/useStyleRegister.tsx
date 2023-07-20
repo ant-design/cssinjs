@@ -412,7 +412,7 @@ export default function useStyleRegister(
       }
     },
 
-    // Inject style here
+    // Effect: Inject style here
     ([styleStr, _, styleId, effectStyle]) => {
       if (isMergedClientSide) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
@@ -486,17 +486,40 @@ export function extractStyle(cache: Cache, plain = false) {
     key.startsWith('style%'),
   );
 
-  // const tokenStyles: Record<string, string[]> = {};
+  const effectStyles: Record<string, boolean> = {};
 
   let styleText = '';
 
-  styleKeys.forEach((key) => {
-    const [styleStr, tokenKey, styleId]: [string, string, string] =
-      cache.cache.get(key)![1];
+  function toStyleStr(style: string, tokenKey: string, styleId: string) {
+    return plain
+      ? style
+      : `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${style}</style>`;
+  }
 
-    styleText += plain
-      ? styleStr
-      : `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${styleStr}</style>`;
+  styleKeys.forEach((key) => {
+    const [styleStr, tokenKey, styleId, effectStyle]: [
+      string,
+      string,
+      string,
+      Record<string, string>,
+    ] = cache.cache.get(key)![1];
+
+    styleText += toStyleStr(styleStr, tokenKey, styleId);
+
+    // Create effect style
+    if (effectStyle) {
+      Object.keys(effectStyle).forEach((effectKey) => {
+        // Effect style can be reused
+        if (!effectStyles[effectKey]) {
+          effectStyles[effectKey] = true;
+          styleText += toStyleStr(
+            normalizeStyle(effectStyle[effectKey]),
+            tokenKey,
+            `_effect-${effectKey}`,
+          );
+        }
+      });
+    }
   });
 
   return styleText;
