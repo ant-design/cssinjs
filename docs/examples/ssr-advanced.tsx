@@ -6,7 +6,7 @@ import Button from './components/Button';
 import Spin from './components/Spin';
 import { DesignTokenContext } from './components/theme';
 
-const Demo = () => {
+export const Demo = () => {
   const sharedProps: React.HTMLAttributes<HTMLButtonElement> = {
     onClick: ({ target }) => {
       console.log('Click:', target);
@@ -72,6 +72,8 @@ export default function App() {
     const style = extractStyle(cacheRef.current);
     const rawStyle = extractStyle(cacheRef.current, true);
 
+    console.log('cache:', cacheRef.current);
+
     return [html, style, rawStyle];
   }, []);
 
@@ -117,6 +119,7 @@ export default function App() {
       <Pre>{ssrStyle}</Pre>
       <Pre>{ssrHTML}</Pre>
 
+      <h4>SSR Style</h4>
       <div id="ssr" dangerouslySetInnerHTML={{ __html: ssrHTML }} />
     </div>
   );
