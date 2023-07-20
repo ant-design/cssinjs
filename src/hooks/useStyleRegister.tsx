@@ -13,7 +13,7 @@ import type { Linter } from '../linters';
 import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
 import type { HashPriority } from '../StyleContext';
 import StyleContext, {
-  ATTR_DEV_CACHE_PATH,
+  ATTR_CACHE_PATH,
   ATTR_MARK,
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
@@ -434,10 +434,8 @@ export default function useStyleRegister(
         // Used for `useCacheToken` to remove on batch when token removed
         style.setAttribute(ATTR_TOKEN, tokenKey);
 
-        // Dev usage to find which cache path made this easily
-        if (process.env.NODE_ENV !== 'production') {
-          style.setAttribute(ATTR_DEV_CACHE_PATH, fullPath.join('|'));
-        }
+        // Set cache path. `recycling` will rebuild cache by this attr
+        style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
 
         // Inject client side effect style
         Object.keys(effectStyle).forEach((effectKey) => {
@@ -481,22 +479,42 @@ export default function useStyleRegister(
 // ==                                  SSR                                   ==
 // ============================================================================
 export function extractStyle(cache: Cache, plain = false) {
+  const matchPrefix = `style%`;
+
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
-    key.startsWith('style%'),
+    key.startsWith(matchPrefix),
   );
 
   const effectStyles: Record<string, boolean> = {};
 
   let styleText = '';
 
-  function toStyleStr(style: string, tokenKey: string, styleId: string) {
-    return plain
-      ? style
-      : `<style ${ATTR_TOKEN}="${tokenKey}" ${ATTR_MARK}="${styleId}">${style}</style>`;
+  function toStyleStr(
+    style: string,
+    tokenKey: string,
+    styleId: string,
+    cachePath?: string,
+  ) {
+    const attrs: Record<string, string> = {
+      [ATTR_TOKEN]: tokenKey,
+      [ATTR_MARK]: styleId,
+    };
+
+    if (cachePath) {
+      attrs[ATTR_CACHE_PATH] = cachePath;
+    }
+
+    const attrStr = Object.keys(attrs)
+      .map((attr) => `${attr}="${attrs[attr]}"`)
+      .join(' ');
+
+    return plain ? style : `<style ${attrStr}>${style}</style>`;
   }
 
   styleKeys.forEach((key) => {
+    const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
+
     const [styleStr, tokenKey, styleId, effectStyle]: [
       string,
       string,
@@ -504,7 +522,7 @@ export function extractStyle(cache: Cache, plain = false) {
       Record<string, string>,
     ] = cache.cache.get(key)![1];
 
-    styleText += toStyleStr(styleStr, tokenKey, styleId);
+    styleText += toStyleStr(styleStr, tokenKey, styleId, cachePath);
 
     // Create effect style
     if (effectStyle) {
