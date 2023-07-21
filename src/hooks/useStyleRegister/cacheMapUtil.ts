@@ -36,6 +36,9 @@ export function prepare() {
     if (canUseDom()) {
       const div = document.createElement('div');
       div.className = ATTR_CACHE_MAP;
+      div.style.position = 'fixed';
+      div.style.visibility = 'hidden';
+      div.style.top = '-9999px';
       document.body.appendChild(div);
 
       let content = getComputedStyle(div).content || '';
