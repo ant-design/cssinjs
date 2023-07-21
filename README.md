@@ -25,7 +25,19 @@ https://ant-design.github.io/cssinjs/
 
 ## Install
 
-[![@ant-design/cssinjs](https://nodei.co/npm/@ant-design/cssinjs.png)](https://npmjs.org/package/@ant-design/cssinjs)
+```bash
+npm install @ant-design/cssinjs
+```
+
+or
+
+```bash
+yarn add @ant-design/cssinjs
+```
+
+```bash
+pnpm add @ant-design/cssinjs
+```
 
 ## Development
 
