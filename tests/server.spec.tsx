@@ -53,7 +53,6 @@ describe('SSR', () => {
     canUseDom.mockReturnValue(false);
 
     reset();
-    // (getStyleAndHash as any).mockReset();
     errorSpy.mockReset();
 
     const styles = Array.from(document.head.querySelectorAll('style'));
@@ -177,6 +176,8 @@ describe('SSR', () => {
     expect(document.head.querySelectorAll('style')).toHaveLength(3);
 
     expect(errorSpy).not.toHaveBeenCalled();
+
+    getStyleAndHash.mockRestore();
   });
 
   it('default hashPriority', () => {
@@ -324,5 +325,37 @@ describe('SSR', () => {
         '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><div class="box"></div>',
       );
     });
+  });
+
+  it('ssr hydrate should clean not exist style', () => {
+    canUseDom.mockReturnValue(true);
+
+    reset(
+      {
+        exist: 'exist',
+        notExist: 'notExist',
+      },
+      false,
+    );
+
+    const getStyleAndHash = vi.spyOn(cacheMapUtil, 'getStyleAndHash');
+
+    document.head.innerHTML = `<style ${ATTR_MARK}="exist">.test{}</style>`;
+
+    // Exist check
+    cacheMapUtil.getStyleAndHash('exist');
+    expect(getStyleAndHash).toHaveReturnedWith(['.test{}', 'exist']);
+
+    // Not Exist check
+    getStyleAndHash.mockClear();
+    cacheMapUtil.getStyleAndHash('notExist');
+    expect(getStyleAndHash).toHaveReturnedWith([null, 'notExist']);
+
+    // Call again will get undefined since cache cleaned
+    getStyleAndHash.mockClear();
+    cacheMapUtil.getStyleAndHash('notExist');
+    expect(getStyleAndHash).toHaveReturnedWith([null, undefined]);
+
+    getStyleAndHash.mockRestore();
   });
 });
