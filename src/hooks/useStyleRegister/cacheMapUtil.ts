@@ -24,9 +24,9 @@ let fromCSSFile = true;
 /**
  * @private Test usage only. Can save remove if no need.
  */
-export function reset(mockCache?: Record<string, string>, from = true) {
+export function reset(mockCache?: Record<string, string>, fromFile = true) {
   cachePathMap = mockCache!;
-  fromCSSFile = from;
+  fromCSSFile = fromFile;
 }
 
 export function prepare() {
@@ -36,6 +36,9 @@ export function prepare() {
     if (canUseDom()) {
       const div = document.createElement('div');
       div.className = ATTR_CACHE_MAP;
+      div.style.position = 'fixed';
+      div.style.visibility = 'hidden';
+      div.style.top = '-9999px';
       document.body.appendChild(div);
 
       let content = getComputedStyle(div).content || '';
@@ -69,14 +72,23 @@ export function getStyleAndHash(
   path: string,
 ): [style: string | null, hash: string] {
   const hash = cachePathMap[path];
-  let styleStr: string | null = CSS_FILE_STYLE;
+  let styleStr: string | null = null;
 
-  if (!fromCSSFile && hash && canUseDom()) {
-    const style = document.querySelector(
-      `style[${ATTR_MARK}="${cachePathMap[path]}"]`,
-    );
+  if (hash && canUseDom()) {
+    if (fromCSSFile) {
+      styleStr = CSS_FILE_STYLE;
+    } else {
+      const style = document.querySelector(
+        `style[${ATTR_MARK}="${cachePathMap[path]}"]`,
+      );
 
-    styleStr = style?.innerHTML || null;
+      if (style) {
+        styleStr = style.innerHTML;
+      } else {
+        // Clean up since not exist anymore
+        delete cachePathMap[path];
+      }
+    }
   }
 
   return [styleStr, hash];
