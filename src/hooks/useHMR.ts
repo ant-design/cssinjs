@@ -18,8 +18,8 @@ if (
   module &&
   module.hot
 ) {
-  const win = window as any;
-  if (typeof win.webpackHotUpdate === 'function') {
+  const win = globalThis as any;
+  if (typeof globalThis.webpackHotUpdate === 'function') {
     const originWebpackHotUpdate = win.webpackHotUpdate;
 
     win.webpackHotUpdate = (...args: any[]) => {
