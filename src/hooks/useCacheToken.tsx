@@ -35,6 +35,10 @@ export interface Option<DerivativeToken, DesignToken> {
   formatToken?: (mergedToken: any) => DerivativeToken;
   /**
    * Get final token with origin token, override token and theme.
+   * The parameters do not contain formatToken since it's passed by user.
+   * @param origin The original token.
+   * @param override Extra tokens to override.
+   * @param theme Theme instance. Could get derivative token by `theme.getDerivativeToken`
    */
   getComputedToken?: (origin: DesignToken, override: object, theme: Theme<any, any>) => DerivativeToken;
 }
