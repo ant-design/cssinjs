@@ -551,4 +551,39 @@ describe('csssinjs', () => {
 
     render(<Demo />);
   });
+
+  it('should support custom getComputedToken', () => {
+    const genDemoStyle = (token: any): CSSInterpolation => ({
+      div: {
+        color: token.myToken,
+      },
+    });
+
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        getComputedToken: (origin, override, myTheme) => {
+          const mergedToken = myTheme.getDerivativeToken(origin);
+          return {
+            ...mergedToken,
+            ...override,
+            myToken: 'test'
+          }
+        }
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-getComputedToken'] },
+        () => [genDemoStyle(token)],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    render(<Demo />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+    expect(styles[0].innerHTML).toContain('color:test');
+  })
 });
