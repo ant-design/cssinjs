@@ -559,31 +559,47 @@ describe('csssinjs', () => {
       },
     });
 
-    const Demo = () => {
+    const Demo = ({myToken}: { myToken: string }) => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
+        override: {
+          myToken,
+        },
         getComputedToken: (origin, override, myTheme) => {
           const mergedToken = myTheme.getDerivativeToken(origin);
           return {
             ...mergedToken,
             ...override,
-            myToken: 'test'
           }
         }
       });
 
+      console.log(hashId)
+
       useStyleRegister(
-        { theme, token, hashId, path: ['cssinjs-getComputedToken'] },
+        { theme, token, hashId, path: ['cssinjs-getComputedToken', myToken] },
         () => [genDemoStyle(token)],
       );
 
       return <div className={classNames('box', hashId)} />;
     };
 
-    render(<Demo />);
+    const { rerender } =render(<Demo myToken="test" />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
     expect(styles[0].innerHTML).toContain('color:test');
+
+    rerender(<Demo myToken="apple" />);
+
+    const styles2 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles2).toHaveLength(1);
+    expect(styles2[0].innerHTML).toContain('color:apple');
+
+    rerender(<Demo myToken="banana" />);
+
+    const styles3 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles3).toHaveLength(1);
+    expect(styles3[0].innerHTML).toContain('color:banana');
   })
 });
