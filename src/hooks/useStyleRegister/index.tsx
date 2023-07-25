@@ -366,10 +366,11 @@ export default function useStyleRegister(
     hashId?: string;
     layer?: string;
     nonce?: string | (() => string);
+    clientOnly?: boolean;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce } = info;
+  const { token, path, hashId, layer, nonce, clientOnly } = info;
   const {
     autoClear,
     mock,
@@ -397,6 +398,7 @@ export default function useStyleRegister(
       tokenKey: string,
       styleId: string,
       effectStyle: Record<string, string>,
+      clientOnly: boolean | undefined,
     ]
   >(
     'style',
@@ -409,7 +411,7 @@ export default function useStyleRegister(
       if (existPath(cachePath)) {
         const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
         if (inlineCacheStyleStr) {
-          return [inlineCacheStyleStr, tokenKey, styleHash, {}];
+          return [inlineCacheStyleStr, tokenKey, styleHash, {}, clientOnly];
         }
       }
 
@@ -427,7 +429,7 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
-      return [styleStr, tokenKey, styleId, effectStyle];
+      return [styleStr, tokenKey, styleId, effectStyle, clientOnly];
     },
 
     // Remove cache if no need
@@ -548,12 +550,18 @@ export function extractStyle(cache: Cache, plain = false) {
   styleKeys.forEach((key) => {
     const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
 
-    const [styleStr, tokenKey, styleId, effectStyle]: [
+    const [styleStr, tokenKey, styleId, effectStyle, clientOnly]: [
       string,
       string,
       string,
       Record<string, string>,
+      boolean,
     ] = cache.cache.get(key)![1];
+
+    // Skip client only style
+    if (clientOnly) {
+      return;
+    }
 
     // ====================== Style ======================
     styleText += toStyleStr(styleStr, tokenKey, styleId);
