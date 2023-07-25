@@ -33,6 +33,9 @@ export interface Option<DerivativeToken, DesignToken> {
    * It's ok to useMemo outside but this has better cache strategy.
    */
   formatToken?: (mergedToken: any) => DerivativeToken;
+  /**
+   * Get final token with origin token, override token and theme.
+   */
   getComputedToken?: (origin: DesignToken, override: object, theme: Theme<any, any>) => DerivativeToken;
 }
 
