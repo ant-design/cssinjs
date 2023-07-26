@@ -8,8 +8,10 @@ import {
   Theme,
   useCacheToken,
   useStyleRegister,
+  createTheme
 } from '../src';
 import { ATTR_MARK, ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
+import type { DerivativeFunc } from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -556,28 +558,29 @@ describe('csssinjs', () => {
     const genDemoStyle = (token: any): CSSInterpolation => ({
       div: {
         color: token.myToken,
+        background: token.primaryColor,
       },
     });
 
-    const Demo = ({myToken}: { myToken: string }) => {
-      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+    const Demo = ({myToken, theme: customTheme}: { myToken?: string, theme?: DerivativeFunc<any, any> }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [{primaryColor: 'blue'}], {
         salt: 'test',
         override: {
           myToken,
+          theme: customTheme && createTheme(customTheme)
         },
-        getComputedToken: (origin, override, myTheme) => {
+        getComputedToken: (origin, override: any, myTheme) => {
           const mergedToken = myTheme.getDerivativeToken(origin);
           return {
             ...mergedToken,
-            ...override,
+            myToken: override.myToken,
+            ...(override.theme?.getDerivativeToken(mergedToken) ?? {}),
           }
         }
       });
 
-      console.log(hashId)
-
       useStyleRegister(
-        { theme, token, hashId, path: ['cssinjs-getComputedToken', myToken] },
+        { theme, token, hashId, path: ['cssinjs-getComputedToken'] },
         () => [genDemoStyle(token)],
       );
 
@@ -589,17 +592,20 @@ describe('csssinjs', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
     expect(styles[0].innerHTML).toContain('color:test');
+    expect(styles[0].innerHTML).toContain('background:blue');
 
     rerender(<Demo myToken="apple" />);
 
     const styles2 = Array.from(document.head.querySelectorAll('style'));
     expect(styles2).toHaveLength(1);
     expect(styles2[0].innerHTML).toContain('color:apple');
+    expect(styles2[0].innerHTML).toContain('background:blue');
 
-    rerender(<Demo myToken="banana" />);
+    rerender(<Demo myToken="banana" theme={(origin) => ({...origin, primaryColor: 'green'})} />);
 
     const styles3 = Array.from(document.head.querySelectorAll('style'));
     expect(styles3).toHaveLength(1);
     expect(styles3[0].innerHTML).toContain('color:banana');
+    expect(styles3[0].innerHTML).toContain('background:green');
   })
 });
