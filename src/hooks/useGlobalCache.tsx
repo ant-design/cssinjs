@@ -42,13 +42,25 @@ export default function useGlobalCache<CacheType>(
 
   // Create cache
   React.useMemo(
-    () => buildCache(),
+    () => {
+      buildCache();
+    },
     /* eslint-disable react-hooks/exhaustive-deps */
     [deps],
     /* eslint-enable */
   );
 
-  const cacheContent = globalCache.get(fullPath)![1];
+  let cacheEntity = globalCache.get(fullPath);
+
+  // HMR clean the cache but not trigger `useMemo` again
+  // Let's fallback of this
+  // ref https://github.com/ant-design/cssinjs/issues/127
+  if (process.env.NODE_ENV !== 'production' && !cacheEntity) {
+    buildCache();
+    cacheEntity = globalCache.get(fullPath);
+  }
+
+  const cacheContent = cacheEntity![1];
 
   // Remove if no need anymore
   useCompatibleInsertionEffect(
