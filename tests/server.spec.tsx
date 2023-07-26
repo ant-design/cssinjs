@@ -180,6 +180,34 @@ describe('SSR', () => {
     getStyleAndHash.mockRestore();
   });
 
+  it('not extract clientOnly style', () => {
+    const Client = ({ children }: { children?: React.ReactNode }) => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+
+      const wrapSSR = useStyleRegister(
+        { theme, token, path: ['.client'], clientOnly: true },
+        () => ({
+          '.client': {
+            backgroundColor: token.primaryColor,
+          },
+        }),
+      );
+
+      return wrapSSR(<div className="box">{children}</div>);
+    };
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Client />
+      </StyleProvider>,
+    );
+
+    const plainStyle = extractStyle(cache, true);
+    expect(plainStyle).not.toContain('client');
+  });
+
   it('default hashPriority', () => {
     // >>> SSR
     const cache = createCache();
