@@ -1,13 +1,16 @@
 import hash from '@emotion/hash';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import { Theme } from './theme';
 
 export function flattenToken(token: any) {
   let str = '';
   Object.keys(token).forEach((key) => {
     const value = token[key];
     str += key;
-    if (value && typeof value === 'object') {
+    if (value instanceof Theme) {
+      str += value.id;
+    } else if (value && typeof value === 'object') {
       str += flattenToken(value);
     } else {
       str += value;

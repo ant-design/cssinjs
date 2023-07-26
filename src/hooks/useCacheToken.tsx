@@ -15,7 +15,7 @@ const hashPrefix =
     ? 'css-dev-only-do-not-override'
     : 'css';
 
-export interface Option<DerivativeToken> {
+export interface Option<DerivativeToken, DesignToken> {
   /**
    * Generate token with salt.
    * This is used to generate different hashId even same derivative token for different version.
@@ -33,6 +33,14 @@ export interface Option<DerivativeToken> {
    * It's ok to useMemo outside but this has better cache strategy.
    */
   formatToken?: (mergedToken: any) => DerivativeToken;
+  /**
+   * Get final token with origin token, override token and theme.
+   * The parameters do not contain formatToken since it's passed by user.
+   * @param origin The original token.
+   * @param override Extra tokens to override.
+   * @param theme Theme instance. Could get derivative token by `theme.getDerivativeToken`
+   */
+  getComputedToken?: (origin: DesignToken, override: object, theme: Theme<any, any>) => DerivativeToken;
 }
 
 const tokenKeys = new Map<string, number>();
@@ -112,12 +120,17 @@ export default function useCacheToken<
 >(
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
-  option: Option<DerivativeToken> = {},
+  option: Option<DerivativeToken, DesignToken> = {},
 ): [DerivativeToken & { _tokenKey: string }, string] {
   const {
     cache: { instanceId },
   } = useContext(StyleContext);
-  const { salt = '', override = EMPTY_OVERRIDE, formatToken } = option;
+  const {
+    salt = '',
+    override = EMPTY_OVERRIDE,
+    formatToken,
+    getComputedToken: compute
+  } = option;
 
   // Basic - We do basic cache here
   const mergedToken = React.useMemo(
@@ -139,7 +152,7 @@ export default function useCacheToken<
     'token',
     [salt, theme.id, tokenStr, overrideTokenStr],
     () => {
-      const mergedDerivativeToken = getComputedToken(
+      const mergedDerivativeToken = compute ? compute(mergedToken, override, theme) : getComputedToken(
         mergedToken,
         override,
         theme,
