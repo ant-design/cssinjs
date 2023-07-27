@@ -115,7 +115,7 @@ describe('SSR', () => {
       '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
     );
     expect(style).toEqual(
-      '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
     );
     expect(plainStyle).toEqual(
       '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}',
@@ -241,7 +241,7 @@ describe('SSR', () => {
 
     const style = extractStyle(cache);
     expect(style).toEqual(
-      '<style data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"1gt9vg4|.hashPriority:1fyoi4y";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"1gt9vg4|.hashPriority:1fyoi4y";}</style>',
     );
   });
 
@@ -330,7 +330,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
       );
     });
 
@@ -385,5 +385,60 @@ describe('SSR', () => {
     expect(getStyleAndHash).toHaveReturnedWith([null, undefined]);
 
     getStyleAndHash.mockRestore();
+  });
+
+  it('ssr keep order', () => {
+    const createComponent = (name: string, order?: number) => {
+      const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+
+        const wrapSSR = useStyleRegister(
+          { theme, token, path: [name], order },
+          () => ({
+            [`.${name}`]: {
+              backgroundColor: token.primaryColor,
+            },
+          }),
+        );
+
+        return wrapSSR(<div className={name}>{children}</div>);
+      };
+
+      return OrderDefault;
+    };
+
+    const Order0 = createComponent('order0', 0);
+    const Order1 = createComponent('order1', 1);
+    const Order2 = createComponent('order2', 2);
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Order1 />
+        <Order0 />
+        <Order2 />
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache);
+    const holder = document.createElement('div');
+    holder.innerHTML = style;
+    const styles = Array.from(holder.querySelectorAll('style'));
+
+    expect(styles[0].getAttribute('data-rc-priority')).toEqual('0');
+    expect(styles[1].getAttribute('data-rc-priority')).toEqual('1');
+    expect(styles[2].getAttribute('data-rc-priority')).toEqual('2');
+
+    // Pure style
+    const pureStyle = extractStyle(cache, true);
+    expect(pureStyle).toEqual(
+      [
+        `.order0{background-color:#1890ff;}`,
+        `.order1{background-color:#1890ff;}`,
+        `.order2{background-color:#1890ff;}`,
+        `.data-ant-cssinjs-cache-path{content:"u4cay0|order1:1qekw6y;u4cay0|order0:1r3sam0;u4cay0|order2:1at78yk";}`,
+      ].join(''),
+    );
   });
 });
