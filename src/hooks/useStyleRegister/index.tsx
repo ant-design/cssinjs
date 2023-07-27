@@ -367,10 +367,16 @@ export default function useStyleRegister(
     layer?: string;
     nonce?: string | (() => string);
     clientOnly?: boolean;
+    /**
+     * Tell cssinjs the insert order of style.
+     * It's useful when you need to insert style
+     * before other style to overwrite for the same selector priority.
+     */
+    order?: number;
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce, clientOnly } = info;
+  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
     autoClear,
     mock,
@@ -399,6 +405,7 @@ export default function useStyleRegister(
       styleId: string,
       effectStyle: Record<string, string>,
       clientOnly: boolean | undefined,
+      order: number,
     ]
   >(
     'style',
@@ -411,7 +418,14 @@ export default function useStyleRegister(
       if (existPath(cachePath)) {
         const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
         if (inlineCacheStyleStr) {
-          return [inlineCacheStyleStr, tokenKey, styleHash, {}, clientOnly];
+          return [
+            inlineCacheStyleStr,
+            tokenKey,
+            styleHash,
+            {},
+            clientOnly,
+            order,
+          ];
         }
       }
 
@@ -429,7 +443,7 @@ export default function useStyleRegister(
       const styleStr = normalizeStyle(parsedStyle);
       const styleId = uniqueHash(fullPath, styleStr);
 
-      return [styleStr, tokenKey, styleId, effectStyle, clientOnly];
+      return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
     },
 
     // Remove cache if no need
@@ -446,6 +460,7 @@ export default function useStyleRegister(
           mark: ATTR_MARK,
           prepend: 'queue',
           attachTo: container,
+          priority: order,
         };
 
         const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
@@ -547,43 +562,65 @@ export function extractStyle(cache: Cache, plain = false) {
   }
 
   // ====================== Fill Style ======================
-  styleKeys.forEach((key) => {
-    const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
+  type OrderStyle = [order: number, style: string];
 
-    const [styleStr, tokenKey, styleId, effectStyle, clientOnly]: [
-      string,
-      string,
-      string,
-      Record<string, string>,
-      boolean,
-    ] = cache.cache.get(key)![1];
+  const orderStyles: OrderStyle[] = styleKeys
+    .map((key) => {
+      const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
 
-    // Skip client only style
-    if (clientOnly) {
-      return;
-    }
+      const [styleStr, tokenKey, styleId, effectStyle, clientOnly, order]: [
+        string,
+        string,
+        string,
+        Record<string, string>,
+        boolean,
+        number,
+      ] = cache.cache.get(key)![1];
 
-    // ====================== Style ======================
-    styleText += toStyleStr(styleStr, tokenKey, styleId);
+      // Skip client only style
+      if (clientOnly) {
+        return null! as OrderStyle;
+      }
 
-    // Save cache path with hash mapping
-    cachePathMap[cachePath] = styleId;
+      // ====================== Style ======================
+      // Used for rc-util
+      const sharedAttrs = {
+        'data-rc-order': 'prependQueue',
+        'data-rc-priority': `${order}`,
+      };
 
-    // =============== Create effect style ===============
-    if (effectStyle) {
-      Object.keys(effectStyle).forEach((effectKey) => {
-        // Effect style can be reused
-        if (!effectStyles[effectKey]) {
-          effectStyles[effectKey] = true;
-          styleText += toStyleStr(
-            normalizeStyle(effectStyle[effectKey]),
-            tokenKey,
-            `_effect-${effectKey}`,
-          );
-        }
-      });
-    }
-  });
+      let keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs);
+
+      // Save cache path with hash mapping
+      cachePathMap[cachePath] = styleId;
+
+      // =============== Create effect style ===============
+      if (effectStyle) {
+        Object.keys(effectStyle).forEach((effectKey) => {
+          // Effect style can be reused
+          if (!effectStyles[effectKey]) {
+            effectStyles[effectKey] = true;
+            keyStyleText += toStyleStr(
+              normalizeStyle(effectStyle[effectKey]),
+              tokenKey,
+              `_effect-${effectKey}`,
+              sharedAttrs,
+            );
+          }
+        });
+      }
+
+      const ret: OrderStyle = [order, keyStyleText];
+
+      return ret;
+    })
+    .filter((o) => o);
+
+  orderStyles
+    .sort((o1, o2) => o1[0] - o2[0])
+    .forEach(([, style]) => {
+      styleText += style;
+    });
 
   // ==================== Fill Cache Path ====================
   styleText += toStyleStr(
