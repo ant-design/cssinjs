@@ -13,6 +13,7 @@ export default process.env.NODE_ENV === 'production' ? useProdHMR : useDevHMR;
 // Webpack `module.hot.accept` do not support any deps update trigger
 // We have to hack handler to force mark as HRM
 if (
+  typeof window !== undefined &&
   process.env.NODE_ENV !== 'production' &&
   typeof module !== 'undefined' &&
   module &&
