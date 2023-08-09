@@ -625,7 +625,7 @@ describe('csssinjs', () => {
     expect(styles3[0].innerHTML).toContain('b1ackground:green');
   });
 
-  it.only('should not cleanup token before finishing rendering', () => {
+  it('should not cleanup token before finishing rendering', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const genDemoStyle = (token: any): CSSInterpolation => ({
       '.box': {
