@@ -695,5 +695,6 @@ describe('csssinjs', () => {
         '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
       ),
     );
+    spy.mockRestore();
   });
 });
