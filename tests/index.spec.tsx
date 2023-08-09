@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import * as React from 'react';
-import { ReactNode, StrictMode } from 'react';
+import { ReactElement, ReactNode, StrictMode } from 'react';
 import { describe, expect } from 'vitest';
 import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
@@ -626,7 +626,9 @@ describe('csssinjs', () => {
   });
 
   describe('should not cleanup token before finishing rendering', () => {
-    const test = (wrapper?: (node: ReactNode) => ReactNode) => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const genDemoStyle = (token: any): CSSInterpolation => ({
         '.box': {
@@ -671,32 +673,24 @@ describe('csssinjs', () => {
         );
       };
 
-      const { rerender } = render(
-        <StrictMode>
-          <Demo myToken="token1" />
-        </StrictMode>,
-      );
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
       const styles = Array.from(document.head.querySelectorAll('style'));
       expect(styles).toHaveLength(1);
       expect(styles[0].innerHTML).toContain('color:token1');
 
       rerender(
-        <StrictMode>
+        wrapper(
           <Demo myToken="token2">
             <Demo myToken="token1" />
-          </Demo>
-        </StrictMode>,
+          </Demo>,
+        ),
       );
       const styles2 = Array.from(document.head.querySelectorAll('style'));
       expect(styles2).toHaveLength(2);
       expect(styles2[0].innerHTML).toContain('color:token1');
       expect(styles2[1].innerHTML).toContain('color:token2');
 
-      rerender(
-        <StrictMode>
-          <Demo myToken="token1" />
-        </StrictMode>,
-      );
+      rerender(wrapper(<Demo myToken="token1" />));
       const styles3 = Array.from(document.head.querySelectorAll('style'));
       expect(styles3).toHaveLength(1);
       expect(styles3[0].innerHTML).toContain('color:token1');
