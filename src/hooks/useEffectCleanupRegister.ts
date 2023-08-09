@@ -26,9 +26,7 @@ const useCleanupRegister = () => {
   React.useEffect(() => () => {
     cleanupFlag = true;
     if (effectCleanups.length) {
-      for (const fn of effectCleanups) {
-        fn();
-      }
+      effectCleanups.forEach((fn) => fn());
     }
   });
 
