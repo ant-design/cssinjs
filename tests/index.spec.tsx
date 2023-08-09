@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import * as React from 'react';
-import { ReactNode } from 'react';
-import { expect } from 'vitest';
+import { ReactNode, StrictMode } from 'react';
+import { describe, expect } from 'vitest';
 import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
   createCache,
@@ -622,79 +622,101 @@ describe('csssinjs', () => {
     const styles3 = Array.from(document.head.querySelectorAll('style'));
     expect(styles3).toHaveLength(1);
     expect(styles3[0].innerHTML).toContain('color:banana');
-    expect(styles3[0].innerHTML).toContain('b1ackground:green');
+    expect(styles3[0].innerHTML).toContain('background:green');
   });
 
-  it('should not cleanup token before finishing rendering', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const genDemoStyle = (token: any): CSSInterpolation => ({
-      '.box': {
-        color: token.primaryColor,
-      },
+  describe('should not cleanup token before finishing rendering', () => {
+    const test = (wrapper?: (node: ReactNode) => ReactNode) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const genDemoStyle = (token: any): CSSInterpolation => ({
+        '.box': {
+          color: token.primaryColor,
+        },
+      });
+
+      const Style = ({ token, hashId }: { token: any; hashId: string }) => {
+        useStyleRegister(
+          {
+            theme,
+            token,
+            hashId,
+            path: ['cssinjs-cleanup-token-after-render', hashId],
+          },
+          () => [genDemoStyle(token)],
+        );
+
+        return null;
+      };
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+          },
+        );
+
+        return (
+          <>
+            <Style token={token} hashId={hashId} />
+            <div className={classNames('box', hashId)}>{children}</div>
+          </>
+        );
+      };
+
+      const { rerender } = render(
+        <StrictMode>
+          <Demo myToken="token1" />
+        </StrictMode>,
+      );
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+      expect(styles[0].innerHTML).toContain('color:token1');
+
+      rerender(
+        <StrictMode>
+          <Demo myToken="token2">
+            <Demo myToken="token1" />
+          </Demo>
+        </StrictMode>,
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(2);
+      expect(styles2[0].innerHTML).toContain('color:token1');
+      expect(styles2[1].innerHTML).toContain('color:token2');
+
+      rerender(
+        <StrictMode>
+          <Demo myToken="token1" />
+        </StrictMode>,
+      );
+      const styles3 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles3).toHaveLength(1);
+      expect(styles3[0].innerHTML).toContain('color:token1');
+
+      expect(spy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
+        ),
+      );
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
     });
 
-    const Style = ({ token, hashId }: { token: any; hashId: string }) => {
-      useStyleRegister(
-        {
-          theme,
-          token,
-          hashId,
-          path: ['cssinjs-cleanup-token-after-render', hashId],
-        },
-        () => [genDemoStyle(token)],
-      );
-
-      return null;
-    };
-
-    const Demo = ({
-      myToken,
-      children,
-    }: {
-      myToken?: string;
-      children?: ReactNode;
-    }) => {
-      const [token, hashId] = useCacheToken<DerivativeToken>(
-        theme,
-        [{ primaryColor: myToken }],
-        {
-          salt: 'test',
-        },
-      );
-
-      return (
-        <>
-          <Style token={token} hashId={hashId} />
-          <div className={classNames('box', hashId)}>{children}</div>
-        </>
-      );
-    };
-
-    const { rerender } = render(<Demo myToken="token1" />);
-    const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(1);
-    expect(styles[0].innerHTML).toContain('color:token1');
-
-    rerender(
-      <Demo myToken="token2">
-        <Demo myToken="token1" />
-      </Demo>,
-    );
-    const styles2 = Array.from(document.head.querySelectorAll('style'));
-    expect(styles2).toHaveLength(2);
-    expect(styles2[0].innerHTML).toContain('color:token1');
-    expect(styles2[1].innerHTML).toContain('color:token2');
-
-    rerender(<Demo myToken="token1" />);
-    const styles3 = Array.from(document.head.querySelectorAll('style'));
-    expect(styles3).toHaveLength(1);
-    expect(styles3[0].innerHTML).toContain('color:token1');
-
-    expect(spy).not.toHaveBeenCalledWith(
-      expect.stringContaining(
-        '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
-      ),
-    );
-    spy.mockRestore();
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
   });
 });

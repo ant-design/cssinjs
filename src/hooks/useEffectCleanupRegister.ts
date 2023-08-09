@@ -23,11 +23,15 @@ const useCleanupRegister = () => {
     effectCleanups.push(fn);
   }
 
-  React.useEffect(() => () => {
-    cleanupFlag = true;
-    if (effectCleanups.length) {
-      effectCleanups.forEach((fn) => fn());
-    }
+  React.useEffect(() => {
+    // Compatible with strict mode
+    cleanupFlag = false;
+    return () => {
+      cleanupFlag = true;
+      if (effectCleanups.length) {
+        effectCleanups.forEach((fn) => fn());
+      }
+    };
   });
 
   return register;
