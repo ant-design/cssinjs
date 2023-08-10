@@ -7,7 +7,7 @@ const fullClone = {
 const { useInsertionEffect } = fullClone;
 
 // DO NOT register functions in useEffect cleanup function, or functions that registered will never be called.
-const useCleanupRegister = () => {
+const useCleanupRegister = (deps?: React.DependencyList) => {
   const effectCleanups: (() => void)[] = [];
   let cleanupFlag = false;
   function register(fn: () => void) {
@@ -32,7 +32,7 @@ const useCleanupRegister = () => {
         effectCleanups.forEach((fn) => fn());
       }
     };
-  });
+  }, deps);
 
   return register;
 };

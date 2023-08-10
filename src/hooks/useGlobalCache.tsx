@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
 import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
+import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
 
 export default function useGlobalCache<CacheType>(
@@ -15,6 +16,8 @@ export default function useGlobalCache<CacheType>(
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
   const deps = fullPath.join('_');
+
+  const register = useEffectCleanupRegister([deps]);
 
   const HMRUpdate = useHMR();
 
@@ -84,7 +87,8 @@ export default function useGlobalCache<CacheType>(
           const nextCount = times - 1;
 
           if (nextCount === 0) {
-            onCacheRemove?.(cache, false);
+            // Always remove styles in useEffect callback
+            register(() => onCacheRemove?.(cache, false));
             return null;
           }
 
