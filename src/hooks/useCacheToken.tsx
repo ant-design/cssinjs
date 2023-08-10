@@ -4,6 +4,7 @@ import { useContext } from 'react';
 import StyleContext, { ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../StyleContext';
 import type Theme from '../theme/Theme';
 import { flattenToken, token2key } from '../util';
+import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
@@ -40,7 +41,11 @@ export interface Option<DerivativeToken, DesignToken> {
    * @param override Extra tokens to override.
    * @param theme Theme instance. Could get derivative token by `theme.getDerivativeToken`
    */
-  getComputedToken?: (origin: DesignToken, override: object, theme: Theme<any, any>) => DerivativeToken;
+  getComputedToken?: (
+    origin: DesignToken,
+    override: object,
+    theme: Theme<any, any>,
+  ) => DerivativeToken;
 }
 
 const tokenKeys = new Map<string, number>();
@@ -129,8 +134,10 @@ export default function useCacheToken<
     salt = '',
     override = EMPTY_OVERRIDE,
     formatToken,
-    getComputedToken: compute
+    getComputedToken: compute,
   } = option;
+
+  const register = useEffectCleanupRegister();
 
   // Basic - We do basic cache here
   const mergedToken = React.useMemo(
@@ -152,12 +159,9 @@ export default function useCacheToken<
     'token',
     [salt, theme.id, tokenStr, overrideTokenStr],
     () => {
-      const mergedDerivativeToken = compute ? compute(mergedToken, override, theme) : getComputedToken(
-        mergedToken,
-        override,
-        theme,
-        formatToken,
-      );
+      const mergedDerivativeToken = compute
+        ? compute(mergedToken, override, theme)
+        : getComputedToken(mergedToken, override, theme, formatToken);
 
       // Optimize for `useStyleRegister` performance
       const tokenKey = token2key(mergedDerivativeToken, salt);
@@ -171,7 +175,10 @@ export default function useCacheToken<
     },
     (cache) => {
       // Remove token will remove all related style
-      cleanTokenStyle(cache[0]._tokenKey, instanceId);
+      // Always remove styles in useEffect callback
+      register(() => {
+        cleanTokenStyle(cache[0]._tokenKey, instanceId);
+      });
     },
   );
 

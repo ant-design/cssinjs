@@ -1,17 +1,18 @@
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import * as React from 'react';
-import type { CSSInterpolation } from '../src';
+import { ReactElement, ReactNode, StrictMode } from 'react';
+import { describe, expect } from 'vitest';
+import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
   createCache,
+  createTheme,
   StyleProvider,
   Theme,
   useCacheToken,
   useStyleRegister,
-  createTheme
 } from '../src';
 import { ATTR_MARK, ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
-import type { DerivativeFunc } from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -562,22 +563,32 @@ describe('csssinjs', () => {
       },
     });
 
-    const Demo = ({myToken, theme: customTheme}: { myToken?: string, theme?: DerivativeFunc<any, any> }) => {
-      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [{primaryColor: 'blue'}], {
-        salt: 'test',
-        override: {
-          myToken,
-          theme: customTheme && createTheme(customTheme)
+    const Demo = ({
+      myToken,
+      theme: customTheme,
+    }: {
+      myToken?: string;
+      theme?: DerivativeFunc<any, any>;
+    }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: 'blue' }],
+        {
+          salt: 'test',
+          override: {
+            myToken,
+            theme: customTheme && createTheme(customTheme),
+          },
+          getComputedToken: (origin, override: any, myTheme) => {
+            const mergedToken = myTheme.getDerivativeToken(origin);
+            return {
+              ...mergedToken,
+              myToken: override.myToken,
+              ...(override.theme?.getDerivativeToken(mergedToken) ?? {}),
+            };
+          },
         },
-        getComputedToken: (origin, override: any, myTheme) => {
-          const mergedToken = myTheme.getDerivativeToken(origin);
-          return {
-            ...mergedToken,
-            myToken: override.myToken,
-            ...(override.theme?.getDerivativeToken(mergedToken) ?? {}),
-          }
-        }
-      });
+      );
 
       useStyleRegister(
         { theme, token, hashId, path: ['cssinjs-getComputedToken'] },
@@ -587,7 +598,7 @@ describe('csssinjs', () => {
       return <div className={classNames('box', hashId)} />;
     };
 
-    const { rerender } =render(<Demo myToken="test" />);
+    const { rerender } = render(<Demo myToken="test" />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
@@ -601,11 +612,105 @@ describe('csssinjs', () => {
     expect(styles2[0].innerHTML).toContain('color:apple');
     expect(styles2[0].innerHTML).toContain('background:blue');
 
-    rerender(<Demo myToken="banana" theme={(origin) => ({...origin, primaryColor: 'green'})} />);
+    rerender(
+      <Demo
+        myToken="banana"
+        theme={(origin) => ({ ...origin, primaryColor: 'green' })}
+      />,
+    );
 
     const styles3 = Array.from(document.head.querySelectorAll('style'));
     expect(styles3).toHaveLength(1);
     expect(styles3[0].innerHTML).toContain('color:banana');
     expect(styles3[0].innerHTML).toContain('background:green');
-  })
+  });
+
+  describe('should not cleanup token before finishing rendering', () => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const genDemoStyle = (token: any): CSSInterpolation => ({
+        '.box': {
+          color: token.primaryColor,
+        },
+      });
+
+      const Style = ({ token, hashId }: { token: any; hashId: string }) => {
+        useStyleRegister(
+          {
+            theme,
+            token,
+            hashId,
+            path: ['cssinjs-cleanup-token-after-render', hashId],
+          },
+          () => [genDemoStyle(token)],
+        );
+
+        return null;
+      };
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+          },
+        );
+
+        return (
+          <>
+            <Style token={token} hashId={hashId} />
+            <div className={classNames('box', hashId)}>{children}</div>
+          </>
+        );
+      };
+
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+      expect(styles[0].innerHTML).toContain('color:token1');
+
+      rerender(
+        wrapper(
+          <Demo myToken="token2">
+            <Demo myToken="token1" />
+          </Demo>,
+        ),
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(2);
+      expect(styles2[0].innerHTML).toContain('color:token1');
+      expect(styles2[1].innerHTML).toContain('color:token2');
+
+      rerender(wrapper(<Demo myToken="token1" />));
+      const styles3 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles3).toHaveLength(1);
+      expect(styles3[0].innerHTML).toContain('color:token1');
+
+      expect(spy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
+        ),
+      );
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
+    });
+
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
+  });
 });
