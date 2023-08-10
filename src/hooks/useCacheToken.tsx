@@ -4,7 +4,6 @@ import { useContext } from 'react';
 import StyleContext, { ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../StyleContext';
 import type Theme from '../theme/Theme';
 import { flattenToken, token2key } from '../util';
-import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
@@ -137,8 +136,6 @@ export default function useCacheToken<
     getComputedToken: compute,
   } = option;
 
-  const register = useEffectCleanupRegister();
-
   // Basic - We do basic cache here
   const mergedToken = React.useMemo(
     () => Object.assign({}, ...tokens),
@@ -175,10 +172,7 @@ export default function useCacheToken<
     },
     (cache) => {
       // Remove token will remove all related style
-      // Always remove styles in useEffect callback
-      register(() => {
-        cleanTokenStyle(cache[0]._tokenKey, instanceId);
-      });
+      cleanTokenStyle(cache[0]._tokenKey, instanceId);
     },
   );
 
