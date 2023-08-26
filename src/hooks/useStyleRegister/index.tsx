@@ -355,28 +355,45 @@ function Empty() {
   return null;
 }
 
+export type StyleRegisterInfo = {
+  theme: Theme<any, any>;
+  token: any;
+  path: string[];
+  /**
+   * Will concat with `path`.
+   * But `subPath` will not remove by auto clear.
+   * This take account as `path` side.
+   */
+  subPath?: string[];
+  hashId?: string;
+  layer?: string;
+  nonce?: string | (() => string);
+  clientOnly?: boolean;
+  /**
+   * Tell cssinjs the insert order of style.
+   * It's useful when you need to insert style
+   * before other style to overwrite for the same selector priority.
+   */
+  order?: number;
+};
+
 /**
  * Register a style to the global style sheet.
  */
 export default function useStyleRegister(
-  info: {
-    theme: Theme<any, any>;
-    token: any;
-    path: string[];
-    hashId?: string;
-    layer?: string;
-    nonce?: string | (() => string);
-    clientOnly?: boolean;
-    /**
-     * Tell cssinjs the insert order of style.
-     * It's useful when you need to insert style
-     * before other style to overwrite for the same selector priority.
-     */
-    order?: number;
-  },
+  info: StyleRegisterInfo,
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
+  const {
+    token,
+    path,
+    subPath = [],
+    hashId,
+    layer,
+    nonce,
+    clientOnly,
+    order = 0,
+  } = info;
   const {
     autoClear,
     mock,
@@ -412,11 +429,11 @@ export default function useStyleRegister(
     fullPath,
     // Create cache if needed
     () => {
-      const cachePath = fullPath.join('|');
+      const cachePathStr = fullPath.join('|');
 
       // Get style from SSR inline style directly
-      if (existPath(cachePath)) {
-        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
+      if (existPath(cachePathStr)) {
+        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePathStr);
         if (inlineCacheStyleStr) {
           return [
             inlineCacheStyleStr,
