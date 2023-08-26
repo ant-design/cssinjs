@@ -359,12 +359,6 @@ export type StyleRegisterInfo = {
   theme: Theme<any, any>;
   token: any;
   path: string[];
-  /**
-   * Will concat with `path`.
-   * But `subPath` will not remove by auto clear.
-   * This take account as `path` side.
-   */
-  subPath?: string[];
   hashId?: string;
   layer?: string;
   nonce?: string | (() => string);
@@ -377,12 +371,17 @@ export type StyleRegisterInfo = {
   order?: number;
 };
 
+export type StyleFn = () => CSSInterpolation;
+
 /**
  * Register a style to the global style sheet.
+ * @param info config cache info
+ * @param styles Accept styleFunc or { subPath: styleFunc } to support dynamic sub styles
+ * @returns
  */
 export default function useStyleRegister(
   info: StyleRegisterInfo,
-  styleFn: () => CSSInterpolation,
+  styles: StyleFn | Record<string, StyleFn>,
 ) {
   const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
@@ -440,7 +439,7 @@ export default function useStyleRegister(
       }
 
       // Generate style
-      const styleObj = styleFn();
+      const styleObj = styles();
       const [parsedStyle, effectStyle] = parseStyle(styleObj, {
         hashId,
         hashPriority,

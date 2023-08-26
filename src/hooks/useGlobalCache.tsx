@@ -5,6 +5,19 @@ import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
 
+export function useGlobalCaches<CacheType>(
+  prefix: string,
+  entities: {
+    keyPath: KeyType[];
+    cacheFn: () => CacheType;
+    onCacheRemove?: (cache: CacheType, fromHMR: boolean) => void;
+    onCacheEffect?: (cachedValue: CacheType) => void;
+  }[],
+) {
+  const { cache: globalCache } = React.useContext(StyleContext);
+  const register = useEffectCleanupRegister([deps]);
+}
+
 export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
