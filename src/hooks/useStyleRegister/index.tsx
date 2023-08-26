@@ -384,16 +384,7 @@ export default function useStyleRegister(
   info: StyleRegisterInfo,
   styleFn: () => CSSInterpolation,
 ) {
-  const {
-    token,
-    path,
-    subPath = [],
-    hashId,
-    layer,
-    nonce,
-    clientOnly,
-    order = 0,
-  } = info;
+  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
     autoClear,
     mock,
@@ -425,15 +416,17 @@ export default function useStyleRegister(
       order: number,
     ]
   >(
+    // Prefix
     'style',
+    // KeyPath
     fullPath,
-    // Create cache if needed
+    // CacheFn: Create cache if needed
     () => {
-      const cachePathStr = fullPath.join('|');
+      const pathStr = fullPath.join('|');
 
       // Get style from SSR inline style directly
-      if (existPath(cachePathStr)) {
-        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePathStr);
+      if (existPath(pathStr)) {
+        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(pathStr);
         if (inlineCacheStyleStr) {
           return [
             inlineCacheStyleStr,
@@ -463,14 +456,14 @@ export default function useStyleRegister(
       return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
     },
 
-    // Remove cache if no need
+    // onCacheRemove: Remove cache if no need
     ([, , styleId], fromHMR) => {
       if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
 
-    // Effect: Inject style here
+    // onCacheEffect: Inject style here
     ([styleStr, _, styleId, effectStyle]) => {
       if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
         const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
