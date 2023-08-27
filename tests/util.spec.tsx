@@ -1,7 +1,8 @@
 import { normalizeStyle, parseStyle } from '../src/hooks/useStyleRegister';
+import { flattenToken } from '../src/util';
 
-vi.mock('../src/util', () => {
-  const origin = vi.importActual('../src/util');
+vi.mock('../src/util', async () => {
+  const origin: any = await vi.importActual('../src/util');
   return {
     ...origin,
     supportLayer: () => true,
@@ -103,5 +104,26 @@ describe('util', () => {
         expect(str).toEqual('@layer a, b, c\n');
       });
     });
+  });
+
+  it('flattenToken should support cache', () => {
+    const token = {};
+
+    let checkTimes = 0;
+    Object.defineProperty(token, 'a', {
+      get() {
+        checkTimes += 1;
+        return 1;
+      },
+      enumerable: true,
+    });
+
+    // Repeat call flattenToken
+    for (let i = 0; i < 10000; i += 1) {
+      const tokenStr = flattenToken(token);
+      expect(tokenStr).toEqual('a1');
+    }
+
+    expect(checkTimes).toEqual(1);
   });
 });
