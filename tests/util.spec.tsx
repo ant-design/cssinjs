@@ -1,5 +1,5 @@
 import { normalizeStyle, parseStyle } from '../src/hooks/useStyleRegister';
-import { flattenToken } from '../src/util';
+import { flattenToken, memoResult } from '../src/util';
 
 vi.mock('../src/util', async () => {
   const origin: any = await vi.importActual('../src/util');
@@ -125,5 +125,20 @@ describe('util', () => {
     }
 
     expect(checkTimes).toEqual(1);
+  });
+
+  it('memoResult with same subpath', () => {
+    const obj1 = {
+      a: 1,
+    };
+    const obj2 = {
+      b: 2,
+    };
+
+    const ret1 = memoResult(() => ({ ...obj1 }), [obj1]);
+    expect(memoResult(() => ({ ...obj1 }), [obj1])).toBe(ret1);
+
+    const ret2 = memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2]);
+    expect(memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2])).toBe(ret2);
   });
 });

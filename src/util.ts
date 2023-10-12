@@ -6,13 +6,14 @@ import { Theme } from './theme';
 // Create a cache for memo concat
 type NestWeakMap<T> = WeakMap<object, NestWeakMap<T> | T>;
 const resultCache: NestWeakMap<object> = new WeakMap();
+const RESULT_VALUE = {};
 
 export function memoResult<T extends object, R>(
   callback: () => R,
   deps: T[],
 ): R {
   let current: WeakMap<any, any> = resultCache;
-  for (let i = 0; i < deps.length - 1; i += 1) {
+  for (let i = 0; i < deps.length; i += 1) {
     const dep = deps[i];
     if (!current.has(dep)) {
       current.set(dep, new WeakMap());
@@ -20,12 +21,11 @@ export function memoResult<T extends object, R>(
     current = current.get(dep)!;
   }
 
-  const lastDep = deps[deps.length - 1];
-  if (!current.has(lastDep)) {
-    current.set(lastDep, callback());
+  if (!current.has(RESULT_VALUE)) {
+    current.set(RESULT_VALUE, callback());
   }
 
-  return current.get(lastDep);
+  return current.get(RESULT_VALUE);
 }
 
 // Create a cache here to avoid always loop generate
