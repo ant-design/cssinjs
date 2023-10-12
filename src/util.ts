@@ -3,9 +3,37 @@ import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import { Theme } from './theme';
 
+// Create a cache for memo concat
+type NestWeakMap<T> = WeakMap<object, NestWeakMap<T> | T>;
+const resultCache: NestWeakMap<object> = new WeakMap();
+
+export function memoResult<T extends object, R>(
+  callback: () => R,
+  deps: T[],
+): R {
+  let current: WeakMap<any, any> = resultCache;
+  for (let i = 0; i < deps.length - 1; i += 1) {
+    const dep = deps[i];
+    if (!current.has(dep)) {
+      current.set(dep, new WeakMap());
+    }
+    current = current.get(dep)!;
+  }
+
+  const lastDep = deps[deps.length - 1];
+  if (!current.has(lastDep)) {
+    current.set(lastDep, callback());
+  }
+
+  return current.get(lastDep);
+}
+
 // Create a cache here to avoid always loop generate
 const flattenTokenCache = new WeakMap<any, string>();
 
+/**
+ * Flatten token to string, this will auto cache the result when token not change
+ */
 export function flattenToken(token: any) {
   let str = flattenTokenCache.get(token) || '';
 
