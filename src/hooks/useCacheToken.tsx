@@ -6,6 +6,7 @@ import { flattenToken, memoResult, token2key } from '../util';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
+const EMPTY_OBJECT = {};
 
 // Generate different prefix to make user selector break in production env.
 // This helps developer not to do style override directly on the hash id.
@@ -138,7 +139,7 @@ export default function useCacheToken<
   // Basic - We do basic cache here
   const mergedToken = tokens.length
     ? memoResult(() => Object.assign({}, ...tokens), tokens)
-    : {};
+    : EMPTY_OBJECT;
 
   const tokenStr = flattenToken(mergedToken);
   const overrideTokenStr = flattenToken(override);
