@@ -136,7 +136,9 @@ export default function useCacheToken<
   } = option;
 
   // Basic - We do basic cache here
-  const mergedToken = memoResult(() => Object.assign({}, ...tokens), tokens);
+  const mergedToken = tokens.length
+    ? memoResult(() => Object.assign({}, ...tokens), tokens)
+    : {};
 
   const tokenStr = flattenToken(mergedToken);
   const overrideTokenStr = flattenToken(override);

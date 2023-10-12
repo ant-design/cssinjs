@@ -3,29 +3,29 @@ import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import { Theme } from './theme';
 
-// We convert obj to number index key first
-const keyIndexCache = new WeakMap<any, number>();
-let keyIndex = 0;
-
-function obj2Key(obj: any): number {
-  if (!keyIndexCache.has(obj)) {
-    keyIndex += 1;
-    keyIndexCache.set(obj, keyIndex);
-  }
-  return keyIndexCache.get(obj)!;
-}
-
 // Create a cache for memo concat
-const resultCache = new WeakMap<any, any>();
+type NestWeakMap<T> = WeakMap<object, NestWeakMap<T> | T>;
+const resultCache: NestWeakMap<object> = new WeakMap();
 
-export function memoResult<T, R>(callback: () => R, deps: T[]): R {
-  const uniqueKey = deps.map(obj2Key).join('-');
-
-  if (!resultCache.has(uniqueKey)) {
-    resultCache.set(uniqueKey, callback());
+export function memoResult<T extends object, R>(
+  callback: () => R,
+  deps: T[],
+): R {
+  let current: WeakMap<any, any> = resultCache;
+  for (let i = 0; i < deps.length - 1; i += 1) {
+    const dep = deps[i];
+    if (!current.has(dep)) {
+      current.set(dep, new WeakMap());
+    }
+    current = current.get(dep)!;
   }
 
-  return resultCache.get(uniqueKey);
+  const lastDep = deps[deps.length - 1];
+  if (!current.has(lastDep)) {
+    current.set(lastDep, callback());
+  }
+
+  return current.get(lastDep);
 }
 
 // Create a cache here to avoid always loop generate
