@@ -3,9 +3,37 @@ import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import { Theme } from './theme';
 
+// We convert obj to number index key first
+const keyIndexCache = new WeakMap<any, number>();
+let keyIndex = 0;
+
+function obj2Key(obj: any): number {
+  if (!keyIndexCache.has(obj)) {
+    keyIndex += 1;
+    keyIndexCache.set(obj, keyIndex);
+  }
+  return keyIndexCache.get(obj)!;
+}
+
+// Create a cache for memo concat
+const resultCache = new WeakMap<any, any>();
+
+export function memoResult<T, R>(callback: () => R, deps: T[]): R {
+  const uniqueKey = deps.map(obj2Key).join('-');
+
+  if (!resultCache.has(uniqueKey)) {
+    resultCache.set(uniqueKey, callback());
+  }
+
+  return resultCache.get(uniqueKey);
+}
+
 // Create a cache here to avoid always loop generate
 const flattenTokenCache = new WeakMap<any, string>();
 
+/**
+ * Flatten token to string, this will auto cache the result when token not change
+ */
 export function flattenToken(token: any) {
   let str = flattenTokenCache.get(token) || '';
 

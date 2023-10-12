@@ -1,9 +1,8 @@
 import hash from '@emotion/hash';
-import * as React from 'react';
 import { useContext } from 'react';
 import StyleContext, { ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../StyleContext';
 import type Theme from '../theme/Theme';
-import { flattenToken, token2key } from '../util';
+import { flattenToken, memoResult, token2key } from '../util';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
@@ -137,18 +136,10 @@ export default function useCacheToken<
   } = option;
 
   // Basic - We do basic cache here
-  const mergedToken = React.useMemo(
-    () => Object.assign({}, ...tokens),
-    [tokens],
-  );
-  const tokenStr = React.useMemo(
-    () => flattenToken(mergedToken),
-    [mergedToken],
-  );
-  const overrideTokenStr = React.useMemo(
-    () => flattenToken(override),
-    [override],
-  );
+  const mergedToken = memoResult(() => Object.assign({}, ...tokens), tokens);
+
+  const tokenStr = flattenToken(mergedToken);
+  const overrideTokenStr = flattenToken(override);
 
   const cachedToken = useGlobalCache<
     [DerivativeToken & { _tokenKey: string }, string]
