@@ -49,9 +49,6 @@ export interface Option<DerivativeToken, DesignToken> {
     override: object,
     theme: Theme<any, any>,
   ) => DerivativeToken;
-  cssVarMapping?: {
-    [key in keyof DerivativeToken]?: `--${string}`;
-  };
   cssVar?: {
     prefix?: string;
     unitless?: Record<string, boolean>;
@@ -144,7 +141,7 @@ export default function useCacheToken<
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
   option: Option<DerivativeToken, DesignToken> = {},
-): [DerivativeToken & { _tokenKey: string }, string] {
+): [DerivativeToken & { _tokenKey: string }, string, DerivativeToken, any] {
   const {
     cache: { instanceId },
     container,
@@ -211,11 +208,11 @@ export default function useCacheToken<
       cleanTokenStyle(cache[0]._tokenKey, instanceId);
     },
     ([_, hashId, actualTokens, cssVarMapping]) => {
-      if (cssVarMapping) {
+      if (cssVar) {
         const declaration = `.${hashId} {${Object.entries(cssVarMapping)
           .map(([key, value]) => {
             let actualValue = (actualTokens as any)[key];
-            if (typeof actualValue === 'number' && !cssVar?.unitless?.[key]) {
+            if (typeof actualValue === 'number' && !cssVar.unitless?.[key]) {
               actualValue = `${actualValue}px`;
             }
             return `${value}: ${actualValue};`;
@@ -236,5 +233,5 @@ export default function useCacheToken<
     },
   );
 
-  return [cachedToken[0], cachedToken[1]];
+  return cachedToken;
 }
