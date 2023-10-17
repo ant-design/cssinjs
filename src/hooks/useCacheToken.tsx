@@ -123,7 +123,9 @@ export const getComputedToken = <
 // Camel case to kebab case
 const token2CSSVar = (token: string, prefix = '') => {
   return `--${prefix ? `${prefix}-` : ''}${token
-    .replace(/([A-Z][a-z]|[A-Z]+|[0-9]+)/g, '-$1')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z0-9]+)/g, '$1-$2')
+    .replace(/([a-z])([A-Z0-9])/g, '$1-$2')
     .toLowerCase()}`;
 };
 
