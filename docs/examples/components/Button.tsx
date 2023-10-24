@@ -29,7 +29,7 @@ const genSharedButtonStyle = (
   },
 });
 
-// 实心底色样式
+// 底色样式
 const genSolidButtonStyle = (
   prefixCls: string,
   token: DerivativeToken,
@@ -77,21 +77,17 @@ const genPrimaryButtonStyle = (
 const genGhostButtonStyle = (
   prefixCls: string,
   token: DerivativeToken,
-): CSSInterpolation => [
-  genSharedButtonStyle(prefixCls, token),
-  {
-    [`.${prefixCls}`]: {
-      backgroundColor: 'transparent',
-      color: token.primaryColor,
-      border: `${token.borderWidth}px solid ${token.primaryColor}`,
+): CSSInterpolation =>
+  genSolidButtonStyle(prefixCls, token, () => ({
+    backgroundColor: 'transparent',
+    color: token.primaryColor,
+    border: `${token.borderWidth}px solid ${token.primaryColor}`,
 
-      '&:hover': {
-        borderColor: token.primaryColor,
-        color: token.primaryColor,
-      },
+    '&:hover': {
+      borderColor: token.primaryColor,
+      color: token.primaryColor,
     },
-  },
-];
+  }));
 
 interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
