@@ -1,7 +1,7 @@
 import hash from '@emotion/hash';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
-import { Theme } from './theme';
+import { Theme } from '../theme';
 
 // Create a cache for memo concat
 type NestWeakMap<T> = WeakMap<object, NestWeakMap<T> | T>;
@@ -146,3 +146,5 @@ export function supportLogicProps(): boolean {
 
   return canLogic!;
 }
+
+export const isClientSide = canUseDom();
