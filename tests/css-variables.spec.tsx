@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
+import { expect } from 'vitest';
 import {
   createTheme,
   unit,
@@ -78,7 +79,13 @@ const DesignTokenProvider: React.FC<
       hashed: customTheme.hashed ?? parentContext.hashed,
       cssVar: customTheme.cssVar,
     };
-  }, [theme, parentContext]);
+  }, [
+    parentContext.token,
+    parentContext.hashed,
+    customTheme.token,
+    customTheme.hashed,
+    customTheme.cssVar,
+  ]);
 
   return (
     <DesignTokenContext.Provider value={mergedCtx}>
@@ -292,6 +299,44 @@ describe('CSS Variables', () => {
       border: '3px solid black',
       backgroundColor: '#1677ff',
       color: '#5c21ff',
+    });
+  });
+
+  it('dynamic', () => {
+    const Demo = (props: { token?: Partial<DerivativeToken> }) => (
+      <DesignTokenProvider
+        theme={{
+          token: props.token,
+          cssVar: {
+            key: 'apple',
+          },
+        }}
+      >
+        <Box className="target" />
+      </DesignTokenProvider>
+    );
+
+    const { container, rerender } = render(<Demo />);
+
+    let styles = Array.from(document.head.querySelectorAll('style'));
+    const box = container.querySelector('.target')!;
+
+    expect(styles.length).toBe(3);
+    expect(box).toHaveClass('apple');
+    expect(box).toHaveStyle({
+      '--rc-line-height': '1.5',
+      lineHeight: 'var(--rc-line-height)',
+    });
+
+    rerender(<Demo token={{ lineHeight: 2 }} />);
+
+    styles = Array.from(document.head.querySelectorAll('style'));
+
+    expect(styles.length).toBe(3);
+    expect(box).toHaveClass('apple');
+    expect(box).toHaveStyle({
+      '--rc-line-height': '2',
+      lineHeight: 'var(--rc-line-height)',
     });
   });
 });

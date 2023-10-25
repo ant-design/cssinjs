@@ -29,13 +29,11 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const fullPath = [...config.path, key, tokenKey];
-
   const cache = useGlobalCache<[TokenWithCSSVar<T>, string, T, string]>(
     'variables',
-    fullPath,
+    [...config.path, key, tokenKey],
     () => {
-      const styleId = hash(fullPath.join('%'));
+      const styleId = hash([...config.path, key].join('%'));
       const originToken = fn();
       const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
         prefix,
