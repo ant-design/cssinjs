@@ -3,7 +3,13 @@ import { render } from '@testing-library/react';
 import classNames from 'classnames';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
-import { createTheme, unit, useCacheToken, useStyleRegister } from '../src';
+import {
+  createTheme,
+  unit,
+  useCacheToken,
+  useCSSVarRegister,
+  useStyleRegister,
+} from '../src';
 
 export interface DesignToken {
   primaryColor: string;
@@ -81,35 +87,49 @@ const DesignTokenProvider: React.FC<
   );
 };
 
-function useToken(): [DerivativeToken, string, string | undefined] {
+function useToken(): [DerivativeToken, string, string, DerivativeToken] {
   const {
     token: rootDesignToken = {},
     hashed,
     cssVar,
   } = React.useContext(DesignTokenContext);
 
-  const [token, hashId] = useCacheToken<DerivativeToken, DesignToken>(
-    theme,
-    [defaultDesignToken, rootDesignToken],
-    {
-      salt: typeof hashed === 'string' ? hashed : '',
-      cssVar: cssVar && {
-        prefix: 'rc',
-        key: cssVar.key,
-        unitless: {
-          lineHeight: true,
-        },
-        ignore: {
-          lineHeightBase: true,
-        },
+  const [token, hashId, realToken] = useCacheToken<
+    DerivativeToken,
+    DesignToken
+  >(theme, [defaultDesignToken, rootDesignToken], {
+    salt: typeof hashed === 'string' ? hashed : '',
+    cssVar: cssVar && {
+      prefix: 'rc',
+      key: cssVar.key,
+      unitless: {
+        lineHeight: true,
+      },
+      ignore: {
+        lineHeightBase: true,
       },
     },
-  );
-  return [token, hashed ? hashId : '', cssVar?.key];
+  });
+  return [token, hashed ? hashId : '', cssVar?.key || '', realToken];
 }
 
 const useStyle = () => {
-  const [token, hashId, cssVarKey] = useToken();
+  const [token, hashId, cssVarKey, realToken] = useToken();
+
+  const getComponentToken = () => ({ boxColor: '#5c21ff' });
+
+  const [cssVarToken] = useCSSVarRegister(
+    {
+      path: ['Box'],
+      key: cssVarKey,
+      token: realToken,
+      prefix: 'rc-box',
+      unitless: {
+        lineHeight: true,
+      },
+    },
+    cssVarKey ? getComponentToken : () => ({}),
+  );
 
   useStyleRegister(
     {
@@ -119,12 +139,20 @@ const useStyle = () => {
       path: ['Box'],
     },
     () => {
+      // @ts-ignore
+      const mergedToken: DerivativeToken & { boxColor: string } = {
+        ...token,
+        ...(cssVarKey ? cssVarToken : getComponentToken()),
+      };
+
       return {
         '.box': {
-          lineHeight: token.lineHeight,
-          border: `${unit(token.borderWidth)} solid ${token.borderColor}`,
-          color: '#fff',
-          backgroundColor: token.primaryColor,
+          lineHeight: mergedToken.lineHeight,
+          border: `${unit(mergedToken.borderWidth)} solid ${
+            mergedToken.borderColor
+          }`,
+          color: mergedToken.boxColor,
+          backgroundColor: mergedToken.primaryColor,
         },
       };
     },
@@ -163,10 +191,11 @@ describe('CSS Variables', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     const box = container.querySelector('.target')!;
 
-    expect(styles.length).toBe(2);
+    expect(styles.length).toBe(3);
     expect(styles[0].textContent).toContain('.apple{');
     expect(styles[0].textContent).toContain('--rc-line-height:1.5;');
-    expect(styles[1].textContent).toContain(
+    expect(styles[1].textContent).toContain('--rc-box-box-color:#5c21ff');
+    expect(styles[2].textContent).toContain(
       'line-height:var(--rc-line-height);',
     );
     expect(box).toHaveClass('apple');
@@ -217,13 +246,14 @@ describe('CSS Variables', () => {
     );
 
     const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(5);
+    expect(styles).toHaveLength(7);
 
     const nonCssVarBox = container.querySelector('.non-css-var')!;
     expect(nonCssVarBox).toHaveStyle({
       lineHeight: '1.5',
       border: '1px solid black',
       backgroundColor: '#1890ff',
+      color: '#5c21ff',
     });
 
     const cssVarBox = container.querySelector('.css-var')!;
@@ -232,9 +262,11 @@ describe('CSS Variables', () => {
       '--rc-border-width': '1px',
       '--rc-border-color': 'black',
       '--rc-primary-color': '#1677ff',
+      '--rc-box-box-color': '#5c21ff',
       lineHeight: 'var(--rc-line-height)',
       border: 'var(--rc-border-width) solid var(--rc-border-color)',
       backgroundColor: 'var(--rc-primary-color)',
+      color: 'var(--rc-box-box-color)',
     });
 
     const cssVarBox2 = container.querySelector('.css-var-2')!;
@@ -245,9 +277,11 @@ describe('CSS Variables', () => {
       '--rc-border-width': '2px',
       '--rc-border-color': 'black',
       '--rc-primary-color': '#1677ff',
+      '--rc-box-box-color': '#5c21ff',
       lineHeight: 'var(--rc-line-height)',
       border: 'var(--rc-border-width) solid var(--rc-border-color)',
       backgroundColor: 'var(--rc-primary-color)',
+      color: 'var(--rc-box-box-color)',
     });
 
     const nonCssVarBox2 = container.querySelector('.non-css-var-2')!;
@@ -257,6 +291,7 @@ describe('CSS Variables', () => {
       lineHeight: '1.5',
       border: '3px solid black',
       backgroundColor: '#1677ff',
+      color: '#5c21ff',
     });
   });
 });

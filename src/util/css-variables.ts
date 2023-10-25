@@ -19,7 +19,7 @@ export const serializeCSSVar = <T extends Record<string, any>>(
 };
 
 export type TokenWithCSSVar<T> = {
-  [key in keyof T]?: string | TokenWithCSSVar<T>;
+  [key in keyof T]?: string;
 };
 
 export const transformToken = <

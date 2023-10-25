@@ -11,7 +11,7 @@ import type { TokenWithCSSVar } from '../util/css-variables';
 import { transformToken } from '../util/css-variables';
 import useGlobalCache from './useGlobalCache';
 
-const useCSSVarRegister = <T>(
+const useCSSVarRegister = <V, T extends Record<string, V>>(
   config: {
     path: string[];
     key: string;
@@ -19,7 +19,7 @@ const useCSSVarRegister = <T>(
     unitless?: Record<string, boolean>;
     token: any;
   },
-  fn: () => Record<string, T>,
+  fn: () => T,
 ) => {
   const { key, prefix, unitless, token } = config;
   const {
@@ -31,9 +31,7 @@ const useCSSVarRegister = <T>(
 
   const fullPath = [...config.path, key, tokenKey];
 
-  const cache = useGlobalCache<
-    [TokenWithCSSVar<T>, string, Record<string, T>, string]
-  >(
+  const cache = useGlobalCache<[TokenWithCSSVar<T>, string, T, string]>(
     'variables',
     fullPath,
     () => {
