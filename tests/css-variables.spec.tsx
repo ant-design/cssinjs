@@ -6,6 +6,7 @@ import React from 'react';
 import { expect } from 'vitest';
 import {
   createTheme,
+  StyleProvider,
   unit,
   useCacheToken,
   useCSSVarRegister,
@@ -338,5 +339,43 @@ describe('CSS Variables', () => {
       '--rc-line-height': '2',
       lineHeight: 'var(--rc-line-height)',
     });
+  });
+
+  it('could autoClear', () => {
+    const { rerender } = render(
+      <StyleProvider autoClear>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'apple',
+            },
+          }}
+        >
+          <Box className="target" />
+        </DesignTokenProvider>
+        ,
+      </StyleProvider>,
+    );
+
+    let styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles.length).toBe(3);
+
+    rerender(
+      <StyleProvider autoClear>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'apple',
+            },
+          }}
+        >
+          <div />
+        </DesignTokenProvider>
+        ,
+      </StyleProvider>,
+    );
+
+    styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles.length).toBe(1);
   });
 });
