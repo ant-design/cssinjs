@@ -16,7 +16,7 @@ import { createTheme, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
-import { supportLogicProps, supportWhere } from './util';
+import { supportLogicProps, supportWhere, unit } from './util';
 import { token2CSSVar } from './util/css-variables';
 
 export {
@@ -42,6 +42,7 @@ export {
 
   // util
   token2CSSVar,
+  unit,
 };
 export type {
   TokenType,

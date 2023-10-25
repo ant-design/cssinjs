@@ -51,7 +51,7 @@ export const serializeCSSVar = <T extends Record<string, any>>(
   cssVars: T,
   hashId: string,
 ) => {
-  return `.${hashId} {${Object.entries(cssVars)
-    .map(([key, value]) => `${key}: ${value};`)
+  return `.${hashId}{${Object.entries(cssVars)
+    .map(([key, value]) => `${key}:${value};`)
     .join('')}}`;
 };

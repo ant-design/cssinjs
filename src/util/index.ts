@@ -148,3 +148,10 @@ export function supportLogicProps(): boolean {
 }
 
 export const isClientSide = canUseDom();
+
+export function unit(num: string | number) {
+  if (typeof num === 'number') {
+    return `${num}px`;
+  }
+  return num;
+}
