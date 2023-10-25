@@ -520,7 +520,7 @@ export default function useStyleRegister(
 // ==                                  SSR                                   ==
 // ============================================================================
 export function extractStyle(cache: Cache, plain = false) {
-  const matchPrefixRegexp = /^(style|variables)%/;
+  const matchPrefixRegexp = /^(style|variables|token)%/;
 
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>

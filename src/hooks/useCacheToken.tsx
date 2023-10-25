@@ -8,7 +8,7 @@ import StyleContext, {
 } from '../StyleContext';
 import type Theme from '../theme/Theme';
 import { flattenToken, memoResult, token2key } from '../util';
-import { serializeCSSVar, transformToken } from '../util/css-variables';
+import { transformToken } from '../util/css-variables';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
@@ -148,7 +148,7 @@ export default function useCacheToken<
   DerivativeToken & { _tokenKey: string; _themeKey: string },
   string,
   DerivativeToken,
-  Record<string, string> | undefined,
+  string,
 ] {
   const {
     cache: { instanceId },
@@ -175,7 +175,7 @@ export default function useCacheToken<
       DerivativeToken & { _tokenKey: string; _themeKey: string },
       string,
       DerivativeToken,
-      Record<string, string> | undefined,
+      string,
     ]
   >(
     'token',
@@ -187,10 +187,11 @@ export default function useCacheToken<
 
       // Replace token value with css variables
       const actualToken = { ...mergedDerivativeToken };
-      let cssVars;
+      let cssVarsStr = '';
       if (!!cssVar) {
-        [mergedDerivativeToken, cssVars] = transformToken(
+        [mergedDerivativeToken, cssVarsStr] = transformToken(
           mergedDerivativeToken,
+          cssVar.key!,
           {
             prefix: cssVar.prefix,
             ignore: cssVar.ignore,
@@ -213,17 +214,16 @@ export default function useCacheToken<
         : `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 
-      return [mergedDerivativeToken, hashId, actualToken, cssVars];
+      return [mergedDerivativeToken, hashId, actualToken, cssVarsStr];
     },
     (cache) => {
       // Remove token will remove all related style
       cleanTokenStyle(cache[0]._themeKey, instanceId);
     },
-    ([token, , , cssVars]) => {
-      if (cssVar && cssVars) {
-        const declaration = serializeCSSVar(cssVars, token._themeKey);
+    ([token, , , cssVarsStr]) => {
+      if (cssVar && cssVarsStr) {
         const style = updateCSS(
-          declaration,
+          cssVarsStr,
           hash(`css-variables-${token._themeKey}`),
           {
             mark: ATTR_MARK,

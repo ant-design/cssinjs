@@ -6,6 +6,18 @@ export const token2CSSVar = (token: string, prefix = '') => {
     .toLowerCase();
 };
 
+export const serializeCSSVar = <T extends Record<string, any>>(
+  cssVars: T,
+  hashId: string,
+) => {
+  if (!Object.keys(cssVars).length) {
+    return '';
+  }
+  return `.${hashId}{${Object.entries(cssVars)
+    .map(([key, value]) => `${key}:${value};`)
+    .join('')}}`;
+};
+
 export type TokenWithCSSVar<T> = {
   [key in keyof T]?: string | TokenWithCSSVar<T>;
 };
@@ -15,6 +27,7 @@ export const transformToken = <
   T extends Record<string, V> = Record<string, V>,
 >(
   token: T,
+  themeKey: string,
   config?: {
     prefix?: string;
     ignore?: {
@@ -24,7 +37,7 @@ export const transformToken = <
       [key in keyof T]?: boolean;
     };
   },
-): [TokenWithCSSVar<T>, Record<string, string>] => {
+): [TokenWithCSSVar<T>, string] => {
   const cssVars: Record<string, string> = {};
   const result: TokenWithCSSVar<T> = {};
   Object.entries(token).forEach(([key, value]) => {
@@ -40,14 +53,5 @@ export const transformToken = <
       result[key as keyof T] = `var(${cssVar})`;
     }
   });
-  return [result, cssVars];
-};
-
-export const serializeCSSVar = <T extends Record<string, any>>(
-  cssVars: T,
-  hashId: string,
-) => {
-  return `.${hashId}{${Object.entries(cssVars)
-    .map(([key, value]) => `${key}:${value};`)
-    .join('')}}`;
+  return [result, serializeCSSVar(cssVars, themeKey)];
 };

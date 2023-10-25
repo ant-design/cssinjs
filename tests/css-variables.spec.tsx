@@ -1,6 +1,7 @@
 import { TinyColor } from '@ctrl/tinycolor';
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
+import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { createTheme, unit, useCacheToken, useStyleRegister } from '../src';
 
@@ -44,16 +45,41 @@ function derivative(designToken: DesignToken): DerivativeToken {
 
 const theme = createTheme(derivative);
 
-const DesignTokenContext = React.createContext<{
+type DesignTokenProviderProps = {
   token?: Partial<DesignToken>;
   hashed?: string | boolean;
   cssVar?: {
     key: string;
   };
-}>({
+};
+
+const DesignTokenContext = React.createContext<DesignTokenProviderProps>({
   token: defaultDesignToken,
   hashed: true,
 });
+
+const DesignTokenProvider: React.FC<
+  PropsWithChildren<{ theme: DesignTokenProviderProps }>
+> = ({ theme: customTheme, children }) => {
+  const parentContext = React.useContext(DesignTokenContext);
+
+  const mergedCtx = React.useMemo(() => {
+    return {
+      token: {
+        ...parentContext.token,
+        ...customTheme.token,
+      },
+      hashed: customTheme.hashed ?? parentContext.hashed,
+      cssVar: customTheme.cssVar,
+    };
+  }, [theme, parentContext]);
+
+  return (
+    <DesignTokenContext.Provider value={mergedCtx}>
+      {children}
+    </DesignTokenContext.Provider>
+  );
+};
 
 function useToken(): [DerivativeToken, string, string | undefined] {
   const {
@@ -114,17 +140,24 @@ const Box = (props: { className?: string }) => {
 };
 
 describe('CSS Variables', () => {
+  beforeEach(() => {
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    styles.forEach((style) => {
+      style.parentNode?.removeChild(style);
+    });
+  });
+
   it('should work with cssVar', () => {
     const { container } = render(
-      <DesignTokenContext.Provider
-        value={{
+      <DesignTokenProvider
+        theme={{
           cssVar: {
             key: 'apple',
           },
         }}
       >
         <Box className="target" />
-      </DesignTokenContext.Provider>,
+      </DesignTokenProvider>,
     );
 
     const styles = Array.from(document.head.querySelectorAll('style'));
@@ -147,8 +180,8 @@ describe('CSS Variables', () => {
     const { container } = render(
       <>
         <Box className="non-css-var" />
-        <DesignTokenContext.Provider
-          value={{
+        <DesignTokenProvider
+          theme={{
             token: {
               primaryColor: '#1677ff',
             },
@@ -158,12 +191,33 @@ describe('CSS Variables', () => {
           }}
         >
           <Box className="css-var" />
-        </DesignTokenContext.Provider>
+          <DesignTokenProvider
+            theme={{
+              token: {
+                borderWidth: 2,
+              },
+              cssVar: {
+                key: 'banana',
+              },
+            }}
+          >
+            <Box className="css-var-2" />
+          </DesignTokenProvider>
+          <DesignTokenProvider
+            theme={{
+              token: {
+                borderWidth: 3,
+              },
+            }}
+          >
+            <Box className="non-css-var-2" />
+          </DesignTokenProvider>
+        </DesignTokenProvider>
       </>,
     );
 
     const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(3);
+    expect(styles).toHaveLength(5);
 
     const nonCssVarBox = container.querySelector('.non-css-var')!;
     expect(nonCssVarBox).toHaveStyle({
@@ -181,6 +235,28 @@ describe('CSS Variables', () => {
       lineHeight: 'var(--rc-line-height)',
       border: 'var(--rc-border-width) solid var(--rc-border-color)',
       backgroundColor: 'var(--rc-primary-color)',
+    });
+
+    const cssVarBox2 = container.querySelector('.css-var-2')!;
+    expect(cssVarBox2).toHaveClass('banana');
+    expect(cssVarBox2).not.toHaveClass('apple');
+    expect(cssVarBox2).toHaveStyle({
+      '--rc-line-height': '1.5',
+      '--rc-border-width': '2px',
+      '--rc-border-color': 'black',
+      '--rc-primary-color': '#1677ff',
+      lineHeight: 'var(--rc-line-height)',
+      border: 'var(--rc-border-width) solid var(--rc-border-color)',
+      backgroundColor: 'var(--rc-primary-color)',
+    });
+
+    const nonCssVarBox2 = container.querySelector('.non-css-var-2')!;
+    expect(nonCssVarBox2).not.toHaveClass('banana');
+    expect(nonCssVarBox2).not.toHaveClass('apple');
+    expect(nonCssVarBox2).toHaveStyle({
+      lineHeight: '1.5',
+      border: '3px solid black',
+      backgroundColor: '#1677ff',
     });
   });
 });

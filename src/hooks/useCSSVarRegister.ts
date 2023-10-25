@@ -8,7 +8,7 @@ import StyleContext, {
 } from '../StyleContext';
 import { isClientSide } from '../util';
 import type { TokenWithCSSVar } from '../util/css-variables';
-import { serializeCSSVar, transformToken } from '../util/css-variables';
+import { transformToken } from '../util/css-variables';
 import useGlobalCache from './useGlobalCache';
 
 const useCSSVarRegister = <T>(
@@ -32,30 +32,29 @@ const useCSSVarRegister = <T>(
   const fullPath = [...config.path, key, tokenKey];
 
   const cache = useGlobalCache<
-    [TokenWithCSSVar<T>, Record<string, string>, Record<string, T>, string]
+    [TokenWithCSSVar<T>, string, Record<string, T>, string]
   >(
     'variables',
     fullPath,
     () => {
       const styleId = hash(fullPath.join('%'));
       const originToken = fn();
-      const [mergedToken, cssVars] = transformToken(originToken, {
+      const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
         prefix,
         unitless,
       });
-      return [mergedToken, cssVars, originToken, styleId];
+      return [mergedToken, cssVarsStr, originToken, styleId];
     },
     ([, , , styleId], fromHMR) => {
       if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
-    ([, cssVars, , styleId]) => {
-      if (!Object.keys(cssVars).length) {
+    ([, cssVarsStr, , styleId]) => {
+      if (!cssVarsStr) {
         return;
       }
-      const declaration = serializeCSSVar(cssVars, key);
-      const style = updateCSS(declaration, styleId, {
+      const style = updateCSS(cssVarsStr, styleId, {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
