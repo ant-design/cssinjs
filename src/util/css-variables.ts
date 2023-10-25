@@ -25,10 +25,6 @@ export const transformToken = <
     };
   },
 ): [TokenWithCSSVar<T>, Record<string, string>] => {
-  if (!token) {
-    return [{}, {}];
-  }
-
   const cssVars: Record<string, string> = {};
   const result: TokenWithCSSVar<T> = {};
   Object.entries(token).forEach(([key, value]) => {

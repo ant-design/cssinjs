@@ -52,6 +52,7 @@ const DesignTokenContext = React.createContext<{
   };
 }>({
   token: defaultDesignToken,
+  hashed: true,
 });
 
 function useToken(): [DerivativeToken, string, string | undefined] {
@@ -113,34 +114,73 @@ const Box = (props: { className?: string }) => {
 };
 
 describe('CSS Variables', () => {
-  describe('useCacheToken', () => {
-    it('should work with cssVar', () => {
-      const { container } = render(
+  it('should work with cssVar', () => {
+    const { container } = render(
+      <DesignTokenContext.Provider
+        value={{
+          cssVar: {
+            key: 'apple',
+          },
+        }}
+      >
+        <Box className="target" />
+      </DesignTokenContext.Provider>,
+    );
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    const box = container.querySelector('.target')!;
+
+    expect(styles.length).toBe(2);
+    expect(styles[0].textContent).toContain('.apple{');
+    expect(styles[0].textContent).toContain('--rc-line-height:1.5;');
+    expect(styles[1].textContent).toContain(
+      'line-height:var(--rc-line-height);',
+    );
+    expect(box).toHaveClass('apple');
+    expect(box).toHaveStyle({
+      '--rc-line-height': '1.5',
+      lineHeight: 'var(--rc-line-height)',
+    });
+  });
+
+  it('could mix with non-css-var', () => {
+    const { container } = render(
+      <>
+        <Box className="non-css-var" />
         <DesignTokenContext.Provider
           value={{
+            token: {
+              primaryColor: '#1677ff',
+            },
             cssVar: {
               key: 'apple',
             },
           }}
         >
-          <Box className="target" />
-        </DesignTokenContext.Provider>,
-      );
+          <Box className="css-var" />
+        </DesignTokenContext.Provider>
+      </>,
+    );
 
-      const styles = Array.from(document.head.querySelectorAll('style'));
-      const box = container.querySelector('.target')!;
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(3);
 
-      expect(styles.length).toBe(2);
-      expect(styles[0].textContent).toContain('.apple{');
-      expect(styles[0].textContent).toContain('--rc-line-height:1.5;');
-      expect(styles[1].textContent).toContain(
-        'line-height:var(--rc-line-height);',
-      );
-      expect(box).toHaveClass('apple');
-      expect(box).toHaveStyle({
-        '--rc-line-height': '1.5',
-        lineHeight: 'var(--rc-line-height)',
-      });
+    const nonCssVarBox = container.querySelector('.non-css-var')!;
+    expect(nonCssVarBox).toHaveStyle({
+      lineHeight: '1.5',
+      border: '1px solid black',
+      backgroundColor: '#1890ff',
+    });
+
+    const cssVarBox = container.querySelector('.css-var')!;
+    expect(cssVarBox).toHaveStyle({
+      '--rc-line-height': '1.5',
+      '--rc-border-width': '1px',
+      '--rc-border-color': 'black',
+      '--rc-primary-color': '#1677ff',
+      lineHeight: 'var(--rc-line-height)',
+      border: 'var(--rc-border-width) solid var(--rc-border-color)',
+      backgroundColor: 'var(--rc-primary-color)',
     });
   });
 });
