@@ -353,7 +353,6 @@ describe('CSS Variables', () => {
         >
           <Box className="target" />
         </DesignTokenProvider>
-        ,
       </StyleProvider>,
     );
 
@@ -371,7 +370,6 @@ describe('CSS Variables', () => {
         >
           <div />
         </DesignTokenProvider>
-        ,
       </StyleProvider>,
     );
 
