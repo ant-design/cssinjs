@@ -25,6 +25,7 @@
   "license": "MIT",
   "scripts": {
     "start": "dumi dev",
+    "dev": "father dev",
     "docs:build": "dumi build",
     "docs:deploy": "gh-pages -d .doc",
     "compile": "father build",

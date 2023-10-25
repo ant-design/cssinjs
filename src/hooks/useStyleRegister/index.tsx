@@ -1,6 +1,5 @@
 import hash from '@emotion/hash';
 import type * as CSS from 'csstype';
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
@@ -18,7 +17,7 @@ import StyleContext, {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../../StyleContext';
-import { supportLayer } from '../../util';
+import { isClientSide, supportLayer } from '../../util';
 import useGlobalCache from '../useGlobalCache';
 import {
   ATTR_CACHE_MAP,
@@ -27,8 +26,6 @@ import {
   getStyleAndHash,
   serialize as serializeCacheMap,
 } from './cacheMapUtil';
-
-const isClientSide = canUseDom();
 
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
@@ -523,11 +520,11 @@ export default function useStyleRegister(
 // ==                                  SSR                                   ==
 // ============================================================================
 export function extractStyle(cache: Cache, plain = false) {
-  const matchPrefix = `style%`;
+  const matchPrefixRegexp = /^style%/;
 
   // prefix with `style` is used for `useStyleRegister` to cache style context
   const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
-    key.startsWith(matchPrefix),
+    matchPrefixRegexp.test(key),
   );
 
   // Common effect styles like animation
@@ -566,7 +563,7 @@ export function extractStyle(cache: Cache, plain = false) {
 
   const orderStyles: OrderStyle[] = styleKeys
     .map((key) => {
-      const cachePath = key.slice(matchPrefix.length).replace(/%/g, '|');
+      const cachePath = key.replace(matchPrefixRegexp, '').replace(/%/g, '|');
 
       const [styleStr, tokenKey, styleId, effectStyle, clientOnly, order]: [
         string,

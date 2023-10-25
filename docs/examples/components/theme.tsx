@@ -1,7 +1,7 @@
-import React from 'react';
-import { TinyColor } from '@ctrl/tinycolor';
 import type { CSSObject, Theme } from '@ant-design/cssinjs';
 import { createTheme, useCacheToken } from '@ant-design/cssinjs';
+import { TinyColor } from '@ctrl/tinycolor';
+import React from 'react';
 
 export type GetStyle = (prefixCls: string, token: DerivativeToken) => CSSObject;
 
@@ -15,6 +15,9 @@ export interface DesignToken {
   borderRadius: number;
   borderColor: string;
   borderWidth: number;
+
+  lineHeight: number;
+  lineHeightBase: number;
 }
 
 export interface DerivativeToken extends DesignToken {
@@ -31,6 +34,9 @@ const defaultDesignToken: DesignToken = {
   borderRadius: 2,
   borderColor: 'black',
   borderWidth: 1,
+
+  lineHeight: 1.5,
+  lineHeightBase: 1.5,
 };
 
 // 模拟推导过程
@@ -48,13 +54,24 @@ export const ThemeContext = React.createContext(createTheme(derivative));
 export const DesignTokenContext = React.createContext<{
   token?: Partial<DesignToken>;
   hashed?: string | boolean;
+  cssVar?: {
+    key: string;
+  };
 }>({
   token: defaultDesignToken,
 });
 
-export function useToken(): [Theme<any, any>, DerivativeToken, string] {
-  const { token: rootDesignToken = {}, hashed } =
-    React.useContext(DesignTokenContext);
+export function useToken(): [
+  Theme<any, any>,
+  DerivativeToken,
+  string,
+  string | undefined,
+] {
+  const {
+    token: rootDesignToken = {},
+    hashed,
+    cssVar,
+  } = React.useContext(DesignTokenContext);
   const theme = React.useContext(ThemeContext);
 
   const [token, hashId] = useCacheToken<DerivativeToken, DesignToken>(
@@ -62,7 +79,14 @@ export function useToken(): [Theme<any, any>, DerivativeToken, string] {
     [defaultDesignToken, rootDesignToken],
     {
       salt: typeof hashed === 'string' ? hashed : '',
+      cssVar: cssVar && {
+        prefix: 'rc',
+        key: cssVar.key,
+        unitless: {
+          lineHeight: true,
+        },
+      },
     },
   );
-  return [theme, token, hashed ? hashId : ''];
+  return [theme, token, hashed ? hashId : '', cssVar?.key];
 }
