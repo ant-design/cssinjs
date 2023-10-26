@@ -57,7 +57,9 @@ export default function extractStyle(cache: Cache, plain = false) {
         return null;
       }
       const [order, styleId, styleStr] = extractedStyle;
-      cachePathMap[cachePath] = styleId;
+      if (key.startsWith('style')) {
+        cachePathMap[cachePath] = styleId;
+      }
       return [order, styleStr];
     })
     .filter(isNotNull)
