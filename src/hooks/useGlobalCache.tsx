@@ -5,6 +5,14 @@ import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
 
+export type ExtractStyle<CacheValue> = (
+  cache: CacheValue,
+  effectStyles: Record<string, boolean>,
+  options?: {
+    plain?: boolean;
+  },
+) => [order: number, styleId: string, style: string] | null;
+
 export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
@@ -25,7 +33,7 @@ export default function useGlobalCache<CacheType>(
 
   const buildCache = (updater?: (data: UpdaterArgs) => UpdaterArgs) => {
     globalCache.update(fullPath, (prevCache) => {
-      const [times = 0, cache] = prevCache || [];
+      const [times = 0, cache] = prevCache || [undefined, undefined];
 
       // HMR should always ignore cache since developer may change it
       let tmpCache = cache;

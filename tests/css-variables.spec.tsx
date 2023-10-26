@@ -5,7 +5,9 @@ import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { expect } from 'vitest';
 import {
+  createCache,
   createTheme,
+  extractStyle,
   StyleProvider,
   unit,
   useCacheToken,
@@ -375,5 +377,24 @@ describe('CSS Variables', () => {
 
     styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles.length).toBe(1);
+  });
+
+  it('support ssr', () => {
+    const cache = createCache();
+    render(
+      <StyleProvider cache={cache}>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'apple',
+            },
+          }}
+        >
+          <Box className="target" />
+        </DesignTokenProvider>
+      </StyleProvider>,
+    );
+
+    expect(extractStyle(cache)).toMatchSnapshot();
   });
 });

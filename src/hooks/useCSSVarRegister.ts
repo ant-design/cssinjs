@@ -1,4 +1,3 @@
-import hash from '@emotion/hash';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import { useContext } from 'react';
 import StyleContext, {
@@ -6,10 +5,21 @@ import StyleContext, {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide } from '../util';
+import { isClientSide, toStyleStr } from '../util';
 import type { TokenWithCSSVar } from '../util/css-variables';
 import { transformToken } from '../util/css-variables';
+import type { ExtractStyle } from './useGlobalCache';
 import useGlobalCache from './useGlobalCache';
+import { uniqueHash } from './useStyleRegister';
+
+export const CSS_VAR_PREFIX = 'cssVar';
+
+type CSSVarCacheValue<T> = [
+  cssVarToken: TokenWithCSSVar<T>,
+  cssVarStr: string,
+  styleId: string,
+  cssVarKey: string,
+];
 
 const useCSSVarRegister = <V, T extends Record<string, V>>(
   config: {
@@ -29,24 +39,24 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const cache = useGlobalCache<[TokenWithCSSVar<T>, string, T, string]>(
-    'variables',
+  const cache = useGlobalCache<CSSVarCacheValue<T>>(
+    CSS_VAR_PREFIX,
     [...config.path, key, tokenKey],
     () => {
-      const styleId = hash([...config.path, key].join('%'));
       const originToken = fn();
       const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
         prefix,
         unitless,
       });
-      return [mergedToken, cssVarsStr, originToken, styleId];
+      const styleId = uniqueHash([...config.path, key], cssVarsStr);
+      return [mergedToken, cssVarsStr, styleId, key];
     },
-    ([, , , styleId], fromHMR) => {
+    ([, , styleId], fromHMR) => {
       if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
-    ([, cssVarsStr, , styleId]) => {
+    ([, cssVarsStr, styleId]) => {
       if (!cssVarsStr) {
         return;
       }
@@ -65,6 +75,38 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   );
 
   return cache;
+};
+
+export const extract: ExtractStyle<CSSVarCacheValue<any>> = (
+  cache,
+  effectStyles,
+  options,
+) => {
+  const [, styleStr, styleId, cssVarKey] = cache;
+  const { plain } = options || {};
+
+  if (!styleStr) {
+    return null;
+  }
+
+  const order = -999;
+
+  // ====================== Style ======================
+  // Used for rc-util
+  const sharedAttrs = {
+    'data-rc-order': 'prependQueue',
+    'data-rc-priority': `${order}`,
+  };
+
+  const styleText = toStyleStr(
+    styleStr,
+    cssVarKey,
+    styleId,
+    sharedAttrs,
+    plain,
+  );
+
+  return [order, styleId, styleText];
 };
 
 export default useCSSVarRegister;

@@ -12,9 +12,9 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import * as cacheMapUtil from '../src/hooks/useStyleRegister/cacheMapUtil';
-import { reset } from '../src/hooks/useStyleRegister/cacheMapUtil';
 import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
+import * as cacheMapUtil from '../src/util/cacheMapUtil';
+import { reset } from '../src/util/cacheMapUtil';
 
 interface DesignToken {
   primaryColor: string;

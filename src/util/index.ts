@@ -1,6 +1,7 @@
 import hash from '@emotion/hash';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import { ATTR_MARK, ATTR_TOKEN } from '../StyleContext';
 import { Theme } from '../theme';
 
 // Create a cache for memo concat
@@ -154,4 +155,31 @@ export function unit(num: string | number) {
     return `${num}px`;
   }
   return num;
+}
+
+export function toStyleStr(
+  style: string,
+  tokenKey?: string,
+  styleId?: string,
+  customizeAttrs: Record<string, string> = {},
+  plain = false,
+) {
+  if (plain) {
+    return style;
+  }
+  const attrs: Record<string, string | undefined> = {
+    ...customizeAttrs,
+    [ATTR_TOKEN]: tokenKey,
+    [ATTR_MARK]: styleId,
+  };
+
+  const attrStr = Object.keys(attrs)
+    .map((attr) => {
+      const val = attrs[attr];
+      return val ? `${attr}="${val}"` : null;
+    })
+    .filter((v) => v)
+    .join(' ');
+
+  return `<style ${attrStr}>${style}</style>`;
 }
