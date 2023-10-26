@@ -4,10 +4,10 @@ import classNames from 'classnames';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { expect } from 'vitest';
-import { extractStyle } from '../es';
 import {
   createCache,
   createTheme,
+  extractStyle,
   StyleProvider,
   unit,
   useCacheToken,
