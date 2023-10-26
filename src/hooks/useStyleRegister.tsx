@@ -5,7 +5,7 @@ import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
-import type { Theme, Transformer } from '../..';
+import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
 import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
@@ -22,7 +22,8 @@ import {
   existPath,
   getStyleAndHash,
 } from '../util/cacheMapUtil';
-import useGlobalCache, { ExtractStyle } from './useGlobalCache';
+import type { ExtractStyle } from './useGlobalCache';
+import useGlobalCache from './useGlobalCache';
 
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
