@@ -11,11 +11,11 @@ import {
   extract as styleExtractStyle,
   STYLE_PREFIX,
 } from './hooks/useStyleRegister';
+import { toStyleStr } from './util';
 import {
   ATTR_CACHE_MAP,
   serialize as serializeCacheMap,
-} from './hooks/useStyleRegister/cacheMapUtil';
-import { toStyleStr } from './util';
+} from './util/cacheMapUtil';
 
 const ExtractStyleFns = {
   [STYLE_PREFIX]: styleExtractStyle,
@@ -45,9 +45,7 @@ export default function extractStyle(cache: Cache, plain = false) {
 
   let styleText = '';
 
-  type ExtractedStyle = [order: number, styleStr: string];
-
-  const extractedStyles: ExtractedStyle[] = styleKeys
+  styleKeys
     .map<[number, string] | null>((key) => {
       const cachePath = key.replace(matchPrefixRegexp, '').replace(/%/g, '|');
       const [prefix] = key.split('%');
@@ -62,9 +60,7 @@ export default function extractStyle(cache: Cache, plain = false) {
       cachePathMap[cachePath] = styleId;
       return [order, styleStr];
     })
-    .filter(isNotNull);
-
-  extractedStyles
+    .filter(isNotNull)
     .sort(([o1], [o2]) => o1 - o2)
     .forEach(([, style]) => {
       styleText += style;
