@@ -6,26 +6,23 @@ import * as React from 'react';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import type { Theme, Transformer } from '../..';
-import type Cache from '../../Cache';
-import type Keyframes from '../../Keyframes';
-import type { Linter } from '../../linters';
-import { contentQuotesLinter, hashedAnimationLinter } from '../../linters';
-import type { HashPriority } from '../../StyleContext';
+import type Keyframes from '../Keyframes';
+import type { Linter } from '../linters';
+import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
+import type { HashPriority } from '../StyleContext';
 import StyleContext, {
   ATTR_CACHE_PATH,
   ATTR_MARK,
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
-} from '../../StyleContext';
-import { isClientSide, supportLayer } from '../../util';
-import useGlobalCache from '../useGlobalCache';
+} from '../StyleContext';
+import { isClientSide, supportLayer, toStyleStr } from '../util';
 import {
-  ATTR_CACHE_MAP,
   CSS_FILE_STYLE,
   existPath,
   getStyleAndHash,
-  serialize as serializeCacheMap,
-} from './cacheMapUtil';
+} from '../util/cacheMapUtil';
+import useGlobalCache, { ExtractStyle } from './useGlobalCache';
 
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
@@ -344,13 +341,24 @@ export const parseStyle = (
 // ============================================================================
 // ==                                Register                                ==
 // ============================================================================
-function uniqueHash(path: (string | number)[], styleStr: string) {
+export function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
 
 function Empty() {
   return null;
 }
+
+export const STYLE_PREFIX = 'style';
+
+type StyleCacheValue = [
+  styleStr: string,
+  tokenKey: string,
+  styleId: string,
+  effectStyle: Record<string, string>,
+  clientOnly: boolean | undefined,
+  order: number,
+];
 
 /**
  * Register a style to the global style sheet.
@@ -395,100 +403,92 @@ export default function useStyleRegister(
     isMergedClientSide = mock === 'client';
   }
 
-  const [cachedStyleStr, cachedTokenKey, cachedStyleId] = useGlobalCache<
-    [
-      styleStr: string,
-      tokenKey: string,
-      styleId: string,
-      effectStyle: Record<string, string>,
-      clientOnly: boolean | undefined,
-      order: number,
-    ]
-  >(
-    'style',
-    fullPath,
-    // Create cache if needed
-    () => {
-      const cachePath = fullPath.join('|');
+  const [cachedStyleStr, cachedTokenKey, cachedStyleId] =
+    useGlobalCache<StyleCacheValue>(
+      STYLE_PREFIX,
+      fullPath,
+      // Create cache if needed
+      () => {
+        const cachePath = fullPath.join('|');
 
-      // Get style from SSR inline style directly
-      if (existPath(cachePath)) {
-        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
-        if (inlineCacheStyleStr) {
-          return [
-            inlineCacheStyleStr,
-            tokenKey,
-            styleHash,
-            {},
-            clientOnly,
-            order,
-          ];
-        }
-      }
-
-      // Generate style
-      const styleObj = styleFn();
-      const [parsedStyle, effectStyle] = parseStyle(styleObj, {
-        hashId,
-        hashPriority,
-        layer,
-        path: path.join('-'),
-        transformers,
-        linters,
-      });
-
-      const styleStr = normalizeStyle(parsedStyle);
-      const styleId = uniqueHash(fullPath, styleStr);
-
-      return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
-    },
-
-    // Remove cache if no need
-    ([, , styleId], fromHMR) => {
-      if ((fromHMR || autoClear) && isClientSide) {
-        removeCSS(styleId, { mark: ATTR_MARK });
-      }
-    },
-
-    // Effect: Inject style here
-    ([styleStr, _, styleId, effectStyle]) => {
-      if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
-        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
-          mark: ATTR_MARK,
-          prepend: 'queue',
-          attachTo: container,
-          priority: order,
-        };
-
-        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-
-        if (nonceStr) {
-          mergedCSSConfig.csp = { nonce: nonceStr };
+        // Get style from SSR inline style directly
+        if (existPath(cachePath)) {
+          const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
+          if (inlineCacheStyleStr) {
+            return [
+              inlineCacheStyleStr,
+              tokenKey,
+              styleHash,
+              {},
+              clientOnly,
+              order,
+            ];
+          }
         }
 
-        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
-
-        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
-
-        // Used for `useCacheToken` to remove on batch when token removed
-        style.setAttribute(ATTR_TOKEN, tokenKey);
-
-        // Debug usage. Dev only
-        if (process.env.NODE_ENV !== 'production') {
-          style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
-        }
-
-        // Inject client side effect style
-        Object.keys(effectStyle).forEach((effectKey) => {
-          updateCSS(
-            normalizeStyle(effectStyle[effectKey]),
-            `_effect-${effectKey}`,
-            mergedCSSConfig,
-          );
+        // Generate style
+        const styleObj = styleFn();
+        const [parsedStyle, effectStyle] = parseStyle(styleObj, {
+          hashId,
+          hashPriority,
+          layer,
+          path: path.join('-'),
+          transformers,
+          linters,
         });
-      }
-    },
-  );
+
+        const styleStr = normalizeStyle(parsedStyle);
+        const styleId = uniqueHash(fullPath, styleStr);
+
+        return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
+      },
+
+      // Remove cache if no need
+      ([, , styleId], fromHMR) => {
+        if ((fromHMR || autoClear) && isClientSide) {
+          removeCSS(styleId, { mark: ATTR_MARK });
+        }
+      },
+
+      // Effect: Inject style here
+      ([styleStr, _, styleId, effectStyle]) => {
+        if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
+          const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+            mark: ATTR_MARK,
+            prepend: 'queue',
+            attachTo: container,
+            priority: order,
+          };
+
+          const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+
+          if (nonceStr) {
+            mergedCSSConfig.csp = { nonce: nonceStr };
+          }
+
+          const style = updateCSS(styleStr, styleId, mergedCSSConfig);
+
+          (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
+
+          // Used for `useCacheToken` to remove on batch when token removed
+          style.setAttribute(ATTR_TOKEN, tokenKey);
+
+          // Debug usage. Dev only
+          if (process.env.NODE_ENV !== 'production') {
+            style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
+          }
+
+          // Inject client side effect style
+          Object.keys(effectStyle).forEach((effectKey) => {
+            updateCSS(
+              normalizeStyle(effectStyle[effectKey]),
+              `_effect-${effectKey}`,
+              mergedCSSConfig,
+            );
+          });
+        }
+      },
+    );
 
   return (node: React.ReactElement) => {
     let styleNode: React.ReactElement;
@@ -516,118 +516,54 @@ export default function useStyleRegister(
   };
 }
 
-// ============================================================================
-// ==                                  SSR                                   ==
-// ============================================================================
-export function extractStyle(cache: Cache, plain = false) {
-  const matchPrefixRegexp = /^style%/;
+export const extract: ExtractStyle<StyleCacheValue> = (
+  cache,
+  effectStyles,
+  options,
+) => {
+  const [
+    styleStr,
+    tokenKey,
+    styleId,
+    effectStyle,
+    clientOnly,
+    order,
+  ]: StyleCacheValue = cache;
+  const { plain } = options || {};
 
-  // prefix with `style` is used for `useStyleRegister` to cache style context
-  const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
-    matchPrefixRegexp.test(key),
-  );
-
-  // Common effect styles like animation
-  const effectStyles: Record<string, boolean> = {};
-
-  // Mapping of cachePath to style hash
-  const cachePathMap: Record<string, string> = {};
-
-  let styleText = '';
-
-  function toStyleStr(
-    style: string,
-    tokenKey?: string,
-    styleId?: string,
-    customizeAttrs: Record<string, string> = {},
-  ) {
-    const attrs: Record<string, string | undefined> = {
-      ...customizeAttrs,
-      [ATTR_TOKEN]: tokenKey,
-      [ATTR_MARK]: styleId,
-    };
-
-    const attrStr = Object.keys(attrs)
-      .map((attr) => {
-        const val = attrs[attr];
-        return val ? `${attr}="${val}"` : null;
-      })
-      .filter((v) => v)
-      .join(' ');
-
-    return plain ? style : `<style ${attrStr}>${style}</style>`;
+  // Skip client only style
+  if (clientOnly) {
+    return null;
   }
 
-  // ====================== Fill Style ======================
-  type OrderStyle = [order: number, style: string];
+  let keyStyleText = styleStr;
 
-  const orderStyles: OrderStyle[] = styleKeys
-    .map((key) => {
-      const cachePath = key.replace(matchPrefixRegexp, '').replace(/%/g, '|');
+  // ====================== Style ======================
+  // Used for rc-util
+  const sharedAttrs = {
+    'data-rc-order': 'prependQueue',
+    'data-rc-priority': `${order}`,
+  };
 
-      const [styleStr, tokenKey, styleId, effectStyle, clientOnly, order]: [
-        string,
-        string,
-        string,
-        Record<string, string>,
-        boolean,
-        number,
-      ] = cache.cache.get(key)![1];
+  keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs, plain);
 
-      // Skip client only style
-      if (clientOnly) {
-        return null! as OrderStyle;
+  // =============== Create effect style ===============
+  if (effectStyle) {
+    Object.keys(effectStyle).forEach((effectKey) => {
+      // Effect style can be reused
+      if (!effectStyles[effectKey]) {
+        effectStyles[effectKey] = true;
+        const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
+        keyStyleText += toStyleStr(
+          effectStyleStr,
+          tokenKey,
+          `_effect-${effectKey}`,
+          sharedAttrs,
+          plain,
+        );
       }
-
-      // ====================== Style ======================
-      // Used for rc-util
-      const sharedAttrs = {
-        'data-rc-order': 'prependQueue',
-        'data-rc-priority': `${order}`,
-      };
-
-      let keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs);
-
-      // Save cache path with hash mapping
-      cachePathMap[cachePath] = styleId;
-
-      // =============== Create effect style ===============
-      if (effectStyle) {
-        Object.keys(effectStyle).forEach((effectKey) => {
-          // Effect style can be reused
-          if (!effectStyles[effectKey]) {
-            effectStyles[effectKey] = true;
-            keyStyleText += toStyleStr(
-              normalizeStyle(effectStyle[effectKey]),
-              tokenKey,
-              `_effect-${effectKey}`,
-              sharedAttrs,
-            );
-          }
-        });
-      }
-
-      const ret: OrderStyle = [order, keyStyleText];
-
-      return ret;
-    })
-    .filter((o) => o);
-
-  orderStyles
-    .sort((o1, o2) => o1[0] - o2[0])
-    .forEach(([, style]) => {
-      styleText += style;
     });
+  }
 
-  // ==================== Fill Cache Path ====================
-  styleText += toStyleStr(
-    `.${ATTR_CACHE_MAP}{content:"${serializeCacheMap(cachePathMap)}";}`,
-    undefined,
-    undefined,
-    {
-      [ATTR_CACHE_MAP]: ATTR_CACHE_MAP,
-    },
-  );
-
-  return styleText;
-}
+  return [order, styleId, keyStyleText];
+};

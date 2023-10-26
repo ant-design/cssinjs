@@ -7,8 +7,9 @@ import StyleContext, {
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
 import type Theme from '../theme/Theme';
-import { flattenToken, memoResult, token2key } from '../util';
+import { flattenToken, memoResult, token2key, toStyleStr } from '../util';
 import { transformToken } from '../util/css-variables';
+import type { ExtractStyle } from './useGlobalCache';
 import useGlobalCache from './useGlobalCache';
 
 const EMPTY_OVERRIDE = {};
@@ -130,6 +131,16 @@ export const getComputedToken = <
   return mergedDerivativeToken;
 };
 
+export const TOKEN_PREFIX = 'token';
+
+type TokenCacheValue<DerivativeToken> = [
+  token: DerivativeToken & { _tokenKey: string; _themeKey: string },
+  hashId: string,
+  realToken: DerivativeToken & { _tokenKey: string },
+  cssVarStr: string,
+  cssVarKey: string,
+];
+
 /**
  * Cache theme derivative token as global shared one
  * @param theme Theme entity
@@ -144,12 +155,7 @@ export default function useCacheToken<
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
   option: Option<DerivativeToken, DesignToken> = {},
-): [
-  DerivativeToken & { _tokenKey: string; _themeKey: string },
-  string,
-  DerivativeToken,
-  string,
-] {
+): TokenCacheValue<DerivativeToken> {
   const {
     cache: { instanceId },
     container,
@@ -170,15 +176,8 @@ export default function useCacheToken<
 
   const cssVarStr = cssVar ? flattenToken(cssVar) : '';
 
-  const cachedToken = useGlobalCache<
-    [
-      DerivativeToken & { _tokenKey: string; _themeKey: string },
-      string,
-      DerivativeToken,
-      string,
-    ]
-  >(
-    'token',
+  const cachedToken = useGlobalCache<TokenCacheValue<DerivativeToken>>(
+    TOKEN_PREFIX,
     [salt, theme.id, tokenStr, overrideTokenStr, cssVarStr],
     () => {
       let mergedDerivativeToken = compute
@@ -214,7 +213,13 @@ export default function useCacheToken<
         : `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 
-      return [mergedDerivativeToken, hashId, actualToken, cssVarsStr];
+      return [
+        mergedDerivativeToken,
+        hashId,
+        actualToken,
+        cssVarsStr,
+        cssVar?.key || '',
+      ];
     },
     (cache) => {
       // Remove token will remove all related style
@@ -243,3 +248,36 @@ export default function useCacheToken<
 
   return cachedToken;
 }
+
+export const extract: ExtractStyle<TokenCacheValue<any>> = (
+  cache,
+  effectStyles,
+  options,
+) => {
+  const [, , realToken, styleStr, cssVarKey] = cache;
+  const { plain } = options || {};
+
+  if (!styleStr) {
+    return null;
+  }
+
+  const styleId = realToken._tokenKey;
+  const order = -999;
+
+  // ====================== Style ======================
+  // Used for rc-util
+  const sharedAttrs = {
+    'data-rc-order': 'prependQueue',
+    'data-rc-priority': `${order}`,
+  };
+
+  const styleText = toStyleStr(
+    styleStr,
+    cssVarKey,
+    styleId,
+    sharedAttrs,
+    plain,
+  );
+
+  return [order, styleId, styleText];
+};
