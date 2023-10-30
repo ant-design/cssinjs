@@ -30,7 +30,7 @@
     "docs:deploy": "gh-pages -d .doc",
     "compile": "father build",
     "gh-pages": "npm run docs:build && npm run docs:deploy",
-    "prepublishOnly": "npm run compile && np --yolo --no-publish",
+    "prepublishOnly": "npm run compile && np --yolo --no-publish --branch=next --tag=next",
     "postpublish": "npm run gh-pages",
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
