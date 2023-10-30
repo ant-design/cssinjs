@@ -27,11 +27,13 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     key: string;
     prefix?: string;
     unitless?: Record<string, boolean>;
+    ignore?: Record<string, boolean>;
+    scope?: string;
     token: any;
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, token } = config;
+  const { key, prefix, unitless, ignore, token, scope = '' } = config;
   const {
     cache: { instanceId },
     container,
@@ -39,16 +41,20 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
+  const stylePath = [...config.path, key, scope];
+
   const cache = useGlobalCache<CSSVarCacheValue<T>>(
     CSS_VAR_PREFIX,
-    [...config.path, key, tokenKey],
+    [...stylePath, tokenKey],
     () => {
       const originToken = fn();
       const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
         prefix,
         unitless,
+        ignore,
+        scope,
       });
-      const styleId = uniqueHash([...config.path, key], cssVarsStr);
+      const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];
     },
     ([, , styleId], fromHMR) => {
