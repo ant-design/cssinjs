@@ -137,6 +137,10 @@ const useStyle = () => {
       unitless: {
         lineHeight: true,
       },
+      ignore: {
+        lineHeightBase: true,
+      },
+      scope: 'box',
     },
     cssVarKey ? getComponentToken : () => ({}),
   );
@@ -204,7 +208,9 @@ describe('CSS Variables', () => {
     expect(styles.length).toBe(3);
     expect(styles[0].textContent).toContain('.apple{');
     expect(styles[0].textContent).toContain('--rc-line-height:1.5;');
+    expect(styles[0].textContent).not.toContain('--rc-line-height-base:1.5;');
     expect(styles[1].textContent).toContain('--rc-box-box-color:#5c21ff');
+    expect(styles[1].textContent).toContain('.apple.box{');
     expect(styles[2].textContent).toContain(
       'line-height:var(--rc-line-height);',
     );

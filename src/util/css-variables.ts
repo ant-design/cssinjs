@@ -9,11 +9,16 @@ export const token2CSSVar = (token: string, prefix = '') => {
 export const serializeCSSVar = <T extends Record<string, any>>(
   cssVars: T,
   hashId: string,
+  options?: {
+    scope?: string;
+  },
 ) => {
   if (!Object.keys(cssVars).length) {
     return '';
   }
-  return `.${hashId}{${Object.entries(cssVars)
+  return `.${hashId}${
+    options?.scope ? `.${options.scope}` : ''
+  }{${Object.entries(cssVars)
     .map(([key, value]) => `${key}:${value};`)
     .join('')}}`;
 };
@@ -36,6 +41,7 @@ export const transformToken = <
     unitless?: {
       [key in keyof T]?: boolean;
     };
+    scope?: string;
   },
 ): [TokenWithCSSVar<T>, string] => {
   const cssVars: Record<string, string> = {};
@@ -53,5 +59,5 @@ export const transformToken = <
       result[key as keyof T] = `var(${cssVar})`;
     }
   });
-  return [result, serializeCSSVar(cssVars, themeKey)];
+  return [result, serializeCSSVar(cssVars, themeKey, { scope: config?.scope })];
 };
