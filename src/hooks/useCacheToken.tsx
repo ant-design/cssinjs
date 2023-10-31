@@ -209,7 +209,7 @@ export default function useCacheToken<
       recordCleanToken(themeKey);
 
       const hashId = cssVar
-        ? `${hashPrefix}-${hash(salt)}`
+        ? `${hashPrefix}-${hash(`${salt}${cssVar.prefix ?? ''}`)}`
         : `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 

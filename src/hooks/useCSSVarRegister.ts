@@ -37,15 +37,14 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   const {
     cache: { instanceId },
     container,
-    autoClear,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const stylePath = [...config.path, key, scope];
+  const stylePath = [...config.path, key, scope, tokenKey];
 
   const cache = useGlobalCache<CSSVarCacheValue<T>>(
     CSS_VAR_PREFIX,
-    [...stylePath, tokenKey],
+    stylePath,
     () => {
       const originToken = fn();
       const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
@@ -57,8 +56,8 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];
     },
-    ([, , styleId], fromHMR) => {
-      if ((fromHMR || autoClear) && isClientSide) {
+    ([, , styleId]) => {
+      if (isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK });
       }
     },
