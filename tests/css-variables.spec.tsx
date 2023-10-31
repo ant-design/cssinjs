@@ -60,6 +60,7 @@ type DesignTokenProviderProps = {
   hashed?: string | boolean;
   cssVar?: {
     key: string;
+    prefix?: string;
   };
 };
 
@@ -110,7 +111,7 @@ function useToken(): [DerivativeToken, string, string, DerivativeToken] {
   >(theme, [defaultDesignToken, rootDesignToken], {
     salt: typeof hashed === 'string' ? hashed : '',
     cssVar: cssVar && {
-      prefix: 'rc',
+      prefix: cssVar.prefix ?? 'rc',
       key: cssVar.key,
       unitless: {
         lineHeight: true,
@@ -402,5 +403,51 @@ describe('CSS Variables', () => {
     );
 
     expect(extractStyle(cache)).toMatchSnapshot();
+  });
+
+  it('css var prefix should regenerate component style', () => {
+    const { rerender } = render(
+      <DesignTokenProvider
+        theme={{
+          cssVar: {
+            key: 'apple',
+            prefix: 'app',
+          },
+        }}
+      >
+        <Box className="target" />
+      </DesignTokenProvider>,
+    );
+
+    let styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles.length).toBe(3);
+    expect(
+      styles.some((style) => style.textContent?.includes('var(--app-')),
+    ).toBe(true);
+    expect(
+      styles.some((style) => style.textContent?.includes('var(--bank-')),
+    ).toBe(false);
+
+    rerender(
+      <DesignTokenProvider
+        theme={{
+          cssVar: {
+            key: 'apple',
+            prefix: 'bank',
+          },
+        }}
+      >
+        <Box className="target" />
+      </DesignTokenProvider>,
+    );
+
+    styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles.length).toBe(4);
+    expect(
+      styles.some((style) => style.textContent?.includes('var(--app-')),
+    ).toBe(true);
+    expect(
+      styles.some((style) => style.textContent?.includes('var(--bank-')),
+    ).toBe(true);
   });
 });
