@@ -151,10 +151,10 @@ export function supportLogicProps(): boolean {
 export const isClientSide = canUseDom();
 
 export function unit(num: string | number) {
-  if (typeof num === 'number') {
-    return `${num}px`;
-  }
-  return num;
+  if (typeof num === 'number') {
+    return num === 0 ? num : `${num}px`;
+  }
+  return num;
 }
 
 export function toStyleStr(
