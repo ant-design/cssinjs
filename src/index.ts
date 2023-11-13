@@ -8,6 +8,7 @@ import type { Linter } from './linters';
 import {
   legacyNotSelectorLinter,
   logicalPropertiesLinter,
+  NaNLinter,
   parentSelectorLinter,
 } from './linters';
 import type { StyleProviderProps } from './StyleContext';
@@ -40,6 +41,7 @@ export {
   logicalPropertiesLinter,
   legacyNotSelectorLinter,
   parentSelectorLinter,
+  NaNLinter,
 
   // util
   token2CSSVar,
