@@ -10,6 +10,7 @@ import {
   StyleProvider,
   Theme,
   useCacheToken,
+  useCSSVarRegister,
   useStyleRegister,
 } from '../src';
 import { ATTR_MARK, ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
@@ -700,6 +701,69 @@ describe('csssinjs', () => {
           '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
         ),
       );
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
+    });
+
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
+  });
+
+  describe('should not cleanup style when unmount and mount', () => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+          },
+        );
+
+        useCSSVarRegister(
+          {
+            key: 'color',
+            path: ['cssinjs-cleanup-style-when-remount'],
+            token,
+          },
+          () => ({
+            token: token.primaryColor,
+          }),
+        );
+
+        return <div className={classNames('box', hashId)}>{children}</div>;
+      };
+
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      rerender(
+        wrapper(
+          <div>
+            <Demo myToken="token1" />
+          </div>,
+        ),
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(1);
+
       spy.mockRestore();
     };
 
