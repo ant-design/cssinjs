@@ -96,7 +96,11 @@ export default function useGlobalCache<CacheType>(
 
           if (nextCount === 0) {
             // Always remove styles in useEffect callback
-            register(() => onCacheRemove?.(cache, false));
+            register(() => {
+              if (!globalCache.get(fullPath)) {
+                onCacheRemove?.(cache, false);
+              }
+            });
             return null;
           }
 
