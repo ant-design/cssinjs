@@ -86,6 +86,8 @@ export default function useGlobalCache<CacheType>(
         if (polyfill && times === 0) {
           onCacheEffect?.(cacheContent);
         }
+        console.log('times++', times + 1);
+
         return [times + 1, cache];
       });
 
@@ -97,7 +99,10 @@ export default function useGlobalCache<CacheType>(
           if (nextCount === 0) {
             // Always remove styles in useEffect callback
             register(() => {
-              if (!globalCache.get(fullPath)) {
+              // With polyfill, registered callback will always be called synchronously
+              // But without polyfill, it will be called in effect clean up,
+              // And by that time this cache is cleaned up.
+              if (polyfill || !globalCache.get(fullPath)) {
                 onCacheRemove?.(cache, false);
               }
             });

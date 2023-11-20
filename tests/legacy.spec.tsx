@@ -1,9 +1,16 @@
 import { render } from '@testing-library/react';
+import classNames from 'classnames';
+import type { ReactElement, ReactNode } from 'react';
 import * as React from 'react';
-import { useLayoutEffect } from 'react';
+import { StrictMode, useLayoutEffect } from 'react';
 import { expect } from 'vitest';
 import type { CSSInterpolation } from '../src';
-import { Theme, useCacheToken, useStyleRegister } from '../src';
+import {
+  Theme,
+  useCacheToken,
+  useCSSVarRegister,
+  useStyleRegister,
+} from '../src';
 
 interface DesignToken {
   primaryColor: string;
@@ -156,5 +163,68 @@ describe('legacy React version', () => {
 
     rerender(<Demo show={false} />);
     expect(document.head.querySelectorAll('style')).toHaveLength(2);
+  });
+
+  describe('should not cleanup style when unmount and mount', () => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+          },
+        );
+
+        useCSSVarRegister(
+          {
+            key: 'color',
+            path: ['cssinjs-cleanup-style-when-remount'],
+            token,
+          },
+          () => ({
+            token: token.primaryColor,
+          }),
+        );
+
+        return <div className={classNames('box', hashId)}>{children}</div>;
+      };
+
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      rerender(
+        wrapper(
+          <div>
+            <Demo myToken="token1" />
+          </div>,
+        ),
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(1);
+
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
+    });
+
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
   });
 });
