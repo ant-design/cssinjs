@@ -86,8 +86,6 @@ export default function useGlobalCache<CacheType>(
         if (polyfill && times === 0) {
           onCacheEffect?.(cacheContent);
         }
-        console.log('times++', times + 1);
-
         return [times + 1, cache];
       });
 

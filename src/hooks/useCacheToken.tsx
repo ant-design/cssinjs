@@ -223,8 +223,6 @@ export default function useCacheToken<
     },
     (cache) => {
       // Remove token will remove all related style
-      console.log('cleared');
-
       cleanTokenStyle(cache[0]._themeKey, instanceId);
     },
     ([token, , , cssVarsStr]) => {
