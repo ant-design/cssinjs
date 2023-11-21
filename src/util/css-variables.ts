@@ -23,8 +23,11 @@ export const serializeCSSVar = <T extends Record<string, any>>(
     .join('')}}`;
 };
 
-export type TokenWithCSSVar<T> = {
-  [key in keyof T]?: string;
+export type TokenWithCSSVar<
+  V,
+  T extends Record<string, V> = Record<string, V>,
+> = {
+  [key in keyof T]?: string | V;
 };
 
 export const transformToken = <
@@ -41,13 +44,18 @@ export const transformToken = <
     unitless?: {
       [key in keyof T]?: boolean;
     };
+    preserve?: {
+      [key in keyof T]?: boolean;
+    };
     scope?: string;
   },
-): [TokenWithCSSVar<T>, string] => {
+): [TokenWithCSSVar<V, T>, string] => {
   const cssVars: Record<string, string> = {};
-  const result: TokenWithCSSVar<T> = {};
+  const result: TokenWithCSSVar<V, T> = {};
   Object.entries(token).forEach(([key, value]) => {
-    if (
+    if (config?.preserve?.[key]) {
+      result[key as keyof T] = value;
+    } else if (
       (typeof value === 'string' || typeof value === 'number') &&
       !config?.ignore?.[key]
     ) {

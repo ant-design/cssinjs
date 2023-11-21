@@ -62,6 +62,8 @@ export interface Option<DerivativeToken, DesignToken> {
     unitless?: Record<string, boolean>;
     /** Tokens that should not be transformed to css variables */
     ignore?: Record<string, boolean>;
+    /** Tokens that preserves origin value */
+    preserve?: Record<string, boolean>;
     /** Key for current theme. Useful for customizing and should be unique */
     key?: string;
   };
@@ -195,6 +197,7 @@ export default function useCacheToken<
             prefix: cssVar.prefix,
             ignore: cssVar.ignore,
             unitless: cssVar.unitless,
+            preserve: cssVar.preserve,
           },
         );
       }
@@ -208,9 +211,7 @@ export default function useCacheToken<
       mergedDerivativeToken._themeKey = themeKey;
       recordCleanToken(themeKey);
 
-      const hashId = cssVar
-        ? `${hashPrefix}-${hash(`${salt}${cssVar.prefix ?? ''}`)}`
-        : `${hashPrefix}-${hash(tokenKey)}`;
+      const hashId = `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 
       return [
