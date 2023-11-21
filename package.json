@@ -1,6 +1,6 @@
 {
   "name": "@ant-design/cssinjs",
-  "version": "1.17.2",
+  "version": "1.18.0-alpha.1",
   "description": "Component level cssinjs resolution for antd",
   "keywords": [
     "react",
@@ -25,11 +25,12 @@
   "license": "MIT",
   "scripts": {
     "start": "dumi dev",
+    "dev": "father dev",
     "docs:build": "dumi build",
     "docs:deploy": "gh-pages -d .doc",
     "compile": "father build",
     "gh-pages": "npm run docs:build && npm run docs:deploy",
-    "prepublishOnly": "npm run compile && np --yolo --no-publish",
+    "prepublishOnly": "npm run compile && np --yolo --no-publish --branch=next --tag=next",
     "postpublish": "npm run gh-pages",
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",

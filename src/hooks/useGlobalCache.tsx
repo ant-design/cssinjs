@@ -5,6 +5,14 @@ import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
 
+export type ExtractStyle<CacheValue> = (
+  cache: CacheValue,
+  effectStyles: Record<string, boolean>,
+  options?: {
+    plain?: boolean;
+  },
+) => [order: number, styleId: string, style: string] | null;
+
 export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
@@ -25,7 +33,7 @@ export default function useGlobalCache<CacheType>(
 
   const buildCache = (updater?: (data: UpdaterArgs) => UpdaterArgs) => {
     globalCache.update(fullPath, (prevCache) => {
-      const [times = 0, cache] = prevCache || [];
+      const [times = 0, cache] = prevCache || [undefined, undefined];
 
       // HMR should always ignore cache since developer may change it
       let tmpCache = cache;
@@ -88,7 +96,14 @@ export default function useGlobalCache<CacheType>(
 
           if (nextCount === 0) {
             // Always remove styles in useEffect callback
-            register(() => onCacheRemove?.(cache, false));
+            register(() => {
+              // With polyfill, registered callback will always be called synchronously
+              // But without polyfill, it will be called in effect clean up,
+              // And by that time this cache is cleaned up.
+              if (polyfill || !globalCache.get(fullPath)) {
+                onCacheRemove?.(cache, false);
+              }
+            });
             return null;
           }
 

@@ -1,5 +1,5 @@
 import type { CSSInterpolation, CSSObject } from '@ant-design/cssinjs';
-import { useStyleRegister } from '@ant-design/cssinjs';
+import { unit, useStyleRegister } from '@ant-design/cssinjs';
 import classNames from 'classnames';
 import React from 'react';
 import type { DerivativeToken } from './theme';
@@ -14,6 +14,7 @@ const genSharedButtonStyle = (
     borderColor: token.borderColor,
     borderWidth: token.borderWidth,
     borderRadius: token.borderRadius,
+    lineHeight: token.lineHeight,
 
     cursor: 'pointer',
 
@@ -65,7 +66,7 @@ const genPrimaryButtonStyle = (
 ): CSSInterpolation =>
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.primaryColor,
-    border: `${token.borderWidth}px solid ${token.primaryColor}`,
+    border: `${unit(token.borderWidth)} solid ${token.primaryColor}`,
     color: token.reverseTextColor,
 
     '&:hover': {
@@ -83,7 +84,7 @@ const genGhostButtonStyle = (
     [`.${prefixCls}`]: {
       backgroundColor: 'transparent',
       color: token.primaryColor,
-      border: `${token.borderWidth}px solid ${token.primaryColor}`,
+      border: `${unit(token.borderWidth)} solid ${token.primaryColor}`,
 
       '&:hover': {
         borderColor: token.primaryColor,
@@ -102,7 +103,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
   const prefixCls = 'ant-btn';
 
   // 【自定义】制造样式
-  const [theme, token, hashId] = useToken();
+  const [theme, token, hashId, cssVarKey] = useToken();
 
   // default 添加默认样式选择器后可以省很多冲突解决问题
   const defaultCls = `${prefixCls}-default`;
@@ -129,7 +130,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 
   return wrapSSR(
     <button
-      className={classNames(prefixCls, typeCls, hashId, className)}
+      className={classNames(prefixCls, typeCls, hashId, className, cssVarKey)}
       {...restProps}
     />,
   );
