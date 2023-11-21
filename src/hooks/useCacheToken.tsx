@@ -62,6 +62,8 @@ export interface Option<DerivativeToken, DesignToken> {
     unitless?: Record<string, boolean>;
     /** Tokens that should not be transformed to css variables */
     ignore?: Record<string, boolean>;
+    /** Tokens that preserves origin value */
+    preserve?: Record<string, boolean>;
     /** Key for current theme. Useful for customizing and should be unique */
     key?: string;
   };
@@ -195,6 +197,7 @@ export default function useCacheToken<
             prefix: cssVar.prefix,
             ignore: cssVar.ignore,
             unitless: cssVar.unitless,
+            preserve: cssVar.preserve,
           },
         );
       }
