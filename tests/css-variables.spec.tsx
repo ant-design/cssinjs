@@ -25,6 +25,8 @@ export interface DesignToken {
 
   lineHeight: number;
   lineHeightBase: number;
+
+  smallScreen: number;
 }
 
 export interface DerivativeToken extends DesignToken {
@@ -41,6 +43,8 @@ const defaultDesignToken: DesignToken = {
 
   lineHeight: 1.5,
   lineHeightBase: 1.5,
+
+  smallScreen: 800,
 };
 
 // 模拟推导过程
@@ -119,6 +123,9 @@ function useToken(): [DerivativeToken, string, string, DerivativeToken] {
       ignore: {
         lineHeightBase: true,
       },
+      preserve: {
+        smallScreen: true,
+      },
     },
   });
   return [token, hashed ? hashId : '', cssVar?.key || '', realToken];
@@ -168,6 +175,7 @@ const useStyle = () => {
           }`,
           color: mergedToken.boxColor,
           backgroundColor: mergedToken.primaryColor,
+          content: `"${mergedToken.smallScreen}"`,
         },
       };
     },
@@ -210,11 +218,13 @@ describe('CSS Variables', () => {
     expect(styles[0].textContent).toContain('.apple{');
     expect(styles[0].textContent).toContain('--rc-line-height:1.5;');
     expect(styles[0].textContent).not.toContain('--rc-line-height-base:1.5;');
+    expect(styles[0].textContent).not.toContain('--rc-small-screen:800;');
     expect(styles[1].textContent).toContain('--rc-box-box-color:#5c21ff');
     expect(styles[1].textContent).toContain('.apple.box{');
     expect(styles[2].textContent).toContain(
       'line-height:var(--rc-line-height);',
     );
+    expect(styles[2].textContent).toContain('content:"800"');
     expect(box).toHaveClass('apple');
     expect(box).toHaveStyle({
       '--rc-line-height': '1.5',
