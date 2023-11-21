@@ -14,8 +14,8 @@ import { uniqueHash } from './useStyleRegister';
 
 export const CSS_VAR_PREFIX = 'cssVar';
 
-type CSSVarCacheValue<T> = [
-  cssVarToken: TokenWithCSSVar<T>,
+type CSSVarCacheValue<V, T extends Record<string, V> = Record<string, V>> = [
+  cssVarToken: TokenWithCSSVar<V, T>,
   cssVarStr: string,
   styleId: string,
   cssVarKey: string,
@@ -42,12 +42,12 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
 
   const stylePath = [...config.path, key, scope, tokenKey];
 
-  const cache = useGlobalCache<CSSVarCacheValue<T>>(
+  const cache = useGlobalCache<CSSVarCacheValue<V, T>>(
     CSS_VAR_PREFIX,
     stylePath,
     () => {
       const originToken = fn();
-      const [mergedToken, cssVarsStr] = transformToken(originToken, key, {
+      const [mergedToken, cssVarsStr] = transformToken<V, T>(originToken, key, {
         prefix,
         unitless,
         ignore,

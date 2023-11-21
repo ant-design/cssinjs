@@ -211,9 +211,7 @@ export default function useCacheToken<
       mergedDerivativeToken._themeKey = themeKey;
       recordCleanToken(themeKey);
 
-      const hashId = cssVar
-        ? `${hashPrefix}-${hash(`${salt}${cssVar.prefix ?? ''}`)}`
-        : `${hashPrefix}-${hash(tokenKey)}`;
+      const hashId = `${hashPrefix}-${hash(tokenKey)}`;
       mergedDerivativeToken._hashId = hashId; // Not used
 
       return [
