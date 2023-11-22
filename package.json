@@ -12,7 +12,8 @@
   "module": "./es/index",
   "files": [
     "es",
-    "lib"
+    "lib",
+    "dist"
   ],
   "homepage": "https://github.com/ant-design/cssinjs",
   "repository": {
