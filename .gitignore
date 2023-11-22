@@ -26,6 +26,7 @@ assets/**/*.css
 build
 lib
 es
+dist
 yarn.lock
 package-lock.json
 coverage/
