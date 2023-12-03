@@ -16,22 +16,22 @@ function splitValues(
     .split(/\s+/);
 
   // Combine styles split in brackets, like `calc(1px + 2px)`
-  let temp = '';
+  let temp: string[] = [];
   let brackets = 0;
   return [
     splitStyle.reduce<string[]>((list, item) => {
       if (item.includes('(')) {
-        temp += item;
+        temp.push(item);
         brackets += item.split('(').length - 1;
       } else if (item.includes(')')) {
-        temp += item;
+        temp.push(item);
         brackets -= item.split(')').length - 1;
         if (brackets === 0) {
-          list.push(temp);
-          temp = '';
+          list.push(temp.join(' '));
+          temp = [];
         }
       } else if (brackets > 0) {
-        temp += item;
+        temp.push(item);
       } else {
         list.push(item);
       }
