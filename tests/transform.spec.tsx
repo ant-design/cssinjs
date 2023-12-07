@@ -159,6 +159,27 @@ describe('transform', () => {
       const styleText = document.head.querySelector('style')?.innerHTML;
       expect(styleText).toContain('33px!important');
     });
+
+    it('split with calc() and var()', () => {
+      const { container } = render(
+        <Wrapper
+          css={{
+            '.box': {
+              marginBlock: 'calc(var(--a) + var(--b)) calc(2px + var(--c))',
+              marginInline: 'calc(2px + 1px)',
+              marginInlineEnd: '3px',
+            },
+          }}
+        />,
+      );
+
+      expect(container.querySelector('.box')).toHaveStyle({
+        marginTop: 'calc(var(--a) + var(--b))',
+        marginBottom: 'calc(2px + var(--c))',
+        marginLeft: 'calc(2px + 1px)',
+        marginRight: '3px',
+      });
+    });
   });
 
   describe('px2rem', () => {

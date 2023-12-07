@@ -20,20 +20,16 @@ function splitValues(
   let brackets = 0;
   return [
     splitStyle.reduce<string[]>((list, item) => {
-      if (item.includes('(')) {
-        temp += item;
-        brackets += item.split('(').length - 1;
-      } else if (item.includes(')')) {
-        temp += item;
-        brackets -= item.split(')').length - 1;
-        if (brackets === 0) {
-          list.push(temp);
-          temp = '';
-        }
+      if (item.includes('(') || item.includes(')')) {
+        const left = item.split('(').length - 1;
+        const right = item.split(')').length - 1;
+        brackets += left - right;
+      }
+      if (brackets === 0) {
+        list.push(temp + item);
+        temp = '';
       } else if (brackets > 0) {
         temp += item;
-      } else {
-        list.push(item);
       }
       return list;
     }, []),
