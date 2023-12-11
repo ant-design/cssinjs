@@ -151,7 +151,7 @@ const transform: Transformer = {
           });
         } else if (matchValue.length === 1) {
           // Handle like `marginBlockStart` => `marginTop`
-          clone[matchValue[0]] = wrapImportantAndSkipCheck(value, important);
+          clone[matchValue[0]] = wrapImportantAndSkipCheck(values[0], important);
         } else if (matchValue.length === 2) {
           // Handle like `marginBlock` => `marginTop` & `marginBottom`
           matchValue.forEach((matchKey, index) => {

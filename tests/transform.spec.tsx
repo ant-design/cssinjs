@@ -151,13 +151,16 @@ describe('transform', () => {
           css={{
             '.box': {
               paddingInline: '33px !important',
+              marginBlockStart: '33px !important',
+              marginBlockEnd: 'calc(2px + 3px) !important',
             },
           }}
         />,
       );
 
       const styleText = document.head.querySelector('style')?.innerHTML;
-      expect(styleText).toContain('33px!important');
+      expect(styleText).toContain('padding-left:33px!important;padding-right:33px!important');
+      expect(styleText).toContain('margin-top:33px!important;margin-bottom:calc(2px+3px)!important;');
     });
 
     it('split with calc() and var()', () => {
