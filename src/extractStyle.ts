@@ -23,13 +23,26 @@ const ExtractStyleFns = {
   [CSS_VAR_PREFIX]: cssVarExtractStyle,
 };
 
+type ExtractStyleType = keyof typeof ExtractStyleFns;
+
 function isNotNull<T>(value: T | null): value is T {
   return value !== null;
 }
 
-export default function extractStyle(cache: Cache, plain = false) {
+export default function extractStyle(
+  cache: Cache,
+  options?:
+    | boolean
+    | {
+        plain?: boolean;
+        types?: ExtractStyleType | ExtractStyleType[];
+      },
+) {
+  const { plain = false, types = ['style', 'token', 'cssVar'] } =
+    typeof options === 'boolean' ? { plain: options } : options || {};
+
   const matchPrefixRegexp = new RegExp(
-    `^(${Object.keys(ExtractStyleFns).join('|')})%`,
+    `^(${(typeof types === 'string' ? [types] : types).join('|')})%`,
   );
 
   // prefix with `style` is used for `useStyleRegister` to cache style context
