@@ -460,4 +460,32 @@ describe('CSS Variables', () => {
       styles.some((style) => style.textContent?.includes('var(--bank-')),
     ).toBe(true);
   });
+
+  it('could extract cssVar only', () => {
+    const cache = createCache();
+    render(
+      <StyleProvider cache={cache}>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'apple',
+            },
+          }}
+        >
+          <Box className="target" />
+        </DesignTokenProvider>
+      </StyleProvider>,
+    );
+
+    const cssVarStyle = extractStyle(cache, {
+      types: ['cssVar', 'token'],
+      plain: true,
+    });
+    const styleStyle = extractStyle(cache, { types: 'style', plain: true });
+
+    expect(cssVarStyle).toContain('--rc-line-height:1.5;');
+    expect(cssVarStyle).not.toContain('line-height:var(--rc-line-height)');
+    expect(styleStyle).toContain('line-height:var(--rc-line-height)');
+    expect(styleStyle).not.toContain('--rc-line-height:1.5;');
+  });
 });
