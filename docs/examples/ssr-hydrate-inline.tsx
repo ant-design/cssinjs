@@ -37,7 +37,7 @@ export default function App() {
     // debugger;
     hydrateRoot(
       container,
-      <StyleProvider cache={createCache()} recycling>
+      <StyleProvider cache={createCache()}>
         <Demo />
       </StyleProvider>,
     );

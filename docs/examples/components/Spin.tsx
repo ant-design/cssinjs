@@ -43,7 +43,7 @@ const Spin = ({ className, ...restProps }: SpinProps) => {
   // 全局注册，内部会做缓存优化
   const wrapSSR = useStyleRegister(
     { theme, token, hashId, path: [prefixCls] },
-    () => [genSpinStyle(prefixCls, token, hashId)],
+    () => [genSpinStyle(prefixCls, token)],
   );
 
   return wrapSSR(
