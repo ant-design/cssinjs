@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { KeyType } from '../Cache';
+import { pathKey, type KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
 import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useEffectCleanupRegister from './useEffectCleanupRegister';
@@ -23,16 +23,16 @@ export default function useGlobalCache<CacheType>(
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
-  const deps = fullPath.join('_');
+  const fullPathStr = pathKey(fullPath);
 
-  const register = useEffectCleanupRegister([deps]);
+  const register = useEffectCleanupRegister([fullPathStr]);
 
   const HMRUpdate = useHMR();
 
   type UpdaterArgs = [times: number, cache: CacheType];
 
   const buildCache = (updater?: (data: UpdaterArgs) => UpdaterArgs) => {
-    globalCache.update(fullPath, (prevCache) => {
+    globalCache.opUpdate(fullPathStr, (prevCache) => {
       const [times = 0, cache] = prevCache || [undefined, undefined];
 
       // HMR should always ignore cache since developer may change it
@@ -57,18 +57,18 @@ export default function useGlobalCache<CacheType>(
       buildCache();
     },
     /* eslint-disable react-hooks/exhaustive-deps */
-    [deps],
+    [fullPathStr],
     /* eslint-enable */
   );
 
-  let cacheEntity = globalCache.get(fullPath);
+  let cacheEntity = globalCache.opGet(fullPathStr);
 
   // HMR clean the cache but not trigger `useMemo` again
   // Let's fallback of this
   // ref https://github.com/ant-design/cssinjs/issues/127
   if (process.env.NODE_ENV !== 'production' && !cacheEntity) {
     buildCache();
-    cacheEntity = globalCache.get(fullPath);
+    cacheEntity = globalCache.opGet(fullPathStr);
   }
 
   const cacheContent = cacheEntity![1];
@@ -90,7 +90,7 @@ export default function useGlobalCache<CacheType>(
       });
 
       return () => {
-        globalCache.update(fullPath, (prevCache) => {
+        globalCache.opUpdate(fullPathStr, (prevCache) => {
           const [times = 0, cache] = prevCache || [];
           const nextCount = times - 1;
 
@@ -100,7 +100,7 @@ export default function useGlobalCache<CacheType>(
               // With polyfill, registered callback will always be called synchronously
               // But without polyfill, it will be called in effect clean up,
               // And by that time this cache is cleaned up.
-              if (polyfill || !globalCache.get(fullPath)) {
+              if (polyfill || !globalCache.opGet(fullPathStr)) {
                 onCacheRemove?.(cache, false);
               }
             });
@@ -111,7 +111,7 @@ export default function useGlobalCache<CacheType>(
         });
       };
     },
-    [deps],
+    [fullPathStr],
   );
 
   return cacheContent;
