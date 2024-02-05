@@ -182,7 +182,6 @@ describe('transform', () => {
     });
   });
 
-  // TODO: remove `only`
   describe('px2rem', () => {
     const Demo = ({ css }: { css: CSSInterpolation }) => {
       useStyleRegister(
