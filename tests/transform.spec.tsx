@@ -182,6 +182,7 @@ describe('transform', () => {
     });
   });
 
+  // TODO: remove `only`
   describe('px2rem', () => {
     const Demo = ({ css }: { css: CSSInterpolation }) => {
       useStyleRegister(
@@ -361,6 +362,184 @@ describe('transform', () => {
 
         const expected =
           '@media only screen and (max-width: 37.5rem){.rule{font-size:1rem;}}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
+
+    describe('minPixelValue', () => {
+      it('should not replace values less than minPixelValue', () => {
+        const options = {
+          minPixelValue: 2,
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            border: '1px solid #000',
+            fontSize: '16px',
+            margin: '1px 10px',
+          },
+        };
+        const expected =
+          '.rule{border:1px solid #000;font-size:1rem;margin:1px 0.625rem;}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
+
+    describe('selectorBlack', () => {
+      it('should not replace values in selectors that match the selectorBlackList - string', () => {
+        const options = {
+          selectorBlackList: {
+            match: ['.rule'],
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16px',
+            '.inner': {
+              fontSize: '32px',
+            },
+          },
+        };
+
+        const expected = '.rule{font-size:16px;}.rule .inner{font-size:32px;}';
+
+        testPx2rem(options, css, expected);
+      });
+
+      it('should not replace values in selectors that match the selectorBlackList - regex', () => {
+        const options = {
+          selectorBlackList: {
+            match: [/^\.rule$/],
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16px',
+            '.inner': {
+              fontSize: '32px',
+            },
+          },
+        };
+
+        const expected = '.rule{font-size:16px;}.rule .inner{font-size:32px;}';
+
+        testPx2rem(options, css, expected);
+      });
+
+      it('should not replace deep selectors', () => {
+        const options = {
+          selectorBlackList: {
+            match: ['.rule'],
+            deep: true,
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16px',
+            '.inner': {
+              fontSize: '32px',
+            },
+          },
+        };
+
+        const expected = '.rule{font-size:16px;}.rule .inner{font-size:32px;}';
+
+        testPx2rem(options, css, expected);
+      });
+
+      it('should replace deep selectors', () => {
+        const options = {
+          selectorBlackList: {
+            match: ['.rule'],
+            deep: false,
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16px',
+            '.inner': {
+              fontSize: '32px',
+            },
+          },
+        };
+
+        const expected = '.rule{font-size:16px;}.rule .inner{font-size:2rem;}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
+
+    describe('propList', () => {
+      it('should filter prop with margin', () => {
+        const options = {
+          propList: ['font-size', 'margin', '!padding', '!*font*'],
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16px',
+            lineHeight: '16px',
+            margin: '16px',
+            padding: '32px',
+            '.inner': {
+              fontSize: '16px',
+              padding: '16px',
+            },
+          },
+        };
+
+        const expected =
+          '.rule{font-size:16px;line-height:1rem;margin:1rem;padding:32px;}.rule .inner{font-size:16px;padding:16px;}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
+
+    describe('convertUnit', () => {
+      it('should convert PX to px with regexp', () => {
+        const options = {
+          convertUnit: {
+            source: /px$/i,
+            target: 'px',
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16PX',
+            lineHeight: '16Px',
+            margin: '16pX',
+          },
+        };
+
+        const expected = '.rule{font-size:16px;line-height:16px;margin:16px;}';
+
+        testPx2rem(options, css, expected);
+      });
+
+      it('should convert PX to px with function', () => {
+        const options = {
+          convertUnit: {
+            source: 'PX',
+            target: 'px',
+          },
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16PX',
+            lineHeight: '16Px',
+            margin: '16px',
+          },
+        };
+
+        const expected = '.rule{font-size:16px;line-height:16Px;margin:1rem;}';
 
         testPx2rem(options, css, expected);
       });
