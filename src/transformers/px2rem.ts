@@ -183,18 +183,19 @@ function blacklistedSelector(blacklist: (string | RegExp)[], selector: string) {
   });
 }
 
-const SKIP_SYMBOL = {
-  key: Symbol('skip_symbol_key'),
-  value: Symbol('skip_symbol_value'),
-};
+const SKIP_SYMBOL = Symbol('skip_transform');
 
 function defineSkipSymbol(obj: object) {
-  Object.defineProperty(obj, SKIP_SYMBOL.key, {
-    value: SKIP_SYMBOL.value,
-    enumerable: true,
+  Reflect.defineProperty(obj, SKIP_SYMBOL, {
+    value: true,
+    enumerable: false,
     writable: false,
     configurable: false,
   });
+}
+
+function getSkipSymbol(obj: object) {
+  return Reflect.get(obj, SKIP_SYMBOL);
 }
 
 const uppercasePattern = /([A-Z])/g;
@@ -243,14 +244,9 @@ const transform = (options: Options = {}): Transformer => {
   const satisfyPropList = createPropListMatcher(propList);
 
   const visit = (cssObj: CSSObject): CSSObject => {
-    const clone: CSSObject = { ...cssObj };
+    const skip = getSkipSymbol(cssObj);
 
-    const skip = Object.getOwnPropertySymbols(clone).some((symbol) => {
-      if (symbol === SKIP_SYMBOL.key) {
-        return true;
-      }
-      return false;
-    });
+    const clone: CSSObject = { ...cssObj };
 
     if (skip) {
       if (selectorBlackList.deep) {
@@ -259,7 +255,6 @@ const transform = (options: Options = {}): Transformer => {
             defineSkipSymbol(value);
           }
         });
-        return clone;
       }
       return clone;
     }
@@ -267,6 +262,8 @@ const transform = (options: Options = {}): Transformer => {
     Object.entries(cssObj).forEach(([key, value]) => {
       if (!isObject(value)) {
         if (!satisfyPropList(hyphenateStyleName(key))) {
+          // Current style property is not in the propList
+          // Skip
           return;
         }
 
