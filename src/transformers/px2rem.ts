@@ -71,7 +71,7 @@ interface Options {
 
 const pxRegex = /"[^"]+"|'[^']+'|url\([^)]+\)|--[\w-]+|(\d*\.?\d+)px/g;
 
-const filterPropList = {
+export const filterPropList = {
   exact(list: string[]) {
     return list.filter((m) => m.match(/^[^!*]+$/));
   },
@@ -205,12 +205,10 @@ function hyphenateStyleName(name: string): string {
 
 function convertUnitFn(value: string, convert: ConvertUnit) {
   const { source, target } = convert;
-  if (isString(source)) {
-    return value.replace(new RegExp(`${source}$`), target);
-  } else if (isRegExp(source)) {
+  if (isRegExp(source)) {
     return value.replace(new RegExp(source), target);
   }
-  return value;
+  return value.replace(new RegExp(`${source}$`), target);
 }
 
 const DEFAULT_OPTIONS: Required<Options> = {
@@ -280,9 +278,9 @@ const transform = (options: Options = {}): Transformer => {
         if (convertUnit && isString(clone[key])) {
           const newValue = clone[key] as string;
           if (Array.isArray(convertUnit)) {
-            convertUnit.forEach((conv) => {
-              clone[key] = convertUnitFn(newValue, conv);
-            });
+            clone[key] = convertUnit.reduce((c, conv) => {
+              return convertUnitFn(c, conv);
+            }, newValue);
           } else {
             clone[key] = convertUnitFn(newValue, convertUnit);
           }

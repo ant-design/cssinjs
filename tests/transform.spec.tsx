@@ -9,7 +9,7 @@ import {
   StyleProvider,
   useStyleRegister,
 } from '../src';
-// import { getStyleText } from './util';
+import { filterPropList } from '../src/transformers/px2rem';
 
 describe('transform', () => {
   beforeEach(() => {
@@ -542,6 +542,147 @@ describe('transform', () => {
 
         testPx2rem(options, css, expected);
       });
+
+      it('should convert unit by order', () => {
+        const options = {
+          convertUnit: [
+            {
+              source: /px$/i,
+              target: 'px',
+            },
+            {
+              source: /rpx$/i,
+              target: 'px',
+            },
+          ],
+        };
+
+        const css: CSSInterpolation = {
+          '.rule': {
+            fontSize: '16PX',
+            lineHeight: '16Px',
+            margin: '16rpx',
+          },
+        };
+
+        const expected = '.rule{font-size:16px;line-height:16px;margin:16px;}';
+
+        testPx2rem(options, css, expected);
+      });
+    });
+  });
+
+  describe('filter-prop-list', () => {
+    it('should find "exact" matches from propList', () => {
+      const propList = [
+        'font-size',
+        'margin',
+        '!padding',
+        '*border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'font-size,margin';
+      expect(filterPropList.exact(propList).join()).toBe(expected);
+    });
+
+    it('should find "contain" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        '*border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'margin,border';
+      expect(filterPropList.contain(propList).join()).toBe(expected);
+    });
+
+    it('should find "start" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        'border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'border';
+      expect(filterPropList.startWith(propList).join()).toBe(expected);
+    });
+
+    it('should find "end" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        'border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'y';
+      expect(filterPropList.endWith(propList).join()).toBe(expected);
+    });
+
+    it('should find "not" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        'border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'padding';
+      expect(filterPropList.notExact(propList).join()).toBe(expected);
+    });
+
+    it('should find "not contain" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        '!border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'font';
+      expect(filterPropList.notContain(propList).join()).toBe(expected);
+    });
+
+    it('should find "not start" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        '!border*',
+        '*',
+        '*y',
+        '!*font*',
+      ];
+      const expected = 'border';
+      expect(filterPropList.notStartWith(propList).join()).toBe(expected);
+    });
+
+    it('should find "not end" matches from propList and reduce to string', () => {
+      const propList = [
+        'font-size',
+        '*margin*',
+        '!padding',
+        '!border*',
+        '*',
+        '!*y',
+        '!*font*',
+      ];
+      const expected = 'y';
+      expect(filterPropList.notEndWith(propList).join()).toBe(expected);
     });
   });
 });
