@@ -13,7 +13,7 @@ function splitValues(
 
   const splitStyle = (importantCells ? importantCells[1] : rawStyle)
     .trim()
-    .split(/\s+/);
+    .split(/(?<!\(.*)\s+(?![^\(]*\))/);
 
   // Combine styles split in brackets, like `calc(1px + 2px)`
   let temp = '';
