@@ -161,24 +161,21 @@ describe('transform', () => {
     });
 
     it('split with calc() and var()', () => {
-      const { container } = render(
+      render(
         <Wrapper
           css={{
             '.box': {
               marginBlock: 'calc(var(--a) + var(--b)) calc(2px + var(--c))',
               marginInline: 'calc(2px + 1px)',
               marginInlineEnd: '3px',
+              paddingInline: `calc(8px - var(--c))`, // <-- https://github.com/ant-design/ant-design/issues/47652
             },
           }}
         />,
       );
 
-      expect(container.querySelector('.box')).toHaveStyle({
-        marginTop: 'calc(var(--a) + var(--b))',
-        marginBottom: 'calc(2px + var(--c))',
-        marginLeft: 'calc(2px + 1px)',
-        marginRight: '3px',
-      });
+      const styleText = document.head.querySelector('style')?.innerHTML;
+      expect(styleText).toMatchSnapshot();
     });
   });
 
