@@ -491,30 +491,40 @@ export default function useStyleRegister(
       },
     );
 
-  return useCallback((node: React.ReactElement) => {
-    let styleNode: React.ReactElement;
+  return React.useCallback(
+    (node: React.ReactElement) => {
+      let styleNode: React.ReactElement;
 
-    if (!ssrInline || isMergedClientSide || !defaultCache) {
-      styleNode = <Empty />;
-    } else {
-      styleNode = (
-        <style
-          {...{
-            [ATTR_TOKEN]: cachedTokenKey,
-            [ATTR_MARK]: cachedStyleId,
-          }}
-          dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
-        />
+      if (!ssrInline || isMergedClientSide || !defaultCache) {
+        styleNode = <Empty />;
+      } else {
+        styleNode = (
+          <style
+            {...{
+              [ATTR_TOKEN]: cachedTokenKey,
+              [ATTR_MARK]: cachedStyleId,
+            }}
+            dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
+          />
+        );
+      }
+
+      return (
+        <>
+          {styleNode}
+          {node}
+        </>
       );
-    }
-
-    return (
-      <>
-        {styleNode}
-        {node}
-      </>
-    );
-  }, [ssrInline, isMergedClientSide, defaultCache, cachedStyleStr, cachedTokenKey, cachedStyleId]);
+    },
+    [
+      ssrInline,
+      isMergedClientSide,
+      defaultCache,
+      cachedStyleStr,
+      cachedTokenKey,
+      cachedStyleId,
+    ],
+  );
 }
 
 export const extract: ExtractStyle<StyleCacheValue> = (
