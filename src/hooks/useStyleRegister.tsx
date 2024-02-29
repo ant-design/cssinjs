@@ -491,7 +491,7 @@ export default function useStyleRegister(
       },
     );
 
-  return (node: React.ReactElement) => {
+  return useCallback((node: React.ReactElement) => {
     let styleNode: React.ReactElement;
 
     if (!ssrInline || isMergedClientSide || !defaultCache) {
@@ -514,7 +514,7 @@ export default function useStyleRegister(
         {node}
       </>
     );
-  };
+  }, [ssrInline, isMergedClientSide, defaultCache, cachedStyleStr, cachedTokenKey, cachedStyleId]);
 }
 
 export const extract: ExtractStyle<StyleCacheValue> = (
