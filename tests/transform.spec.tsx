@@ -161,21 +161,43 @@ describe('transform', () => {
     });
 
     it('split with calc() and var()', () => {
-      render(
+      const str47652 = 'calc(8px - var(--c))';
+      const str47707 = 'calc(50% - calc(var(--c) / 2) - var(-c))';
+
+      const { container } = render(
         <Wrapper
           css={{
             '.box': {
               marginBlock: 'calc(var(--a) + var(--b)) calc(2px + var(--c))',
               marginInline: 'calc(2px + 1px)',
               marginInlineEnd: '3px',
-              paddingInline: `calc(8px - var(--c))`, // <-- https://github.com/ant-design/ant-design/issues/47652
             },
+            // https://github.com/ant-design/ant-design/issues/47652
+            '.antd-issue-47652': {
+              paddingInline: str47652,
+            },
+            '.antd-issue-47707': {
+              paddingInline: str47707,
+            }
           }}
         />,
       );
 
+      expect(container.querySelector('.box')).toHaveStyle({
+        marginTop: 'calc(var(--a) + var(--b))',
+        marginBottom: 'calc(2px + var(--c))',
+        marginLeft: 'calc(2px + 1px)',
+        marginRight: '3px',
+      });
+
       const styleText = document.head.querySelector('style')?.innerHTML;
       expect(styleText).toMatchSnapshot();
+
+      expect(styleText).toContain(`padding-left:${str47652}`);
+      expect(styleText).toContain(`padding-right:${str47652}`);
+
+      expect(styleText).toContain(`padding-left:${str47707}`);
+      expect(styleText).toContain(`padding-right:${str47707}`);
     });
   });
 
