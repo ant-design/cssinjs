@@ -13,7 +13,7 @@ function splitValues(
 
   const splitStyle = (importantCells ? importantCells[1] : rawStyle)
     .trim()
-    .split(/(?<!\(.*)\s+(?![^\(]*\))/);
+    .split(/\s+/);
 
   // Combine styles split in brackets, like `calc(1px + 2px)`
   let temp = '';
@@ -26,10 +26,10 @@ function splitValues(
         brackets += left - right;
       }
       if (brackets === 0) {
-        list.push(temp + item);
+        list.push(`${temp} ${item}`);
         temp = '';
       } else if (brackets > 0) {
-        temp += item;
+        temp += ` ${item}`;
       }
       return list;
     }, []),
