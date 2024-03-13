@@ -16,7 +16,7 @@ function splitValues(
     .split(/\s+/);
 
   // Combine styles split in brackets, like `calc(1px + 2px)`
-  let temp = '';
+  let temp: string[] = [];
   let brackets = 0;
   return [
     splitStyle.reduce<string[]>((list, item) => {
@@ -25,11 +25,10 @@ function splitValues(
         const right = item.split(')').length - 1;
         brackets += left - right;
       }
+      if (brackets >= 0) temp.push(item);
       if (brackets === 0) {
-        list.push(`${temp} ${item}`);
-        temp = '';
-      } else if (brackets > 0) {
-        temp += ` ${item}`;
+        list.push(temp.join(' '));
+        temp = [];
       }
       return list;
     }, []),
