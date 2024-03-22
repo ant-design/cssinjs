@@ -160,7 +160,7 @@ describe('transform', () => {
 
       const styleText = document.head.querySelector('style')?.innerHTML;
       expect(styleText).toContain('padding-left:33px!important;padding-right:33px!important');
-      expect(styleText).toContain('margin-top:33px!important;margin-bottom:calc(2px+3px)!important;');
+      expect(styleText).toContain('margin-top:33px!important;margin-bottom:calc(2px + 3px)!important;}');
     });
 
     it('split with calc() and var()', () => {
