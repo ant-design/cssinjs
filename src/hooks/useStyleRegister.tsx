@@ -493,8 +493,9 @@ export default function useStyleRegister(
 
   return (node: React.ReactElement) => {
     let styleNode: React.ReactElement;
+    const [times] = cache.get(['style', ...fullPath]) || [0];
 
-    if (!ssrInline || isMergedClientSide || !defaultCache) {
+    if (!ssrInline || isMergedClientSide || !defaultCache || (ssrInline && !isMergedClientSide && !defaultCache && times > 1)) {
       styleNode = <Empty />;
     } else {
       styleNode = (
