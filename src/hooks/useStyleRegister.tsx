@@ -400,7 +400,11 @@ export default function useStyleRegister(
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
-  const fullPath = [tokenKey, enableLayer ? 'layer' : 'base', ...path];
+  const fullPath = [tokenKey];
+  if (enableLayer) {
+    fullPath.push('layer');
+  }
+  fullPath.push(...path);
 
   // Check if need insert style
   let isMergedClientSide = isClientSide;
