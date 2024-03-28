@@ -16,7 +16,7 @@ import StyleContext, {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, supportLayer, toStyleStr } from '../util';
+import { isClientSide, toStyleStr } from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -27,6 +27,11 @@ import useGlobalCache from './useGlobalCache';
 
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
+
+export interface LayerConfig {
+  name: string;
+  dependencies?: string[];
+}
 
 export type CSSProperties = Omit<
   CSS.PropertiesFallback<number | string>,
@@ -123,7 +128,7 @@ function injectSelectorHash(
 export interface ParseConfig {
   hashId?: string;
   hashPriority?: HashPriority;
-  layer?: string;
+  layer?: LayerConfig;
   path?: string;
   transformers?: Transformer[];
   linters?: Linter[];
@@ -324,15 +329,13 @@ export const parseStyle = (
 
   if (!root) {
     styleStr = `{${styleStr}}`;
-  } else if (layer && supportLayer()) {
-    const layerCells = layer.split(',');
-    const layerName = layerCells[layerCells.length - 1].trim();
-    styleStr = `@layer ${layerName} {${styleStr}}`;
+  } else if (layer) {
+    styleStr = `@layer ${layer.name} {${styleStr}}`;
 
-    // Order of layer if needed
-    if (layerCells.length > 1) {
-      // zombieJ: stylis do not support layer order, so we need to handle it manually.
-      styleStr = `@layer ${layer}{%%%:%}${styleStr}`;
+    if (layer.dependencies) {
+      effectStyle[`@layer ${layer.name}`] = layer.dependencies
+        .map((deps) => `@layer ${deps}, ${layer.name};`)
+        .join('\n');
     }
   }
 
@@ -370,7 +373,7 @@ export default function useStyleRegister(
     token: any;
     path: string[];
     hashId?: string;
-    layer?: string;
+    layer?: LayerConfig;
     nonce?: string | (() => string);
     clientOnly?: boolean;
     /**
@@ -393,10 +396,11 @@ export default function useStyleRegister(
     transformers,
     linters,
     cache,
+    layer: enableLayer,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
-  const fullPath = [tokenKey, ...path];
+  const fullPath = [tokenKey, enableLayer ? 'layer' : 'base', ...path];
 
   // Check if need insert style
   let isMergedClientSide = isClientSide;
@@ -432,7 +436,7 @@ export default function useStyleRegister(
         const [parsedStyle, effectStyle] = parseStyle(styleObj, {
           hashId,
           hashPriority,
-          layer,
+          layer: enableLayer ? layer : undefined,
           path: path.join('-'),
           transformers,
           linters,
@@ -467,6 +471,31 @@ export default function useStyleRegister(
             mergedCSSConfig.csp = { nonce: nonceStr };
           }
 
+          // ================= Split Effect Style =================
+          // We will split effectStyle here since @layer should be at the top level
+          const effectLayerKeys: string[] = [];
+          const effectRestKeys: string[] = [];
+
+          Object.keys(effectStyle).forEach((key) => {
+            if (key.startsWith('@layer')) {
+              effectLayerKeys.push(key);
+            } else {
+              effectRestKeys.push(key);
+            }
+          });
+
+          // ================= Inject Layer Style =================
+          // Inject layer style
+          effectLayerKeys.forEach((effectKey) => {
+            updateCSS(
+              normalizeStyle(effectStyle[effectKey]),
+              `_layer-${effectKey}`,
+              mergedCSSConfig,
+            );
+          });
+
+          // ==================== Inject Style ====================
+          // Inject style
           const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
           (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
@@ -479,8 +508,9 @@ export default function useStyleRegister(
             style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
           }
 
+          // ================ Inject Effect Style =================
           // Inject client side effect style
-          Object.keys(effectStyle).forEach((effectKey) => {
+          effectRestKeys.forEach((effectKey) => {
             updateCSS(
               normalizeStyle(effectStyle[effectKey]),
               `_effect-${effectKey}`,
@@ -539,13 +569,14 @@ export const extract: ExtractStyle<StyleCacheValue> = (
 
   let keyStyleText = styleStr;
 
-  // ====================== Style ======================
+  // ====================== Share ======================
   // Used for rc-util
   const sharedAttrs = {
     'data-rc-order': 'prependQueue',
     'data-rc-priority': `${order}`,
   };
 
+  // ====================== Style ======================
   keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs, plain);
 
   // =============== Create effect style ===============
@@ -555,13 +586,19 @@ export const extract: ExtractStyle<StyleCacheValue> = (
       if (!effectStyles[effectKey]) {
         effectStyles[effectKey] = true;
         const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
-        keyStyleText += toStyleStr(
+        const effectStyleHTML = toStyleStr(
           effectStyleStr,
           tokenKey,
           `_effect-${effectKey}`,
           sharedAttrs,
           plain,
         );
+
+        if (effectKey.startsWith('@layer')) {
+          keyStyleText = effectStyleHTML + keyStyleText;
+        } else {
+          keyStyleText += effectStyleHTML;
+        }
       }
     });
   }
