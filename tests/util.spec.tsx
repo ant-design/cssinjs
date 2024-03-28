@@ -74,29 +74,33 @@ describe('util', () => {
               },
             },
           ],
-          { hashId: 'hashed', layer: 'test-layer' },
+          { hashId: 'hashed', layer: { name: 'test-layer' } },
         );
 
         expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
       });
 
       it('order', () => {
-        const str = normalizeStyle(
-          parseStyle(
-            [
-              {
-                p: {
-                  color: 'red',
-                },
+        const parsedStyle = parseStyle(
+          [
+            {
+              p: {
+                color: 'red',
               },
-            ],
-            { hashId: 'hashed', layer: 'shared, test-layer' },
-          )[0],
+            },
+          ],
+          {
+            hashId: 'hashed',
+            layer: { name: 'test-layer', dependencies: ['shared'] },
+          },
         );
 
-        expect(str).toEqual(
-          '@layer shared,test-layer;@layer test-layer{p.hashed{color:red;}}',
-        );
+        const str = normalizeStyle(parsedStyle[0]);
+
+        expect(str).toEqual('@layer test-layer{p.hashed{color:red;}}');
+        expect(parsedStyle[1]).toEqual({
+          '@layer test-layer': '@layer shared, test-layer;',
+        });
       });
 
       it('raw order', () => {
