@@ -21,7 +21,7 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
         color: 'blue',
 
         a: {
-          color: 'orange',
+          color: 'pink',
           cursor: 'pointer',
 
           '&:hover': {
@@ -56,9 +56,9 @@ export default function App() {
   return (
     <StyleProvider layer>
       <Div>
-        Text should be pink:
+        Text should be blue.
         <div>
-          A simple <a>link</a>
+          The link should be <a>pink</a>
         </div>
       </Div>
     </StyleProvider>

@@ -464,7 +464,7 @@ export default function useStyleRegister(
         if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
           const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
             mark: ATTR_MARK,
-            prepend: 'queue',
+            prepend: enableLayer ? false : 'queue',
             attachTo: container,
             priority: order,
           };
@@ -494,7 +494,7 @@ export default function useStyleRegister(
             updateCSS(
               normalizeStyle(effectStyle[effectKey]),
               `_layer-${effectKey}`,
-              mergedCSSConfig,
+              { ...mergedCSSConfig, prepend: true },
             );
           });
 
