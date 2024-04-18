@@ -35,7 +35,7 @@ const flattenTokenCache = new WeakMap<any, string>();
 /**
  * Flatten token to string, this will auto cache the result when token not change
  */
-export function flattenToken(token: any) {
+export function flattenToken(token: any, hashed: boolean = false) {
   let str = flattenTokenCache.get(token) || '';
 
   if (!str) {
@@ -45,11 +45,17 @@ export function flattenToken(token: any) {
       if (value instanceof Theme) {
         str += value.id;
       } else if (value && typeof value === 'object') {
-        str += flattenToken(value);
+        str += flattenToken(value, hashed);
       } else {
         str += value;
       }
     });
+
+    // https://github.com/ant-design/ant-design/issues/48386
+    // Should hash the string to avoid style tag name too long
+    if (hashed) {
+      str = hash(str);
+    }
 
     // Put in cache
     flattenTokenCache.set(token, str);
@@ -61,7 +67,7 @@ export function flattenToken(token: any) {
  * Convert derivative token to key string
  */
 export function token2key(token: any, salt: string): string {
-  return hash(`${salt}_${flattenToken(token)}`);
+  return hash(`${salt}_${flattenToken(token, true)}`);
 }
 
 const randomSelectorKey = `random-${Date.now()}-${Math.random()}`.replace(

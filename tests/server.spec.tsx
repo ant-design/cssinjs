@@ -115,10 +115,10 @@ describe('SSR', () => {
       '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
     );
     expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
     );
     expect(plainStyle).toEqual(
-      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}',
+      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}',
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
@@ -134,7 +134,7 @@ describe('SSR', () => {
       expect(document.head.querySelectorAll('style')).toHaveLength(3);
       reset(
         {
-          'u4cay0|.box': 'gn1jfq',
+          'z4ntcy|.box': '7g9s98',
         },
         false,
       );
@@ -165,10 +165,10 @@ describe('SSR', () => {
     );
 
     expect(getStyleAndHash).toHaveBeenCalled();
-    expect(getStyleAndHash).toHaveBeenCalledWith('u4cay0|.box');
+    expect(getStyleAndHash).toHaveBeenCalledWith('z4ntcy|.box');
     expect(getStyleAndHash).toHaveReturnedWith([
       '.box{background-color:#1890ff;}',
-      'gn1jfq',
+      '7g9s98',
     ]);
 
     // Not remove other style
@@ -241,7 +241,7 @@ describe('SSR', () => {
 
     const style = extractStyle(cache);
     expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"1gt9vg4|.hashPriority:1fyoi4y";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="zarvcw" data-css-hash="1j3b03q">.css-dev-only-do-not-override-1sesbhq.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"zarvcw|.hashPriority:1j3b03q";}</style>',
     );
   });
 
@@ -330,7 +330,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
       );
     });
 
@@ -350,7 +350,7 @@ describe('SSR', () => {
       );
 
       expect(html).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><div class="box"></div>',
+        '<style data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><div class="box"></div>',
       );
     });
   });
@@ -437,7 +437,7 @@ describe('SSR', () => {
         `.order0{background-color:#1890ff;}`,
         `.order1{background-color:#1890ff;}`,
         `.order2{background-color:#1890ff;}`,
-        `.data-ant-cssinjs-cache-path{content:"u4cay0|order1:1qekw6y;u4cay0|order0:1r3sam0;u4cay0|order2:1at78yk";}`,
+        `.data-ant-cssinjs-cache-path{content:"z4ntcy|order1:wcvshe;z4ntcy|order0:1ec9a;z4ntcy|order2:v5oiw3";}`,
       ].join(''),
     );
   });

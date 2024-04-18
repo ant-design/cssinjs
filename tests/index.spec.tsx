@@ -202,7 +202,7 @@ describe('csssinjs', () => {
     const { container } = render(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(container.textContent).toEqual('rqtnqb');
+    expect(container.textContent).toEqual('1cpx0di');
   });
 
   it('hash', () => {
@@ -231,13 +231,13 @@ describe('csssinjs', () => {
 
     const style = styles[0];
     expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).a',
+      ':where(.css-dev-only-do-not-override-1ldpa3u).a',
     );
     expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).b',
+      ':where(.css-dev-only-do-not-override-1ldpa3u).b',
     );
     expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).c .d',
+      ':where(.css-dev-only-do-not-override-1ldpa3u).c .d',
     );
 
     unmount();
