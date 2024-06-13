@@ -1,5 +1,5 @@
 import type { AbstractCalculator } from '../src';
-import { calc as genCalc } from '../src';
+import { genCalc } from '../src';
 
 describe('calculator', () => {
   const cases: [

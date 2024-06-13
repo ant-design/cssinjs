@@ -14,7 +14,7 @@ import {
 import type { StyleProviderProps } from './StyleContext';
 import { createCache, StyleProvider } from './StyleContext';
 import type { AbstractCalculator, DerivativeFunc, TokenType } from './theme';
-import { calc, createTheme, Theme } from './theme';
+import { createTheme, genCalc, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
@@ -46,7 +46,7 @@ export {
   // util
   token2CSSVar,
   unit,
-  calc,
+  genCalc,
 };
 export type {
   TokenType,
