@@ -13,8 +13,8 @@ import {
 } from './linters';
 import type { StyleProviderProps } from './StyleContext';
 import { createCache, StyleProvider } from './StyleContext';
-import type { DerivativeFunc, TokenType } from './theme';
-import { createTheme, Theme } from './theme';
+import type { AbstractCalculator, DerivativeFunc, TokenType } from './theme';
+import { calc, createTheme, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
@@ -46,6 +46,7 @@ export {
   // util
   token2CSSVar,
   unit,
+  calc,
 };
 export type {
   TokenType,
@@ -55,6 +56,7 @@ export type {
   Transformer,
   Linter,
   StyleProviderProps,
+  AbstractCalculator,
 };
 
 export const _experimental = {
