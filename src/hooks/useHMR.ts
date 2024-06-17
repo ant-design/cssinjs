@@ -19,7 +19,7 @@ if (
   (module as any).hot &&
   typeof window !== 'undefined'
 ) {
-  const win = window as any;
+  const win = globalThis as any;
   if (typeof win.webpackHotUpdate === 'function') {
     const originWebpackHotUpdate = win.webpackHotUpdate;
 
