@@ -58,7 +58,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     },
     ([, , styleId]) => {
       if (isClientSide) {
-        removeCSS(styleId, { mark: ATTR_MARK });
+        removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
       }
     },
     ([, cssVarsStr, styleId]) => {
