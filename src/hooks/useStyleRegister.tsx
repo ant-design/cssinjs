@@ -236,6 +236,9 @@ export const parseStyle = (
             if (mergedKey.startsWith('@')) {
               // 略过媒体查询，交给子节点继续插入 hashId
               subInjectHash = true;
+            } else if (mergedKey === '&') {
+              // 抹掉 root selector 上的单个 &
+              mergedKey = injectSelectorHash('', hashId, hashPriority);
             } else {
               // 注入 hashId
               mergedKey = injectSelectorHash(key, hashId, hashPriority);
@@ -251,7 +254,7 @@ export const parseStyle = (
             // and finally we will get `{color:red;}` as css, which is wrong.
             // So we need to remove key in root, and treat child `{ a: { color: 'red' } }` as root.
             mergedKey = '';
-            nextRoot = true;
+            nextRoot = !hashId;
           }
 
           const [parsedStr, childEffectStyle] = parseStyle(

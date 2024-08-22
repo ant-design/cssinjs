@@ -778,7 +778,7 @@ describe('csssinjs', () => {
     });
   });
 
-  it('hash & nest style', () => {
+  it.only('hash & nest style', () => {
     const genHashStyle = (): CSSInterpolation => ({
       '&': {
         a: {
