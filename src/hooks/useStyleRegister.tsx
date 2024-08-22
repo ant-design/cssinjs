@@ -254,7 +254,7 @@ export const parseStyle = (
             // and finally we will get `{color:red;}` as css, which is wrong.
             // So we need to remove key in root, and treat child `{ a: { color: 'red' } }` as root.
             mergedKey = '';
-            nextRoot = !hashId;
+            nextRoot = true;
           }
 
           const [parsedStr, childEffectStyle] = parseStyle(
