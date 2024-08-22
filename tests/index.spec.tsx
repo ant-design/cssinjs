@@ -777,4 +777,38 @@ describe('csssinjs', () => {
       });
     });
   });
+
+  it('hash & nest style', () => {
+    const genHashStyle = (): CSSInterpolation => ({
+      '&': {
+        a: {
+          color: 'red',
+        },
+      },
+    });
+
+    const Holder = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+      });
+
+      useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
+        genHashStyle(),
+      ]);
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    const { unmount } = render(<Holder />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+
+    const style = styles[0];
+    expect(style.innerHTML).toContain(
+      ':where(.css-dev-only-do-not-override-1ldpa3u) a{color:red;}',
+    );
+
+    unmount();
+  });
 });
