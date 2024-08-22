@@ -236,6 +236,9 @@ export const parseStyle = (
             if (mergedKey.startsWith('@')) {
               // 略过媒体查询，交给子节点继续插入 hashId
               subInjectHash = true;
+            } else if (mergedKey === '&') {
+              // 抹掉 root selector 上的单个 &
+              mergedKey = injectSelectorHash('', hashId, hashPriority);
             } else {
               // 注入 hashId
               mergedKey = injectSelectorHash(key, hashId, hashPriority);
