@@ -36,7 +36,8 @@
     "lint": "eslint src/ --ext .ts,.tsx,.jsx,.js,.md",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "pretty-quick": "pretty-quick",
-    "test": "vitest",
+    "test": "vitest --watch=false",
+    "test:watch": "vitest",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
