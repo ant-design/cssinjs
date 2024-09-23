@@ -93,11 +93,19 @@ Extracts the styles from the cache and returns them as a string.
 #### Example
 
 ```typescript
-import extractStyle from '@ant-design/cssinjs';
+import { extractStyle, createCache } from '@ant-design/cssinjs';
 
-const cache = /* your cache instance */;
+// 创建并填充缓存
+const cache = createCache();
+// 注意：在实际使用中，缓存通常会在渲染组件时自动填充
+
+// 提取样式
 const styles = extractStyle(cache, { plain: true, types: ['style', 'token'] });
-console.log(styles);
+
+// 使用提取的样式
+const styleElement = document.createElement('style');
+styleElement.innerHTML = styles;
+document.head.appendChild(styleElement);
 ```
 
 ## Transform
