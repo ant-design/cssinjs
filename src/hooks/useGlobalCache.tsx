@@ -23,7 +23,8 @@ export default function useGlobalCache<CacheType>(
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
-  const fullPathStr = pathKey(fullPath);
+  const stableFullPathStr = React.useRef(pathKey(fullPath));
+  const fullPathStr = stableFullPathStr.current;
 
   const register = useEffectCleanupRegister([fullPathStr]);
 
