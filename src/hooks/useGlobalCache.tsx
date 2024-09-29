@@ -23,8 +23,18 @@ export default function useGlobalCache<CacheType>(
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
+
+  // 缓存fullPathStr，减少render导致的内存占用问题
   const stableFullPathStr = React.useRef(pathKey(fullPath));
-  const fullPathStr = stableFullPathStr.current;
+  const fullPathStr = React.useMemo(() => {
+    const _fullPathStr = pathKey(fullPath);
+    // 比较fullPathStr变更
+    if (_fullPathStr !== stableFullPathStr.current) {
+      stableFullPathStr.current = _fullPathStr;
+      return _fullPathStr;
+    }
+    return stableFullPathStr.current;
+  }, [fullPath]);
 
   const register = useEffectCleanupRegister([fullPathStr]);
 
