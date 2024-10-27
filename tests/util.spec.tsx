@@ -145,4 +145,25 @@ describe('util', () => {
     const ret2 = memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2]);
     expect(memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2])).toBe(ret2);
   });
+
+  describe('normalizeStyle', () => {
+    it('with leading &', () => {
+      const [str] = parseStyle(
+        {
+          '&.btn-variant-outline,&.btn-variant-dashed': {
+            color: 'red',
+          },
+        },
+        { hashId: 'hashed' },
+      );
+      const normalized = normalizeStyle(str);
+
+      expect(str).toEqual(
+        '.hashed&.btn-variant-outline,.hashed&.btn-variant-dashed{color:red;}',
+      );
+      expect(normalized).toEqual(
+        '.hashed.btn-variant-outline,.hashed.btn-variant-dashed{color:red;}',
+      );
+    });
+  });
 });
