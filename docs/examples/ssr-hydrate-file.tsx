@@ -2,7 +2,7 @@ import { createCache, StyleProvider } from '@ant-design/cssinjs';
 import React from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { Demo } from './ssr-advanced';
-import './ssr-hydrate-file.css';
+// import './ssr-hydrate-file.css';
 
 // Copy from `ssr-advanced-hydrate.tsx`
 const HTML = `
@@ -27,7 +27,7 @@ export default function App() {
     // debugger;
     hydrateRoot(
       container,
-      <StyleProvider cache={createCache()} recycling>
+      <StyleProvider cache={createCache()}>
         <Demo />
       </StyleProvider>,
     );

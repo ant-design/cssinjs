@@ -189,7 +189,7 @@ describe('Theme', () => {
   });
 
   it('should warn if empty array', () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(vi.fn());
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(errSpy).toHaveBeenCalledTimes(0);
     createTheme([]);
     expect(errSpy).toHaveBeenCalledTimes(1);

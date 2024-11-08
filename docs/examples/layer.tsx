@@ -1,41 +1,27 @@
+import { StyleProvider, Theme, useStyleRegister } from '@ant-design/cssinjs';
 import classNames from 'classnames';
 import React from 'react';
-import './layer.less';
-import { useStyleRegister, Theme } from '@ant-design/cssinjs';
 
 const theme = new Theme([() => ({})]);
 
 const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
-  // Shared
-  useStyleRegister(
-    {
-      theme,
-      token: { _tokenKey: 'test' },
-      path: ['shared'],
-      layer: 'shared',
-    },
-    () => ({
-      'html body .layer-div': {
-        color: 'rgba(0,0,0,0.65)',
-      },
-    }),
-  );
-
   // Layer
   useStyleRegister(
     {
       theme,
       token: { _tokenKey: 'test' },
       path: ['layer'],
-      layer: 'shared, layer',
+      layer: {
+        name: 'layer',
+        dependencies: ['shared'],
+      },
     },
     () => ({
       '.layer-div': {
-        // color: 'blue',
-        color: 'pink',
+        color: 'blue',
 
         a: {
-          color: 'orange',
+          color: 'pink',
           cursor: 'pointer',
 
           '&:hover': {
@@ -46,16 +32,35 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
     }),
   );
 
+  // Shared
+  useStyleRegister(
+    {
+      theme,
+      token: { _tokenKey: 'test' },
+      path: ['shared'],
+      layer: {
+        name: 'shared',
+      },
+    },
+    () => ({
+      'html body .layer-div': {
+        color: 'green',
+      },
+    }),
+  );
+
   return <div className={classNames(className, 'layer-div')} {...rest} />;
 };
 
 export default function App() {
   return (
-    <Div>
-      Layer: blue & `a` orange. User: `a` green
-      <div>
-        A simple <a>link</a>
-      </div>
-    </Div>
+    <StyleProvider layer>
+      <Div>
+        Text should be blue.
+        <div>
+          The link should be <a>pink</a>
+        </div>
+      </Div>
+    </StyleProvider>
   );
 }

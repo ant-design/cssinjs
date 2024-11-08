@@ -1,8 +1,17 @@
 import * as React from 'react';
-import type { KeyType } from '../Cache';
+import { pathKey, type KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
 import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
+import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
+
+export type ExtractStyle<CacheValue> = (
+  cache: CacheValue,
+  effectStyles: Record<string, boolean>,
+  options?: {
+    plain?: boolean;
+  },
+) => [order: number, styleId: string, style: string] | null;
 
 export default function useGlobalCache<CacheType>(
   prefix: string,
@@ -14,15 +23,17 @@ export default function useGlobalCache<CacheType>(
 ): CacheType {
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
-  const deps = fullPath.join('_');
+  const fullPathStr = pathKey(fullPath);
+
+  const register = useEffectCleanupRegister([fullPathStr]);
 
   const HMRUpdate = useHMR();
 
   type UpdaterArgs = [times: number, cache: CacheType];
 
   const buildCache = (updater?: (data: UpdaterArgs) => UpdaterArgs) => {
-    globalCache.update(fullPath, (prevCache) => {
-      const [times = 0, cache] = prevCache || [];
+    globalCache.opUpdate(fullPathStr, (prevCache) => {
+      const [times = 0, cache] = prevCache || [undefined, undefined];
 
       // HMR should always ignore cache since developer may change it
       let tmpCache = cache;
@@ -42,13 +53,25 @@ export default function useGlobalCache<CacheType>(
 
   // Create cache
   React.useMemo(
-    () => buildCache(),
+    () => {
+      buildCache();
+    },
     /* eslint-disable react-hooks/exhaustive-deps */
-    [deps],
+    [fullPathStr],
     /* eslint-enable */
   );
 
-  const cacheContent = globalCache.get(fullPath)![1];
+  let cacheEntity = globalCache.opGet(fullPathStr);
+
+  // HMR clean the cache but not trigger `useMemo` again
+  // Let's fallback of this
+  // ref https://github.com/ant-design/cssinjs/issues/127
+  if (process.env.NODE_ENV !== 'production' && !cacheEntity) {
+    buildCache();
+    cacheEntity = globalCache.opGet(fullPathStr);
+  }
+
+  const cacheContent = cacheEntity![1];
 
   // Remove if no need anymore
   useCompatibleInsertionEffect(
@@ -67,12 +90,20 @@ export default function useGlobalCache<CacheType>(
       });
 
       return () => {
-        globalCache.update(fullPath, (prevCache) => {
+        globalCache.opUpdate(fullPathStr, (prevCache) => {
           const [times = 0, cache] = prevCache || [];
           const nextCount = times - 1;
 
           if (nextCount === 0) {
-            onCacheRemove?.(cache, false);
+            // Always remove styles in useEffect callback
+            register(() => {
+              // With polyfill, registered callback will always be called synchronously
+              // But without polyfill, it will be called in effect clean up,
+              // And by that time this cache is cleaned up.
+              if (polyfill || !globalCache.opGet(fullPathStr)) {
+                onCacheRemove?.(cache, false);
+              }
+            });
             return null;
           }
 
@@ -80,7 +111,7 @@ export default function useGlobalCache<CacheType>(
         });
       };
     },
-    [deps],
+    [fullPathStr],
   );
 
   return cacheContent;

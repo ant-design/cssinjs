@@ -13,7 +13,7 @@ const { useInsertionEffect } = fullClone;
 type UseCompatibleInsertionEffect = (
   renderEffect: EffectCallback,
   effect: (polyfill?: boolean) => ReturnType<EffectCallback>,
-  deps?: React.DependencyList,
+  deps: React.DependencyList,
 ) => void;
 
 /**

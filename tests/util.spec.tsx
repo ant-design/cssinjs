@@ -1,7 +1,8 @@
 import { normalizeStyle, parseStyle } from '../src/hooks/useStyleRegister';
+import { flattenToken, memoResult } from '../src/util';
 
-vi.mock('../src/util', () => {
-  const origin = vi.importActual('../src/util');
+vi.mock('../src/util', async () => {
+  const origin: any = await vi.importActual('../src/util');
   return {
     ...origin,
     supportLayer: () => true,
@@ -73,35 +74,96 @@ describe('util', () => {
               },
             },
           ],
-          { hashId: 'hashed', layer: 'test-layer' },
+          { hashId: 'hashed', layer: { name: 'test-layer' } },
         );
 
         expect(str).toEqual('@layer test-layer {p.hashed{color:red;}}');
       });
 
       it('order', () => {
-        const str = normalizeStyle(
-          parseStyle(
-            [
-              {
-                p: {
-                  color: 'red',
-                },
+        const parsedStyle = parseStyle(
+          [
+            {
+              p: {
+                color: 'red',
               },
-            ],
-            { hashId: 'hashed', layer: 'shared, test-layer' },
-          )[0],
+            },
+          ],
+          {
+            hashId: 'hashed',
+            layer: { name: 'test-layer', dependencies: ['shared'] },
+          },
         );
 
-        expect(str).toEqual(
-          '@layer shared,test-layer;@layer test-layer{p.hashed{color:red;}}',
-        );
+        const str = normalizeStyle(parsedStyle[0]);
+
+        expect(str).toEqual('@layer test-layer{p.hashed{color:red;}}');
+        expect(parsedStyle[1]).toEqual({
+          '@layer test-layer': '@layer shared, test-layer;',
+        });
       });
 
       it('raw order', () => {
         const [str] = parseStyle('@layer a, b, c', { hashId: 'hashed' });
         expect(str).toEqual('@layer a, b, c\n');
       });
+    });
+  });
+
+  it('flattenToken should support cache', () => {
+    const token = {};
+
+    let checkTimes = 0;
+    Object.defineProperty(token, 'a', {
+      get() {
+        checkTimes += 1;
+        return 1;
+      },
+      enumerable: true,
+    });
+
+    // Repeat call flattenToken
+    for (let i = 0; i < 10000; i += 1) {
+      const tokenStr = flattenToken(token);
+      expect(tokenStr).toEqual('a1');
+    }
+
+    expect(checkTimes).toEqual(1);
+  });
+
+  it('memoResult with same subpath', () => {
+    const obj1 = {
+      a: 1,
+    };
+    const obj2 = {
+      b: 2,
+    };
+
+    const ret1 = memoResult(() => ({ ...obj1 }), [obj1]);
+    expect(memoResult(() => ({ ...obj1 }), [obj1])).toBe(ret1);
+
+    const ret2 = memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2]);
+    expect(memoResult(() => ({ ...obj1, ...obj2 }), [obj1, obj2])).toBe(ret2);
+  });
+
+  describe('normalizeStyle', () => {
+    it('with leading &', () => {
+      const [str] = parseStyle(
+        {
+          '&.btn-variant-outline,&.btn-variant-dashed': {
+            color: 'red',
+          },
+        },
+        { hashId: 'hashed' },
+      );
+      const normalized = normalizeStyle(str);
+
+      expect(str).toEqual(
+        '.hashed&.btn-variant-outline,.hashed&.btn-variant-dashed{color:red;}',
+      );
+      expect(normalized).toEqual(
+        '.hashed.btn-variant-outline,.hashed.btn-variant-dashed{color:red;}',
+      );
     });
   });
 });

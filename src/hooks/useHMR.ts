@@ -16,7 +16,8 @@ if (
   process.env.NODE_ENV !== 'production' &&
   typeof module !== 'undefined' &&
   module &&
-  module.hot
+  (module as any).hot &&
+  typeof window !== 'undefined'
 ) {
   // Use `globalThis` first, and `window` for older browsers
   // const win = globalThis as any;

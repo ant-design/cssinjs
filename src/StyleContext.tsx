@@ -77,6 +77,8 @@ export interface StyleContextProps {
    * Please note that `linters` do not support dynamic update.
    */
   linters?: Linter[];
+  /** Wrap css in a layer to avoid global style conflict */
+  layer?: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

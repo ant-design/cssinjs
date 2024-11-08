@@ -16,24 +16,19 @@ function splitValues(
     .split(/\s+/);
 
   // Combine styles split in brackets, like `calc(1px + 2px)`
-  let temp = '';
+  let temp: string[] = [];
   let brackets = 0;
   return [
     splitStyle.reduce<string[]>((list, item) => {
-      if (item.includes('(')) {
-        temp += item;
-        brackets += item.split('(').length - 1;
-      } else if (item.includes(')')) {
-        temp += item;
-        brackets -= item.split(')').length - 1;
-        if (brackets === 0) {
-          list.push(temp);
-          temp = '';
-        }
-      } else if (brackets > 0) {
-        temp += item;
-      } else {
-        list.push(item);
+      if (item.includes('(') || item.includes(')')) {
+        const left = item.split('(').length - 1;
+        const right = item.split(')').length - 1;
+        brackets += left - right;
+      }
+      if (brackets >= 0) temp.push(item);
+      if (brackets === 0) {
+        list.push(temp.join(' '));
+        temp = [];
       }
       return list;
     }, []),
@@ -155,7 +150,7 @@ const transform: Transformer = {
           });
         } else if (matchValue.length === 1) {
           // Handle like `marginBlockStart` => `marginTop`
-          clone[matchValue[0]] = wrapImportantAndSkipCheck(value, important);
+          clone[matchValue[0]] = wrapImportantAndSkipCheck(values[0], important);
         } else if (matchValue.length === 2) {
           // Handle like `marginBlock` => `marginTop` & `marginBottom`
           matchValue.forEach((matchKey, index) => {

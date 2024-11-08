@@ -12,9 +12,9 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import * as cacheMapUtil from '../src/hooks/useStyleRegister/cacheMapUtil';
-import { reset } from '../src/hooks/useStyleRegister/cacheMapUtil';
 import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
+import * as cacheMapUtil from '../src/util/cacheMapUtil';
+import { reset } from '../src/util/cacheMapUtil';
 
 interface DesignToken {
   primaryColor: string;
@@ -115,10 +115,10 @@ describe('SSR', () => {
       '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
     );
     expect(style).toEqual(
-      '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
     );
     expect(plainStyle).toEqual(
-      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}',
+      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}',
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
@@ -134,7 +134,7 @@ describe('SSR', () => {
       expect(document.head.querySelectorAll('style')).toHaveLength(3);
       reset(
         {
-          'u4cay0|.box': 'gn1jfq',
+          'z4ntcy|.box': '7g9s98',
         },
         false,
       );
@@ -165,10 +165,10 @@ describe('SSR', () => {
     );
 
     expect(getStyleAndHash).toHaveBeenCalled();
-    expect(getStyleAndHash).toHaveBeenCalledWith('u4cay0|.box');
+    expect(getStyleAndHash).toHaveBeenCalledWith('z4ntcy|.box');
     expect(getStyleAndHash).toHaveReturnedWith([
       '.box{background-color:#1890ff;}',
-      'gn1jfq',
+      '7g9s98',
     ]);
 
     // Not remove other style
@@ -178,6 +178,34 @@ describe('SSR', () => {
     expect(errorSpy).not.toHaveBeenCalled();
 
     getStyleAndHash.mockRestore();
+  });
+
+  it('not extract clientOnly style', () => {
+    const Client = ({ children }: { children?: React.ReactNode }) => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+
+      const wrapSSR = useStyleRegister(
+        { theme, token, path: ['.client'], clientOnly: true },
+        () => ({
+          '.client': {
+            backgroundColor: token.primaryColor,
+          },
+        }),
+      );
+
+      return wrapSSR(<div className="box">{children}</div>);
+    };
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Client />
+      </StyleProvider>,
+    );
+
+    const plainStyle = extractStyle(cache, true);
+    expect(plainStyle).not.toContain('client');
   });
 
   it('default hashPriority', () => {
@@ -213,7 +241,7 @@ describe('SSR', () => {
 
     const style = extractStyle(cache);
     expect(style).toEqual(
-      '<style data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"1gt9vg4|.hashPriority:1fyoi4y";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="zarvcw" data-css-hash="1j3b03q">.css-dev-only-do-not-override-1sesbhq.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"zarvcw|.hashPriority:1j3b03q";}</style>',
     );
   });
 
@@ -302,7 +330,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"u4cay0|.box:gn1jfq";}</style>',
+        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
       );
     });
 
@@ -322,7 +350,7 @@ describe('SSR', () => {
       );
 
       expect(html).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><div class="box"></div>',
+        '<style data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><div class="box"></div>',
       );
     });
   });
@@ -357,5 +385,60 @@ describe('SSR', () => {
     expect(getStyleAndHash).toHaveReturnedWith([null, undefined]);
 
     getStyleAndHash.mockRestore();
+  });
+
+  it('ssr keep order', () => {
+    const createComponent = (name: string, order?: number) => {
+      const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+
+        const wrapSSR = useStyleRegister(
+          { theme, token, path: [name], order },
+          () => ({
+            [`.${name}`]: {
+              backgroundColor: token.primaryColor,
+            },
+          }),
+        );
+
+        return wrapSSR(<div className={name}>{children}</div>);
+      };
+
+      return OrderDefault;
+    };
+
+    const Order0 = createComponent('order0', 0);
+    const Order1 = createComponent('order1', 1);
+    const Order2 = createComponent('order2', 2);
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Order1 />
+        <Order0 />
+        <Order2 />
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache);
+    const holder = document.createElement('div');
+    holder.innerHTML = style;
+    const styles = Array.from(holder.querySelectorAll('style'));
+
+    expect(styles[0].getAttribute('data-rc-priority')).toEqual('0');
+    expect(styles[1].getAttribute('data-rc-priority')).toEqual('1');
+    expect(styles[2].getAttribute('data-rc-priority')).toEqual('2');
+
+    // Pure style
+    const pureStyle = extractStyle(cache, true);
+    expect(pureStyle).toEqual(
+      [
+        `.order0{background-color:#1890ff;}`,
+        `.order1{background-color:#1890ff;}`,
+        `.order2{background-color:#1890ff;}`,
+        `.data-ant-cssinjs-cache-path{content:"z4ntcy|order1:wcvshe;z4ntcy|order0:1ec9a;z4ntcy|order2:v5oiw3";}`,
+      ].join(''),
+    );
   });
 });
