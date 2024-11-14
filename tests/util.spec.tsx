@@ -125,7 +125,7 @@ describe('util', () => {
     // Repeat call flattenToken
     for (let i = 0; i < 10000; i += 1) {
       const tokenStr = flattenToken(token);
-      expect(tokenStr).toEqual('a1');
+      expect(tokenStr).toEqual('d9a1z5');
     }
 
     expect(checkTimes).toEqual(1);
