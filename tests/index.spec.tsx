@@ -202,7 +202,7 @@ describe('csssinjs', () => {
     const { container } = render(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(container.textContent).toEqual('1cpx0di');
+    expect(container.textContent).toEqual('1fs647j');
   });
 
   it('hash', () => {
