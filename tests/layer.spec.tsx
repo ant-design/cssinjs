@@ -66,4 +66,34 @@ describe('layer', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles[0].innerHTML.trim()).toEqual('@layer shared,button;');
   });
+
+  // TODO: try fix, If stylis is fixed, this case should not be needed here.
+  // https://github.com/thysultan/stylis/pull/339
+  // https://github.com/ant-design/ant-design/issues/51867
+  it('empty braces (#51867)', () => {
+    const theme = createTheme(() => ({}));
+    const Demo = () => {
+      useStyleRegister(
+        {
+          theme,
+          token: { _tokenKey: 'test' },
+          path: ['shared'],
+          layer: {
+            name: 'shared',
+          },
+        },
+        () => [],
+      );
+      return null;
+    };
+
+    render(
+      <StyleProvider layer cache={createCache()}>
+        <Demo />
+      </StyleProvider>,
+    );
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles[0].innerHTML.trim()).toEqual('');
+  });
 });

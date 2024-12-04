@@ -333,7 +333,11 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer) {
-    styleStr = `@layer ${layer.name} {${styleStr}}`;
+
+    // fixme: https://github.com/thysultan/stylis/pull/339
+    if (styleStr) {
+      styleStr = `@layer ${layer.name} {${styleStr}}`;
+    }
 
     if (layer.dependencies) {
       effectStyle[`@layer ${layer.name}`] = layer.dependencies
