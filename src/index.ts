@@ -12,7 +12,7 @@ import {
   parentSelectorLinter,
 } from './linters';
 import type { StyleProviderProps } from './StyleContext';
-import { createCache, StyleProvider } from './StyleContext';
+import StyleContext, { createCache, StyleProvider } from './StyleContext';
 import type { AbstractCalculator, DerivativeFunc, TokenType } from './theme';
 import { createTheme, genCalc, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
@@ -29,6 +29,7 @@ export {
   useCacheToken,
   createCache,
   StyleProvider,
+  StyleContext,
   Keyframes,
   extractStyle,
   getComputedToken,
