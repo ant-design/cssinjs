@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { pathKey, type KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
-import useCompatibleInsertionEffect from './useCompatibleInsertionEffect';
 import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
+import { useInsertionEffect } from 'react';
 
 export type ExtractStyle<CacheValue> = (
   cache: CacheValue,
@@ -74,20 +74,13 @@ export default function useGlobalCache<CacheType>(
   const cacheContent = cacheEntity![1];
 
   // Remove if no need anymore
-  useCompatibleInsertionEffect(
+  useInsertionEffect(
     () => {
       onCacheEffect?.(cacheContent);
-    },
-    (polyfill) => {
       // It's bad to call build again in effect.
       // But we have to do this since StrictMode will call effect twice
       // which will clear cache on the first time.
-      buildCache(([times, cache]) => {
-        if (polyfill && times === 0) {
-          onCacheEffect?.(cacheContent);
-        }
-        return [times + 1, cache];
-      });
+      buildCache(([times, cache]) => [times + 1, cache]);
 
       return () => {
         globalCache.opUpdate(fullPathStr, (prevCache) => {
@@ -100,7 +93,7 @@ export default function useGlobalCache<CacheType>(
               // With polyfill, registered callback will always be called synchronously
               // But without polyfill, it will be called in effect clean up,
               // And by that time this cache is cleaned up.
-              if (polyfill || !globalCache.opGet(fullPathStr)) {
+              if (!globalCache.opGet(fullPathStr)) {
                 onCacheRemove?.(cache, false);
               }
             });
