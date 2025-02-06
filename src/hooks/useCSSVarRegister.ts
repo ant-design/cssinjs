@@ -35,6 +35,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
 ) => {
   const { key, prefix, unitless, ignore, token, scope = '' } = config;
   const {
+    autoClear,
     cache: { instanceId },
     container,
   } = useContext(StyleContext);
@@ -56,8 +57,8 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];
     },
-    ([, , styleId]) => {
-      if (isClientSide) {
+    ([, , styleId], fromHMR) => {
+      if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
       }
     },
