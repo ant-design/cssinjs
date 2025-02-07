@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react';
 import classNames from 'classnames';
+import type { ReactElement, ReactNode } from 'react';
 import * as React from 'react';
-import { ReactElement, ReactNode, StrictMode } from 'react';
+import { StrictMode } from 'react';
 import { describe, expect } from 'vitest';
 import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
@@ -424,6 +425,45 @@ describe('csssinjs', () => {
     );
 
     expect(container.querySelectorAll('style')).toHaveLength(1);
+  });
+
+  // https://github.com/ant-design/cssinjs/issues/189
+  it('should cleanup style when unmount', () => {
+    const container = document.createElement('div');
+
+    const CssVarBox = () => {
+      const [token] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: 'red' }],
+        {
+          salt: 'test',
+        },
+      );
+
+      useCSSVarRegister(
+        {
+          key: 'color-2',
+          path: ['cssinjs-cleanup-style-when-unmount'],
+          token,
+        },
+        () => ({
+          token: token.primaryColor,
+        }),
+      );
+
+      return null;
+    };
+
+    const { unmount } = render(
+      <StyleProvider cache={createCache()} container={container} autoClear>
+        <Box />
+        <CssVarBox />
+      </StyleProvider>,
+    );
+
+    expect(container.querySelectorAll('style')).toHaveLength(2);
+    unmount();
+    expect(container.querySelectorAll('style')).toHaveLength(0);
   });
 
   describe('nonce', () => {

@@ -92,15 +92,13 @@ const TOKEN_THRESHOLD = 0;
 function cleanTokenStyle(tokenKey: string, instanceId: string) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
 
-  const tokenKeyList = Array.from(tokenKeys.keys());
-  const cleanableKeyList = tokenKeyList.filter((key) => {
-    const count = tokenKeys.get(key) || 0;
-
-    return count <= 0;
-  });
+  const cleanableKeyList = new Set<string>();
+  tokenKeys.forEach((value, key) => {
+    if (value <= 0) cleanableKeyList.add(key);
+  })
 
   // Should keep tokens under threshold for not to insert style too often
-  if (tokenKeyList.length - cleanableKeyList.length > TOKEN_THRESHOLD) {
+  if (tokenKeys.size - cleanableKeyList.size > TOKEN_THRESHOLD) {
     cleanableKeyList.forEach((key) => {
       removeStyleTags(key, instanceId);
       tokenKeys.delete(key);

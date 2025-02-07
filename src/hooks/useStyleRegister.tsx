@@ -333,7 +333,6 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer) {
-
     // fixme: https://github.com/thysultan/stylis/pull/339
     if (styleStr) {
       styleStr = `@layer ${layer.name} {${styleStr}}`;
@@ -462,7 +461,7 @@ export default function useStyleRegister(
       // Remove cache if no need
       ([, , styleId], fromHMR) => {
         if ((fromHMR || autoClear) && isClientSide) {
-          removeCSS(styleId, { mark: ATTR_MARK });
+          removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
         }
       },
 
