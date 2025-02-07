@@ -462,7 +462,7 @@ export default function useStyleRegister(
       // Remove cache if no need
       ([, , styleId], fromHMR) => {
         if ((fromHMR || autoClear) && isClientSide) {
-          removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
+          removeCSS(styleId, { mark: ATTR_MARK });
         }
       },
 
