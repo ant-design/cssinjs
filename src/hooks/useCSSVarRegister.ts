@@ -10,7 +10,7 @@ import type { TokenWithCSSVar } from '../util/css-variables';
 import { transformToken } from '../util/css-variables';
 import type { ExtractStyle } from './useGlobalCache';
 import useGlobalCache from './useGlobalCache';
-import { uniqueHash } from './useStyleRegister';
+import { LayerConfig, uniqueHash } from './useStyleRegister';
 
 export const CSS_VAR_PREFIX = 'cssVar';
 
@@ -30,17 +30,19 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     ignore?: Record<string, boolean>;
     scope?: string;
     token: any;
+    layer?: LayerConfig;
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, scope = '' } = config;
+  const { key, prefix, unitless, ignore, token, scope = '', layer } = config;
   const {
     cache: { instanceId },
     container,
+    layer: enableLayer,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const stylePath = [...config.path, key, scope, tokenKey];
+  const stylePath = [...config.path, key, scope, tokenKey, enableLayer];
 
   const cache = useGlobalCache<CSSVarCacheValue<V, T>>(
     CSS_VAR_PREFIX,
@@ -52,6 +54,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
         unitless,
         ignore,
         scope,
+        layer,
       });
       const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];
