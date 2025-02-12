@@ -333,7 +333,6 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer) {
-
     // fixme: https://github.com/thysultan/stylis/pull/339
     if (styleStr) {
       styleStr = `@layer ${layer.name} {${styleStr}}`;
@@ -364,7 +363,6 @@ export const STYLE_PREFIX = 'style';
 
 type StyleCacheValue = [
   styleStr: string,
-  tokenKey: string,
   styleId: string,
   effectStyle: Record<string, string>,
   clientOnly: boolean | undefined,
@@ -392,7 +390,7 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
+  const { path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
     autoClear,
     mock,
@@ -405,9 +403,8 @@ export default function useStyleRegister(
     cache,
     layer: enableLayer,
   } = React.useContext(StyleContext);
-  const tokenKey = token._tokenKey as string;
 
-  const fullPath = [tokenKey];
+  const fullPath: string[] = [];
   if (enableLayer) {
     fullPath.push('layer');
   }
@@ -431,14 +428,7 @@ export default function useStyleRegister(
         if (existPath(cachePath)) {
           const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
           if (inlineCacheStyleStr) {
-            return [
-              inlineCacheStyleStr,
-              tokenKey,
-              styleHash,
-              {},
-              clientOnly,
-              order,
-            ];
+            return [inlineCacheStyleStr, styleHash, {}, clientOnly, order];
           }
         }
 
@@ -456,18 +446,18 @@ export default function useStyleRegister(
         const styleStr = normalizeStyle(parsedStyle);
         const styleId = uniqueHash(fullPath, styleStr);
 
-        return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
+        return [styleStr, styleId, effectStyle, clientOnly, order];
       },
 
       // Remove cache if no need
-      ([, , styleId], fromHMR) => {
+      ([, styleId], fromHMR) => {
         if ((fromHMR || autoClear) && isClientSide) {
           removeCSS(styleId, { mark: ATTR_MARK });
         }
       },
 
       // Effect: Inject style here
-      ([styleStr, _, styleId, effectStyle]) => {
+      ([styleStr, styleId, effectStyle]) => {
         if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
           const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
             mark: ATTR_MARK,
@@ -510,9 +500,6 @@ export default function useStyleRegister(
           const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
           (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
-
-          // Used for `useCacheToken` to remove on batch when token removed
-          style.setAttribute(ATTR_TOKEN, tokenKey);
 
           // Debug usage. Dev only
           if (process.env.NODE_ENV !== 'production') {
@@ -563,14 +550,8 @@ export const extract: ExtractStyle<StyleCacheValue> = (
   effectStyles,
   options,
 ) => {
-  const [
-    styleStr,
-    tokenKey,
-    styleId,
-    effectStyle,
-    clientOnly,
-    order,
-  ]: StyleCacheValue = cache;
+  const [styleStr, styleId, effectStyle, clientOnly, order]: StyleCacheValue =
+    cache;
   const { plain } = options || {};
 
   // Skip client only style
@@ -588,7 +569,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
   };
 
   // ====================== Style ======================
-  keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs, plain);
+  keyStyleText = toStyleStr(styleStr, undefined, styleId, sharedAttrs, plain);
 
   // =============== Create effect style ===============
   if (effectStyle) {
@@ -599,7 +580,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
         const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
         const effectStyleHTML = toStyleStr(
           effectStyleStr,
-          tokenKey,
+          undefined,
           `_effect-${effectKey}`,
           sharedAttrs,
           plain,
