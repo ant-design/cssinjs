@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`csssinjs > hash & nest style 1`] = `":where(.css-dev-only-do-not-override-1c7qaqv) a{color:red;}"`;

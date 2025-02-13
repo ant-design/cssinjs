@@ -200,12 +200,13 @@ export default function useCacheToken<
       ) as [any, string];
 
       // Optimize for `useStyleRegister` performance
-      actualToken._tokenKey = token2key(actualToken, salt);
+      const mergedSalt = `${salt}_${cssVar.prefix || ''}`;
+      actualToken._tokenKey = token2key(actualToken, mergedSalt);
 
       const themeKey = cssVar.key;
       recordCleanToken(themeKey);
 
-      const hashId = `${hashPrefix}-${hash(salt)}`;
+      const hashId = `${hashPrefix}-${hash(mergedSalt)}`;
 
       return [tokenWithCssVar, hashId, actualToken, cssVarsStr, cssVar.key];
     },
@@ -214,6 +215,9 @@ export default function useCacheToken<
       cleanTokenStyle(themeKey, instanceId);
     },
     ([, , , cssVarsStr, themeKey]) => {
+      if (!cssVarsStr) {
+        return;
+      }
       const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), {
         mark: ATTR_MARK,
         prepend: 'queue',

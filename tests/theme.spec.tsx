@@ -112,11 +112,11 @@ describe('Theme', () => {
     const sameSeed = { primaryColor: 'red' };
 
     const Demo = ({ theme }: { theme: Theme<any, any> }) => {
-      const [token] = useCacheToken<DerivativeToken, DesignToken>(theme, [
+      const [, , realToken] = useCacheToken<DerivativeToken, DesignToken>(theme, [
         sameSeed,
-      ]);
+      ], { cssVar: {key: 'css-var-test'}});
 
-      return <span>{JSON.stringify(token)}</span>;
+      return <span>{JSON.stringify(realToken)}</span>;
     };
 
     let calledTimes = 0;
@@ -158,9 +158,9 @@ describe('Theme', () => {
     const sameSeed = { primaryColor: 'red' };
 
     const Demo = ({ theme }: { theme: Theme<any, any> }) => {
-      const [token] = useCacheToken<DerivativeToken, DesignToken>(theme, [
+      const [,,token] = useCacheToken<DerivativeToken, DesignToken>(theme, [
         sameSeed,
-      ]);
+      ], { cssVar: {key: 'css-var-test'}});
 
       return <span>{JSON.stringify(token)}</span>;
     };

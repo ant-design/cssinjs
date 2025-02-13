@@ -53,7 +53,6 @@ export function createCache() {
 export type HashPriority = 'low' | 'high';
 
 export interface StyleContextProps {
-  autoClear?: boolean;
   /** @private Test only. Not work in production. */
   mock?: 'server' | 'client';
   /**

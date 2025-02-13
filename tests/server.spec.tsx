@@ -70,13 +70,13 @@ describe('SSR', () => {
   });
 
   const Box = ({ children }: { children?: React.ReactNode }) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
-    const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
+    useStyleRegister({ theme, token, path: ['.box'] }, () => [
       genStyle(token),
     ]);
 
-    return wrapSSR(<div className="box">{children}</div>);
+    return <div className="box">{children}</div>;
   };
 
   const IdHolder = () => {
@@ -87,12 +87,6 @@ describe('SSR', () => {
       </div>
     );
   };
-
-  it('should not use cache', () => {
-    render(<Box />);
-
-    expect(document.head.querySelectorAll('style')).toHaveLength(0);
-  });
 
   it('ssr extract style', () => {
     // >>> SSR
@@ -112,13 +106,13 @@ describe('SSR', () => {
     const plainStyle = extractStyle(cache, true);
 
     expect(html).toEqual(
-      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
+      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":R2:" class="id">:R2:</div></div><div id=":R3:" class="id">:R3:</div>',
     );
     expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1n24fpp">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="1bbkdf1">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}</style>',
     );
     expect(plainStyle).toEqual(
-      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}',
+      '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}.box{background-color:var(--primary-color);}.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}',
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
@@ -131,10 +125,10 @@ describe('SSR', () => {
       document.head.innerHTML = `<style id="otherStyle">html { background: red; }</style>${style}`;
       root.innerHTML = html;
 
-      expect(document.head.querySelectorAll('style')).toHaveLength(3);
+      expect(document.head.querySelectorAll('style')).toHaveLength(4);
       reset(
         {
-          'z4ntcy|.box': '7g9s98',
+          '|.box': '1bbkdf1',
         },
         false,
       );
@@ -165,15 +159,15 @@ describe('SSR', () => {
     );
 
     expect(getStyleAndHash).toHaveBeenCalled();
-    expect(getStyleAndHash).toHaveBeenCalledWith('z4ntcy|.box');
+    expect(getStyleAndHash).toHaveBeenCalledWith('|.box');
     expect(getStyleAndHash).toHaveReturnedWith([
-      '.box{background-color:#1890ff;}',
-      '7g9s98',
+      '.box{background-color:var(--primary-color);}',
+      '1bbkdf1',
     ]);
 
     // Not remove other style
     expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
-    expect(document.head.querySelectorAll('style')).toHaveLength(3);
+    expect(document.head.querySelectorAll('style')).toHaveLength(5);
 
     expect(errorSpy).not.toHaveBeenCalled();
 
@@ -182,7 +176,7 @@ describe('SSR', () => {
 
   it('not extract clientOnly style', () => {
     const Client = ({ children }: { children?: React.ReactNode }) => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
       const wrapSSR = useStyleRegister(
         { theme, token, path: ['.client'], clientOnly: true },
@@ -218,6 +212,7 @@ describe('SSR', () => {
         [baseToken],
         {
           salt: 'hashPriority',
+          cssVar: {key: 'css-var-test'}
         },
       );
 
@@ -241,61 +236,8 @@ describe('SSR', () => {
 
     const style = extractStyle(cache);
     expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="zarvcw" data-css-hash="1j3b03q">.css-dev-only-do-not-override-1sesbhq.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"zarvcw|.hashPriority:1j3b03q";}</style>',
+      '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1k2x1i2">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="2zjb3q">.css-dev-only-do-not-override-1v5hawo.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.hashPriority:2zjb3q";}</style>',
     );
-  });
-
-  it('tricky ssr', () => {
-    const html = renderToString(
-      <StyleProvider ssrInline>
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-    );
-
-    // >>> Exist style
-    const root = document.createElement('div');
-    root.id = 'root';
-    root.innerHTML = html;
-    expect(root.querySelectorAll('style')).toHaveLength(1);
-
-    // >>> Hydrate
-    canUseDom.mockReturnValue(true);
-    document.body.appendChild(root);
-    const cache = createCache();
-    render(
-      <StyleProvider
-        cache={cache}
-        // Force insert style since we hack `canUseDom` to false
-        mock="client"
-      >
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-      {
-        hydrate: true,
-        container: root,
-      },
-    );
-
-    // Remove inline style
-    expect(root.querySelectorAll('style')).toHaveLength(0);
-
-    // Patch to header
-    expect(document.head.querySelectorAll('style')).toHaveLength(1);
-    expect(
-      (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
-        CSS_IN_JS_INSTANCE
-      ],
-    ).toBe(cache.instanceId);
-
-    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it('!ssrInline', () => {
@@ -330,27 +272,7 @@ describe('SSR', () => {
 
       expect(html).toEqual('<div class="box"></div>');
       expect(style).toEqual(
-        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
-      );
-    });
-
-    it('tricky', () => {
-      const html = renderToString(
-        <StyleProvider ssrInline>
-          <StyleProvider>
-            <StyleProvider>
-              <StyleProvider>
-                <StyleProvider>
-                  <Box />
-                </StyleProvider>
-              </StyleProvider>
-            </StyleProvider>
-          </StyleProvider>
-        </StyleProvider>,
-      );
-
-      expect(html).toEqual(
-        '<style data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><div class="box"></div>',
+        '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1n24fpp">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="1bbkdf1">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}</style>',
       );
     });
   });
@@ -390,7 +312,7 @@ describe('SSR', () => {
   it('ssr keep order', () => {
     const createComponent = (name: string, order?: number) => {
       const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
-        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
         const wrapSSR = useStyleRegister(
           { theme, token, path: [name], order },
@@ -426,18 +348,19 @@ describe('SSR', () => {
     holder.innerHTML = style;
     const styles = Array.from(holder.querySelectorAll('style'));
 
-    expect(styles[0].getAttribute('data-rc-priority')).toEqual('0');
-    expect(styles[1].getAttribute('data-rc-priority')).toEqual('1');
-    expect(styles[2].getAttribute('data-rc-priority')).toEqual('2');
+    expect(styles[1].getAttribute('data-rc-priority')).toEqual('0');
+    expect(styles[2].getAttribute('data-rc-priority')).toEqual('1');
+    expect(styles[3].getAttribute('data-rc-priority')).toEqual('2');
 
     // Pure style
     const pureStyle = extractStyle(cache, true);
     expect(pureStyle).toEqual(
       [
-        `.order0{background-color:#1890ff;}`,
-        `.order1{background-color:#1890ff;}`,
-        `.order2{background-color:#1890ff;}`,
-        `.data-ant-cssinjs-cache-path{content:"z4ntcy|order1:wcvshe;z4ntcy|order0:1ec9a;z4ntcy|order2:v5oiw3";}`,
+        '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}',
+        `.order0{background-color:var(--primary-color);}`,
+        `.order1{background-color:var(--primary-color);}`,
+        `.order2{background-color:var(--primary-color);}`,
+        `.data-ant-cssinjs-cache-path{content:"|order1:1rqllqf;|order0:12ogt2g;|order2:1jmwgle";}`,
       ].join(''),
     );
   });

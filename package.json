@@ -53,7 +53,7 @@
     "@ctrl/tinycolor": "^3.4.0",
     "@rc-component/father-plugin": "^1.0.1",
     "@testing-library/jest-dom": "^5.16.3",
-    "@testing-library/react": "^13.0.0",
+    "@testing-library/react": "^14.0.0",
     "@types/classnames": "^2.2.9",
     "@types/enzyme": "^3.10.11",
     "@types/react": "^18.0.0",

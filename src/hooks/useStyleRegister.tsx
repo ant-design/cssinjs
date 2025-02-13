@@ -390,9 +390,8 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { path, hashId, layer, nonce, clientOnly, order = 0 } = info;
+  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
-    autoClear,
     mock,
     defaultCache,
     hashPriority,
@@ -404,7 +403,7 @@ export default function useStyleRegister(
     layer: enableLayer,
   } = React.useContext(StyleContext);
 
-  const fullPath: string[] = [];
+  const fullPath: string[] = [token._cssVarPrefix];
   if (enableLayer) {
     fullPath.push('layer');
   }
@@ -451,7 +450,7 @@ export default function useStyleRegister(
 
       // Remove cache if no need
       ([, styleId], fromHMR) => {
-        if ((fromHMR || autoClear) && isClientSide) {
+        if (fromHMR && isClientSide) {
           removeCSS(styleId, { mark: ATTR_MARK });
         }
       },

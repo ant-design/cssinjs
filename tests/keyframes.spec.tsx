@@ -36,7 +36,7 @@ describe('animation', () => {
 
   describe('without hashed', () => {
     const Box = () => {
-      const [token, hashId] = useCacheToken(theme, [baseToken]);
+      const [token, hashId] = useCacheToken(theme, [baseToken],{cssVar: {key: 'css-var-test'}});
 
       useStyleRegister({ theme, token, hashId, path: ['.box'] }, () => ({
         '.box': {
