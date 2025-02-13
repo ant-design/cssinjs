@@ -178,7 +178,7 @@ describe('SSR', () => {
     const Client = ({ children }: { children?: React.ReactNode }) => {
       const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
-      const wrapSSR = useStyleRegister(
+      useStyleRegister(
         { theme, token, path: ['.client'], clientOnly: true },
         () => ({
           '.client': {
@@ -187,7 +187,7 @@ describe('SSR', () => {
         }),
       );
 
-      return wrapSSR(<div className="box">{children}</div>);
+      return <div className="box">{children}</div>;
     };
 
     const cache = createCache();
@@ -216,14 +216,12 @@ describe('SSR', () => {
         },
       );
 
-      const wrapSSR = useStyleRegister(
+      useStyleRegister(
         { theme, token, hashId, path: ['.hashPriority'] },
         () => [genStyle(token)],
       );
 
-      return wrapSSR(
-        <div className={classNames(hashId, 'my-box')}>{children}</div>,
-      );
+      return <div className={classNames(hashId, 'my-box')}>{children}</div>;
     };
 
     renderToString(
@@ -314,7 +312,7 @@ describe('SSR', () => {
       const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
         const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
-        const wrapSSR = useStyleRegister(
+        useStyleRegister(
           { theme, token, path: [name], order },
           () => ({
             [`.${name}`]: {
@@ -323,7 +321,7 @@ describe('SSR', () => {
           }),
         );
 
-        return wrapSSR(<div className={name}>{children}</div>);
+        return <div className={name}>{children}</div>;
       };
 
       return OrderDefault;

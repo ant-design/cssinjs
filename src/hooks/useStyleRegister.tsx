@@ -13,7 +13,6 @@ import type { HashPriority } from '../StyleContext';
 import StyleContext, {
   ATTR_CACHE_PATH,
   ATTR_MARK,
-  ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
 import { isClientSide, toStyleStr } from '../util';
@@ -517,31 +516,6 @@ export default function useStyleRegister(
         }
       },
     );
-
-  return (node: React.ReactElement) => {
-    let styleNode: React.ReactElement;
-
-    if (!ssrInline || isMergedClientSide || !defaultCache) {
-      styleNode = <Empty />;
-    } else {
-      styleNode = (
-        <style
-          {...{
-            [ATTR_TOKEN]: cachedTokenKey,
-            [ATTR_MARK]: cachedStyleId,
-          }}
-          dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
-        />
-      );
-    }
-
-    return (
-      <>
-        {styleNode}
-        {node}
-      </>
-    );
-  };
 }
 
 export const extract: ExtractStyle<StyleCacheValue> = (
