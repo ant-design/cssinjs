@@ -41,13 +41,13 @@ const Spin = ({ className, ...restProps }: SpinProps) => {
   const [theme, token, hashId] = useToken();
 
   // 全局注册，内部会做缓存优化
-  const wrapSSR = useStyleRegister(
+  useStyleRegister(
     { theme, token, hashId, path: [prefixCls] },
     () => [genSpinStyle(prefixCls, token)],
   );
 
-  return wrapSSR(
-    <div className={classNames(prefixCls, hashId, className)} {...restProps} />,
+  return (
+    <div className={classNames(prefixCls, hashId, className)} {...restProps} />
   );
 };
 
