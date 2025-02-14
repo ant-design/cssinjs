@@ -23,7 +23,7 @@ export default function App() {
       {show && (
         <div>
           <DesignTokenContext.Provider
-            value={{ cssVar: { key: 'default' }, hashed: true }}
+            value={{ cssVar: { key: 'default' }, hashed: false }}
           >
             <Button>Default</Button>
             <Button type="primary">Primary</Button>
@@ -36,7 +36,7 @@ export default function App() {
             value={{
               token: { primaryColor: 'green' },
               cssVar: { key: 'default2' },
-              hashed: true,
+              hashed: false,
             }}
           >
             <Button>Default</Button>

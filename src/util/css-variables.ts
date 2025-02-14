@@ -51,7 +51,9 @@ export const transformToken = <
   },
 ): [TokenWithCSSVar<V, T>, string] => {
   const cssVars: Record<string, string> = {};
-  const result: TokenWithCSSVar<V, T> = {};
+  const result: TokenWithCSSVar<V, T> = {
+    _cssVarPrefix: config?.prefix || '',
+  };
   Object.entries(token).forEach(([key, value]) => {
     if (config?.preserve?.[key]) {
       result[key as keyof T] = value;

@@ -79,9 +79,9 @@ export function useToken(): [
     [defaultDesignToken, rootDesignToken],
     {
       salt: typeof hashed === 'string' ? hashed : '',
-      cssVar: cssVar && {
+      cssVar: {
         prefix: 'rc',
-        key: cssVar.key,
+        key: cssVar?.key || 'css-var-root',
         unitless: {
           lineHeight: true,
         },
