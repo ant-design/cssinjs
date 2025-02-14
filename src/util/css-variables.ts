@@ -1,3 +1,5 @@
+import type { LayerConfig } from '../interface';
+
 export const token2CSSVar = (token: string, prefix = '') => {
   return `--${prefix ? `${prefix}-` : ''}${token}`
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
@@ -8,19 +10,28 @@ export const token2CSSVar = (token: string, prefix = '') => {
 
 export const serializeCSSVar = <T extends Record<string, any>>(
   cssVars: T,
-  hashId: string,
+  cssVarKey: string,
   options?: {
     scope?: string;
+    layer?: LayerConfig;
   },
 ) => {
   if (!Object.keys(cssVars).length) {
     return '';
   }
-  return `.${hashId}${
+
+  const { layer } = options || {};
+
+  let cssVarStr = `.${cssVarKey}${
     options?.scope ? `.${options.scope}` : ''
   }{${Object.entries(cssVars)
     .map(([key, value]) => `${key}:${value};`)
     .join('')}}`;
+
+  if (layer) {
+    cssVarStr = `@layer ${layer.name} {${cssVarStr}}`;
+  }
+  return cssVarStr;
 };
 
 export type TokenWithCSSVar<
@@ -48,6 +59,7 @@ export const transformToken = <
       [key in keyof T]?: boolean;
     };
     scope?: string;
+    layer?: LayerConfig;
   },
 ): [TokenWithCSSVar<V, T>, string] => {
   const cssVars: Record<string, string> = {};
@@ -69,5 +81,11 @@ export const transformToken = <
       result[key as keyof T] = `var(${cssVar})`;
     }
   });
-  return [result, serializeCSSVar(cssVars, themeKey, { scope: config?.scope })];
+  return [
+    result,
+    serializeCSSVar(cssVars, themeKey, {
+      scope: config?.scope,
+      layer: config?.layer,
+    }),
+  ];
 };

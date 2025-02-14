@@ -6,6 +6,7 @@ import * as React from 'react';
 import unitless from '@emotion/unitless';
 import { compile, serialize, stringify } from 'stylis';
 import type { Theme, Transformer } from '..';
+import type { LayerConfig } from '../interface';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
 import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
@@ -26,11 +27,6 @@ import useGlobalCache from './useGlobalCache';
 
 const SKIP_CHECK = '_skip_check_';
 const MULTI_VALUE = '_multi_value_';
-
-export interface LayerConfig {
-  name: string;
-  dependencies?: string[];
-}
 
 export type CSSProperties = Omit<
   CSS.PropertiesFallback<number | string>,
