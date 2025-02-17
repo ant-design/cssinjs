@@ -389,20 +389,18 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
+  const { path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
     mock,
-    defaultCache,
     hashPriority,
     container,
-    ssrInline,
     transformers,
     linters,
     cache,
     layer: enableLayer,
   } = React.useContext(StyleContext);
 
-  const fullPath: string[] = [token._cssVarPrefix];
+  const fullPath: string[] = [hashId || ''];
   if (enableLayer) {
     fullPath.push('layer');
   }
@@ -414,108 +412,109 @@ export default function useStyleRegister(
     isMergedClientSide = mock === 'client';
   }
 
-  const [cachedStyleStr, cachedTokenKey, cachedStyleId] =
-    useGlobalCache<StyleCacheValue>(
-      STYLE_PREFIX,
-      fullPath,
-      // Create cache if needed
-      () => {
-        const cachePath = fullPath.join('|');
+  useGlobalCache<StyleCacheValue>(
+    STYLE_PREFIX,
+    fullPath,
+    // Create cache if needed
+    () => {
+      const cachePath = fullPath.join('|');
 
-        // Get style from SSR inline style directly
-        if (existPath(cachePath)) {
-          const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
-          if (inlineCacheStyleStr) {
-            return [inlineCacheStyleStr, styleHash, {}, clientOnly, order];
-          }
+      // Get style from SSR inline style directly
+      if (existPath(cachePath)) {
+        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
+        if (inlineCacheStyleStr) {
+          return [inlineCacheStyleStr, styleHash, {}, clientOnly, order];
+        }
+      }
+
+      // Generate style
+      const styleObj = styleFn();
+      const [parsedStyle, effectStyle] = parseStyle(styleObj, {
+        hashId,
+        hashPriority,
+        layer: enableLayer ? layer : undefined,
+        path: path.join('-'),
+        transformers,
+        linters,
+      });
+
+      const styleStr = normalizeStyle(parsedStyle);
+      const styleId = uniqueHash(fullPath, styleStr);
+
+      return [styleStr, styleId, effectStyle, clientOnly, order];
+    },
+
+    // Remove cache if no need
+    (cacheValue, fromHMR) => {
+      const [, styleId] = cacheValue;
+      if (fromHMR && isClientSide) {
+        removeCSS(styleId, { mark: ATTR_MARK });
+      }
+    },
+
+    // Effect: Inject style here
+    (cacheValue) => {
+      const [styleStr, styleId, effectStyle, , priority] = cacheValue;
+      if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
+        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+          mark: ATTR_MARK,
+          prepend: enableLayer ? false : 'queue',
+          attachTo: container,
+          priority,
+        };
+
+        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+
+        if (nonceStr) {
+          mergedCSSConfig.csp = { nonce: nonceStr };
         }
 
-        // Generate style
-        const styleObj = styleFn();
-        const [parsedStyle, effectStyle] = parseStyle(styleObj, {
-          hashId,
-          hashPriority,
-          layer: enableLayer ? layer : undefined,
-          path: path.join('-'),
-          transformers,
-          linters,
+        // ================= Split Effect Style =================
+        // We will split effectStyle here since @layer should be at the top level
+        const effectLayerKeys: string[] = [];
+        const effectRestKeys: string[] = [];
+
+        Object.keys(effectStyle).forEach((key) => {
+          if (key.startsWith('@layer')) {
+            effectLayerKeys.push(key);
+          } else {
+            effectRestKeys.push(key);
+          }
         });
 
-        const styleStr = normalizeStyle(parsedStyle);
-        const styleId = uniqueHash(fullPath, styleStr);
+        // ================= Inject Layer Style =================
+        // Inject layer style
+        effectLayerKeys.forEach((effectKey) => {
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey]),
+            `_layer-${effectKey}`,
+            { ...mergedCSSConfig, prepend: true },
+          );
+        });
 
-        return [styleStr, styleId, effectStyle, clientOnly, order];
-      },
+        // ==================== Inject Style ====================
+        // Inject style
+        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
-      // Remove cache if no need
-      ([, styleId], fromHMR) => {
-        if (fromHMR && isClientSide) {
-          removeCSS(styleId, { mark: ATTR_MARK });
+        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
+
+        // Debug usage. Dev only
+        if (process.env.NODE_ENV !== 'production') {
+          style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
         }
-      },
 
-      // Effect: Inject style here
-      ([styleStr, styleId, effectStyle]) => {
-        if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
-          const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
-            mark: ATTR_MARK,
-            prepend: enableLayer ? false : 'queue',
-            attachTo: container,
-            priority: order,
-          };
-
-          const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-
-          if (nonceStr) {
-            mergedCSSConfig.csp = { nonce: nonceStr };
-          }
-
-          // ================= Split Effect Style =================
-          // We will split effectStyle here since @layer should be at the top level
-          const effectLayerKeys: string[] = [];
-          const effectRestKeys: string[] = [];
-
-          Object.keys(effectStyle).forEach((key) => {
-            if (key.startsWith('@layer')) {
-              effectLayerKeys.push(key);
-            } else {
-              effectRestKeys.push(key);
-            }
-          });
-
-          // ================= Inject Layer Style =================
-          // Inject layer style
-          effectLayerKeys.forEach((effectKey) => {
-            updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
-              `_layer-${effectKey}`,
-              { ...mergedCSSConfig, prepend: true },
-            );
-          });
-
-          // ==================== Inject Style ====================
-          // Inject style
-          const style = updateCSS(styleStr, styleId, mergedCSSConfig);
-
-          (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
-
-          // Debug usage. Dev only
-          if (process.env.NODE_ENV !== 'production') {
-            style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
-          }
-
-          // ================ Inject Effect Style =================
-          // Inject client side effect style
-          effectRestKeys.forEach((effectKey) => {
-            updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
-              `_effect-${effectKey}`,
-              mergedCSSConfig,
-            );
-          });
-        }
-      },
-    );
+        // ================ Inject Effect Style =================
+        // Inject client side effect style
+        effectRestKeys.forEach((effectKey) => {
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey]),
+            `_effect-${effectKey}`,
+            mergedCSSConfig,
+          );
+        });
+      }
+    },
+  );
 }
 
 export const extract: ExtractStyle<StyleCacheValue> = (

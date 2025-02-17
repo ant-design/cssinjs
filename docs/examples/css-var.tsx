@@ -1,7 +1,17 @@
 import React from 'react';
 import './basic.less';
 import Button from './components/Button';
-import { DesignTokenContext } from './components/theme';
+import { DesignTokenProvider } from './components/theme';
+
+const Demo = () => (
+  <>
+    <Button>Default</Button>
+    <Button type="primary">Primary</Button>
+    <Button type="ghost">Ghost</Button>
+
+    <Button className="btn-override">Override By ClassName</Button>
+  </>
+);
 
 export default function App() {
   const [show, setShow] = React.useState(true);
@@ -22,29 +32,24 @@ export default function App() {
 
       {show && (
         <div>
-          <DesignTokenContext.Provider
-            value={{ cssVar: { key: 'default' }, hashed: false }}
-          >
-            <Button>Default</Button>
-            <Button type="primary">Primary</Button>
-            <Button type="ghost">Ghost</Button>
-
-            <Button className="btn-override">Override By ClassName</Button>
-          </DesignTokenContext.Provider>
+          <Demo />
           <br />
-          <DesignTokenContext.Provider
+          <DesignTokenProvider
             value={{
               token: { primaryColor: 'green' },
-              cssVar: { key: 'default2' },
-              hashed: false,
             }}
           >
-            <Button>Default</Button>
-            <Button type="primary">Primary</Button>
-            <Button type="ghost">Ghost</Button>
-
-            <Button className="btn-override">Override By ClassName</Button>
-          </DesignTokenContext.Provider>
+            <Demo />
+          </DesignTokenProvider>
+          <br />
+          <DesignTokenProvider
+            value={{
+              token: { primaryColor: 'orange' },
+              hashed: true,
+            }}
+          >
+            <Demo />
+          </DesignTokenProvider>
         </div>
       )}
     </div>
