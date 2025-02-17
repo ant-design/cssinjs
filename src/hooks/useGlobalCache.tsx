@@ -62,9 +62,6 @@ export default function useGlobalCache<CacheType>(
 
   // Remove if no need anymore
   useInsertionEffect(() => {
-    // It's bad to call build again in effect.
-    // But we have to do this since StrictMode will call effect twice
-    // which will clear cache on the first time.
     buildCache(([times, cache]) => [times + 1, cache]);
     onCacheEffect?.(cacheContent);
 
@@ -74,15 +71,6 @@ export default function useGlobalCache<CacheType>(
         const nextCount = times - 1;
 
         if (nextCount === 0) {
-          // // Always remove styles in useEffect callback
-          // register(() => {
-          //   // With polyfill, registered callback will always be called synchronously
-          //   // But without polyfill, it will be called in effect clean up,
-          //   // And by that time this cache is cleaned up.
-          //   if (!globalCache.opGet(fullPathStr)) {
-          //     onCacheRemove?.(cache, false);
-          //   }
-          // });
           onCacheRemove?.(cache, false);
           return null;
         }
