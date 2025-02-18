@@ -55,9 +55,11 @@ describe('csssinjs', () => {
   }
 
   const Box = ({ propToken = baseToken }: BoxProps) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [propToken], { cssVar: {
-      key: 'css-var-test',
-      }});
+    const [token] = useCacheToken<DerivativeToken>(theme, [propToken], {
+      cssVar: {
+        key: 'css-var-test',
+      },
+    });
 
     useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
@@ -170,7 +172,9 @@ describe('csssinjs', () => {
     });
 
     const Nest = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
 
       useStyleRegister({ theme, token, path: ['.parent'] }, () => [
         genNestStyle(token),
@@ -194,13 +198,17 @@ describe('csssinjs', () => {
 
   it('serialize nest object token', () => {
     const TokenShower = (): any => {
-      const [,,token] = useCacheToken(theme, [
-        {
-          nest: {
-            nothing: 1,
+      const [, , token] = useCacheToken(
+        theme,
+        [
+          {
+            nest: {
+              nothing: 1,
+            },
           },
-        },
-      ], { cssVar: {key: 'css-var-test'}});
+        ],
+        { cssVar: { key: 'css-var-test' } },
+      );
 
       return (token as any)._tokenKey;
     };
@@ -208,7 +216,7 @@ describe('csssinjs', () => {
     const { container } = render(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(container.textContent).toEqual('8o31vm');
+    expect(container.textContent).toMatchSnapshot();
   });
 
   it('hash', () => {
@@ -221,7 +229,7 @@ describe('csssinjs', () => {
     const Holder = () => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
-        cssVar: {key: 'css-var-test'},
+        cssVar: { key: 'css-var-test' },
       });
 
       useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
@@ -236,15 +244,9 @@ describe('csssinjs', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
     const style = styles[0];
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-1c7qaqv).a',
-    );
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-1c7qaqv).b',
-    );
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-1c7qaqv).c .d',
-    );
+    expect(style.innerHTML).toMatchSnapshot();
+    expect(style.innerHTML).toMatchSnapshot();
+    expect(style.innerHTML).toMatchSnapshot();
 
     unmount();
   });
@@ -270,7 +272,7 @@ describe('csssinjs', () => {
       override: object;
     }) => {
       const [token] = useCacheToken<MyDerivativeToken>(theme, [baseToken], {
-        cssVar: {key: 'css-var-test'},
+        cssVar: { key: 'css-var-test' },
         override,
         formatToken: (origin: DerivativeToken) => ({
           ...origin,
@@ -301,8 +303,12 @@ describe('csssinjs', () => {
       const styles = Array.from(document.head.querySelectorAll('style'));
       expect(styles).toHaveLength(2);
 
-      expect(styles[0].innerHTML).toEqual('.css-var-test{--primary-color:#010203;--primary-color-disabled:#1890ff;--color:#010203;}')
-      expect(styles[1].innerHTML).toContain('.box{width:93px;line-height:1;background-color:var(--primary-color);color:var(--color);}')
+      expect(styles[0].innerHTML).toEqual(
+        '.css-var-test{--primary-color:#010203;--primary-color-disabled:#1890ff;--color:#010203;}',
+      );
+      expect(styles[1].innerHTML).toContain(
+        '.box{width:93px;line-height:1;background-color:var(--primary-color);color:var(--color);}',
+      );
 
       unmount();
     });
@@ -321,7 +327,7 @@ describe('csssinjs', () => {
         [{ primaryColor: colorPrimary }],
         {
           salt: 'test',
-          cssVar: {key: 'css-var-test'},
+          cssVar: { key: 'css-var-test' },
         },
       );
 
@@ -382,7 +388,7 @@ describe('csssinjs', () => {
         [{ primaryColor: colorPrimary }],
         {
           salt: 'test',
-          cssVar: {key: 'css-var-test'},
+          cssVar: { key: 'css-var-test' },
         },
       );
       hash = hashId;
@@ -409,7 +415,9 @@ describe('csssinjs', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(3);
 
-    expect(styles[1].innerHTML).toBe('a{color:var(--primary-color);}div{color:blue;}');
+    expect(styles[1].innerHTML).toBe(
+      'a{color:var(--primary-color);}div{color:blue;}',
+    );
     expect(styles[2].innerHTML).toBe(
       `:where(.${hash}) a{color:var(--primary-color);}:where(.${hash}) div{color:blue;}`,
     );
@@ -471,7 +479,7 @@ describe('csssinjs', () => {
         [{ primaryColor: colorPrimary }],
         {
           salt: 'test',
-          cssVar: {key: 'css-var-test'},
+          cssVar: { key: 'css-var-test' },
         },
       );
 
@@ -520,7 +528,7 @@ describe('csssinjs', () => {
     const Demo = () => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
-        cssVar: {key: 'css-var-test'},
+        cssVar: { key: 'css-var-test' },
       });
 
       useStyleRegister(
@@ -548,7 +556,7 @@ describe('csssinjs', () => {
     const Demo = () => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
-        cssVar: {key: 'css-var-test'},
+        cssVar: { key: 'css-var-test' },
       });
 
       useStyleRegister(
@@ -581,7 +589,7 @@ describe('csssinjs', () => {
         theme,
         [{ primaryColor: 'blue' }],
         {
-          cssVar: {key: 'css-var-test'},
+          cssVar: { key: 'css-var-test' },
           salt: 'test',
           override: {
             myToken,
@@ -670,7 +678,7 @@ describe('csssinjs', () => {
           [{ primaryColor: myToken }],
           {
             salt: 'test',
-            cssVar: {key: `css-var-${myToken}`},
+            cssVar: { key: `css-var-${myToken}` },
           },
         );
 
@@ -742,7 +750,7 @@ describe('csssinjs', () => {
           [{ primaryColor: myToken }],
           {
             salt: 'test',
-            cssVar: {key: 'css-var-test'},
+            cssVar: { key: 'css-var-test' },
           },
         );
 
@@ -800,7 +808,7 @@ describe('csssinjs', () => {
     const Holder = () => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
-        cssVar: {key: 'css-var-test'},
+        cssVar: { key: 'css-var-test' },
       });
 
       useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
@@ -819,5 +827,83 @@ describe('csssinjs', () => {
     expect(style.innerHTML).toMatchSnapshot();
 
     unmount();
+  });
+
+  it('hash only changes if salt or cssVar prefix changes', () => {
+    const genHashStyle = (token: any): CSSInterpolation => ({
+      '.box': {
+        color: token.colorPrimary,
+      },
+    });
+
+    const Demo = ({
+      salt,
+      prefix = 'rc-test',
+      token: customToken = { colorPrimary: 'red' },
+    }: {
+      salt: string;
+      prefix?: string;
+      token?: any;
+    }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [customToken],
+        {
+          salt,
+          cssVar: {
+            key: 'css-var-test',
+            prefix,
+            hashed: true,
+          },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['test-hash-change'] },
+        () => [genHashStyle(token)],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    const { rerender } = render(<Demo salt="test" />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(2);
+    expect(styles[0].innerHTML).toMatchSnapshot();
+
+    const style = styles[1].innerHTML;
+    expect(style).toContain('.box{color:var(--rc-test-color-primary);}');
+
+    rerender(<Demo salt="test" />);
+    const styles2 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles2).toHaveLength(2);
+    expect(styles2[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles2[1].innerHTML).toEqual(style);
+
+    // token 不影响样式
+    rerender(<Demo salt="test" token={{ colorPrimary: 'blue' }} />);
+    const styles4 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles4).toHaveLength(2);
+    expect(styles4[0].innerHTML).toMatchSnapshot();
+    expect(styles4[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles4[1].innerHTML).toEqual(style);
+
+    rerender(<Demo salt="test2" />);
+    const styles3 = Array.from(document.head.querySelectorAll('style'));
+    // 这里生成了新的组件样式，但是 css 变量没变，所以多了一个
+    expect(styles3).toHaveLength(3);
+    expect(styles3[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[1].innerHTML).toEqual(style);
+    expect(styles3[2].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[2].innerHTML).not.toEqual(style);
   });
 });

@@ -1,9 +1,8 @@
 import * as React from 'react';
+import { useInsertionEffect } from 'react';
 import { pathKey, type KeyType } from '../Cache';
 import StyleContext from '../StyleContext';
-import useEffectCleanupRegister from './useEffectCleanupRegister';
 import useHMR from './useHMR';
-import { useInsertionEffect } from 'react';
 
 export type ExtractStyle<CacheValue> = (
   cache: CacheValue,
@@ -24,8 +23,6 @@ export default function useGlobalCache<CacheType>(
   const { cache: globalCache } = React.useContext(StyleContext);
   const fullPath = [prefix, ...keyPath];
   const fullPathStr = pathKey(fullPath);
-
-  const register = useEffectCleanupRegister([fullPathStr]);
 
   const HMRUpdate = useHMR();
 
@@ -51,16 +48,6 @@ export default function useGlobalCache<CacheType>(
     });
   };
 
-  // Create cache
-  React.useMemo(
-    () => {
-      buildCache();
-    },
-    /* eslint-disable react-hooks/exhaustive-deps */
-    [fullPathStr],
-    /* eslint-enable */
-  );
-
   let cacheEntity = globalCache.opGet(fullPathStr);
 
   // HMR clean the cache but not trigger `useMemo` again
@@ -74,38 +61,24 @@ export default function useGlobalCache<CacheType>(
   const cacheContent = cacheEntity![1];
 
   // Remove if no need anymore
-  useInsertionEffect(
-    () => {
-      onCacheEffect?.(cacheContent);
-      // It's bad to call build again in effect.
-      // But we have to do this since StrictMode will call effect twice
-      // which will clear cache on the first time.
-      buildCache(([times, cache]) => [times + 1, cache]);
+  useInsertionEffect(() => {
+    buildCache(([times, cache]) => [times + 1, cache]);
+    onCacheEffect?.(cacheContent);
 
-      return () => {
-        globalCache.opUpdate(fullPathStr, (prevCache) => {
-          const [times = 0, cache] = prevCache || [];
-          const nextCount = times - 1;
+    return () => {
+      globalCache.opUpdate(fullPathStr, (prevCache) => {
+        const [times = 0, cache] = prevCache || [];
+        const nextCount = times - 1;
 
-          if (nextCount === 0) {
-            // Always remove styles in useEffect callback
-            register(() => {
-              // With polyfill, registered callback will always be called synchronously
-              // But without polyfill, it will be called in effect clean up,
-              // And by that time this cache is cleaned up.
-              if (!globalCache.opGet(fullPathStr)) {
-                onCacheRemove?.(cache, false);
-              }
-            });
-            return null;
-          }
+        if (nextCount === 0) {
+          onCacheRemove?.(cache, false);
+          return null;
+        }
 
-          return [times - 1, cache];
-        });
-      };
-    },
-    [fullPathStr],
-  );
+        return [times - 1, cache];
+      });
+    };
+  }, [fullPathStr]);
 
   return cacheContent;
 }

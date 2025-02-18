@@ -12,7 +12,7 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
+import { ATTR_MARK } from '../src/StyleContext';
 import * as cacheMapUtil from '../src/util/cacheMapUtil';
 import { reset } from '../src/util/cacheMapUtil';
 
@@ -70,11 +70,11 @@ describe('SSR', () => {
   });
 
   const Box = ({ children }: { children?: React.ReactNode }) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      cssVar: { key: 'css-var-test' },
+    });
 
-    useStyleRegister({ theme, token, path: ['.box'] }, () => [
-      genStyle(token),
-    ]);
+    useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
     return <div className="box">{children}</div>;
   };
@@ -105,15 +105,9 @@ describe('SSR', () => {
     const style = extractStyle(cache);
     const plainStyle = extractStyle(cache, true);
 
-    expect(html).toEqual(
-      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":R2:" class="id">:R2:</div></div><div id=":R3:" class="id">:R3:</div>',
-    );
-    expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1n24fpp">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="1bbkdf1">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}</style>',
-    );
-    expect(plainStyle).toEqual(
-      '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}.box{background-color:var(--primary-color);}.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}',
-    );
+    expect(html).toMatchSnapshot();
+    expect(style).toMatchSnapshot();
+    expect(plainStyle).toMatchSnapshot();
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
     // >>> Server Render
@@ -176,7 +170,9 @@ describe('SSR', () => {
 
   it('not extract clientOnly style', () => {
     const Client = ({ children }: { children?: React.ReactNode }) => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
 
       useStyleRegister(
         { theme, token, path: ['.client'], clientOnly: true },
@@ -212,7 +208,7 @@ describe('SSR', () => {
         [baseToken],
         {
           salt: 'hashPriority',
-          cssVar: {key: 'css-var-test'}
+          cssVar: { key: 'css-var-test' },
         },
       );
 
@@ -233,9 +229,7 @@ describe('SSR', () => {
     );
 
     const style = extractStyle(cache);
-    expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1k2x1i2">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="2zjb3q">.css-dev-only-do-not-override-1v5hawo.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.hashPriority:2zjb3q";}</style>',
-    );
+    expect(style).toMatchSnapshot();
   });
 
   it('!ssrInline', () => {
@@ -269,9 +263,7 @@ describe('SSR', () => {
       const style = extractStyle(cache);
 
       expect(html).toEqual('<div class="box"></div>');
-      expect(style).toEqual(
-        '<style data-rc-order="prependQueue" data-rc-priority="-999" data-token-hash="css-var-test" data-css-hash="1n24fpp">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order="prependQueue" data-rc-priority="0" data-css-hash="1bbkdf1">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"|.box:1bbkdf1";}</style>',
-      );
+      expect(style).toMatchSnapshot();
     });
   });
 
@@ -310,16 +302,15 @@ describe('SSR', () => {
   it('ssr keep order', () => {
     const createComponent = (name: string, order?: number) => {
       const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
-        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+          cssVar: { key: 'css-var-test' },
+        });
 
-        useStyleRegister(
-          { theme, token, path: [name], order },
-          () => ({
-            [`.${name}`]: {
-              backgroundColor: token.primaryColor,
-            },
-          }),
-        );
+        useStyleRegister({ theme, token, path: [name], order }, () => ({
+          [`.${name}`]: {
+            backgroundColor: token.primaryColor,
+          },
+        }));
 
         return <div className={name}>{children}</div>;
       };
@@ -352,14 +343,6 @@ describe('SSR', () => {
 
     // Pure style
     const pureStyle = extractStyle(cache, true);
-    expect(pureStyle).toEqual(
-      [
-        '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}',
-        `.order0{background-color:var(--primary-color);}`,
-        `.order1{background-color:var(--primary-color);}`,
-        `.order2{background-color:var(--primary-color);}`,
-        `.data-ant-cssinjs-cache-path{content:"|order1:1rqllqf;|order0:12ogt2g;|order2:1jmwgle";}`,
-      ].join(''),
-    );
+    expect(pureStyle).toMatchSnapshot();
   });
 });

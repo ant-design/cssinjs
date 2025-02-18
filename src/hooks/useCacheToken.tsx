@@ -56,6 +56,7 @@ export interface Option<DerivativeToken, DesignToken> {
    * Transform token to css variables.
    */
   cssVar: {
+    hashed?: boolean;
     /** Prefix for css variables */
     prefix?: string;
     /** Tokens that should not be appended with unit */
@@ -161,6 +162,7 @@ export default function useCacheToken<
   const {
     cache: { instanceId },
     container,
+    hashPriority,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -176,7 +178,7 @@ export default function useCacheToken<
   const tokenStr = flattenToken(mergedToken);
   const overrideTokenStr = flattenToken(override);
 
-  const cssVarStr = cssVar ? flattenToken(cssVar) : '';
+  const cssVarStr = flattenToken(cssVar);
 
   const cachedToken = useGlobalCache<TokenCacheValue<DerivativeToken>>(
     TOKEN_PREFIX,
@@ -185,9 +187,15 @@ export default function useCacheToken<
       const mergedDerivativeToken = compute
         ? compute(mergedToken, override, theme)
         : getComputedToken(mergedToken, override, theme, formatToken);
+      const actualToken = { ...mergedDerivativeToken };
+
+      // Optimize for `useStyleRegister` performance
+      const mergedSalt = `${salt}_${cssVar.prefix}`;
+      const hashId = hash(mergedSalt);
+      const hashCls = `${hashPrefix}-${hash(mergedSalt)}`;
+      actualToken._tokenKey = token2key(actualToken, mergedSalt);
 
       // Replace token value with css variables
-      const actualToken = { ...mergedDerivativeToken };
       const [tokenWithCssVar, cssVarsStr] = transformToken(
         mergedDerivativeToken,
         cssVar.key,
@@ -196,19 +204,14 @@ export default function useCacheToken<
           ignore: cssVar.ignore,
           unitless: cssVar.unitless,
           preserve: cssVar.preserve,
+          hashPriority,
+          hashCls: cssVar.hashed ? hashCls : undefined,
         },
       ) as [any, string];
+      tokenWithCssVar._hashId = hashId;
 
-      // Optimize for `useStyleRegister` performance
-      const mergedSalt = `${salt}_${cssVar.prefix || ''}`;
-      actualToken._tokenKey = token2key(actualToken, mergedSalt);
-
-      const themeKey = cssVar.key;
-      recordCleanToken(themeKey);
-
-      const hashId = `${hashPrefix}-${hash(mergedSalt)}`;
-
-      return [tokenWithCssVar, hashId, actualToken, cssVarsStr, cssVar.key];
+      recordCleanToken(hashId);
+      return [tokenWithCssVar, hashCls, actualToken, cssVarsStr, cssVar.key];
     },
     ([, , , , themeKey]) => {
       // Remove token will remove all related style
