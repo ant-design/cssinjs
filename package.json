@@ -38,6 +38,7 @@
     "pretty-quick": "pretty-quick",
     "test": "vitest --watch=false",
     "test:watch": "vitest",
+    "tsc": "tsc --noEmit",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {

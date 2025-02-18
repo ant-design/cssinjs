@@ -22,7 +22,6 @@ export interface DesignToken {
 
 export interface DerivativeToken extends DesignToken {
   primaryColorDisabled: string;
-  buttonPadding: string;
 }
 
 const defaultDesignToken: DesignToken = {

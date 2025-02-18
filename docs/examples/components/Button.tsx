@@ -10,10 +10,14 @@ import React from 'react';
 import type { DerivativeToken } from './theme';
 import { useToken } from './theme';
 
+interface ButtonToken extends DerivativeToken {
+  buttonPadding: string;
+}
+
 // 通用框架
 const genSharedButtonStyle = (
   prefixCls: string,
-  token: DerivativeToken,
+  token: ButtonToken,
 ): CSSInterpolation => ({
   [`.${prefixCls}`]: {
     borderColor: token.borderColor,
@@ -39,7 +43,7 @@ const genSharedButtonStyle = (
 // 实心底色样式
 const genSolidButtonStyle = (
   prefixCls: string,
-  token: DerivativeToken,
+  token: ButtonToken,
   postFn: () => CSSObject,
 ): CSSInterpolation => [
   genSharedButtonStyle(prefixCls, token),
@@ -53,7 +57,7 @@ const genSolidButtonStyle = (
 // 默认样式
 const genDefaultButtonStyle = (
   prefixCls: string,
-  token: DerivativeToken,
+  token: ButtonToken,
 ): CSSInterpolation =>
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.componentBackgroundColor,
@@ -68,7 +72,7 @@ const genDefaultButtonStyle = (
 // 主色样式
 const genPrimaryButtonStyle = (
   prefixCls: string,
-  token: DerivativeToken,
+  token: ButtonToken,
 ): CSSInterpolation =>
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.primaryColor,
@@ -83,7 +87,7 @@ const genPrimaryButtonStyle = (
 // 透明按钮
 const genGhostButtonStyle = (
   prefixCls: string,
-  token: DerivativeToken,
+  token: ButtonToken,
 ): CSSInterpolation => [
   genSharedButtonStyle(prefixCls, token),
   {
