@@ -828,4 +828,82 @@ describe('csssinjs', () => {
 
     unmount();
   });
+
+  it.only('hash only changes if salt or cssVar prefix changes', () => {
+    const genHashStyle = (token: any): CSSInterpolation => ({
+      '.box': {
+        color: token.colorPrimary,
+      },
+    });
+
+    const Demo = ({
+      salt,
+      prefix = 'rc-test',
+      token: customToken = { colorPrimary: 'red' },
+    }: {
+      salt: string;
+      prefix?: string;
+      token?: any;
+    }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [customToken],
+        {
+          salt,
+          cssVar: {
+            key: 'css-var-test',
+            prefix,
+            hashed: true,
+          },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['test-hash-change'] },
+        () => [genHashStyle(token)],
+      );
+
+      return <div className={classNames('box', hashId)} />;
+    };
+
+    const { rerender } = render(<Demo salt="test" />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(2);
+    expect(styles[0].innerHTML).toMatchSnapshot();
+
+    const style = styles[1].innerHTML;
+    expect(style).toContain('.box{color:var(--rc-test-color-primary);}');
+
+    rerender(<Demo salt="test" />);
+    const styles2 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles2).toHaveLength(2);
+    expect(styles2[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles2[1].innerHTML).toEqual(style);
+
+    // token 不影响样式
+    rerender(<Demo salt="test" token={{ colorPrimary: 'blue' }} />);
+    const styles4 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles4).toHaveLength(2);
+    expect(styles4[0].innerHTML).toMatchSnapshot();
+    expect(styles4[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles4[1].innerHTML).toEqual(style);
+
+    rerender(<Demo salt="test2" />);
+    const styles3 = Array.from(document.head.querySelectorAll('style'));
+    // 这里生成了新的组件样式，但是 css 变量没变，所以多了一个
+    expect(styles3).toHaveLength(3);
+    expect(styles3[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[1].innerHTML).toEqual(style);
+    expect(styles3[2].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[2].innerHTML).not.toEqual(style);
+  });
 });
