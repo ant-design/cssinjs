@@ -829,7 +829,7 @@ describe('csssinjs', () => {
     unmount();
   });
 
-  it.only('hash only changes if salt or cssVar prefix changes', () => {
+  it('hash only changes if salt or cssVar prefix changes', () => {
     const genHashStyle = (token: any): CSSInterpolation => ({
       '.box': {
         color: token.colorPrimary,
