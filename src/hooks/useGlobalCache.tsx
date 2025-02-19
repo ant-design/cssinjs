@@ -48,6 +48,16 @@ export default function useGlobalCache<CacheType>(
     });
   };
 
+  // Create cache
+  React.useMemo(
+    () => {
+      buildCache();
+    },
+    /* eslint-disable react-hooks/exhaustive-deps */
+    [fullPathStr],
+    /* eslint-enable */
+  );
+
   let cacheEntity = globalCache.opGet(fullPathStr);
 
   // HMR clean the cache but not trigger `useMemo` again
