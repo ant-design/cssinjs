@@ -210,7 +210,7 @@ export default function useCacheToken<
       ) as [any, string];
       tokenWithCssVar._hashId = hashId;
 
-      recordCleanToken(hashId);
+      recordCleanToken(cssVar.key);
       return [tokenWithCssVar, hashCls, actualToken, cssVarsStr, cssVar.key];
     },
     ([, , , , themeKey]) => {
