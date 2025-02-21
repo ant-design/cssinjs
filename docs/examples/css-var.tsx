@@ -15,8 +15,8 @@ const Demo = () => (
 
 export default function App() {
   const [show, setShow] = React.useState(true);
-
   const [, forceUpdate] = React.useState({});
+  const [color, setColor] = React.useState('royalblue');
   React.useEffect(() => {
     forceUpdate({});
   }, []);
@@ -30,13 +30,15 @@ export default function App() {
         Show Components
       </label>
 
+      <button onClick={() => { setColor((prev) => prev === 'royalblue' ? 'mediumslateblue' : 'royalblue')}}>Change theme</button>
+
       {show && (
         <div>
           <Demo />
           <br />
           <DesignTokenProvider
             value={{
-              token: { primaryColor: 'green' },
+              token: { primaryColor: color },
             }}
           >
             <Demo />

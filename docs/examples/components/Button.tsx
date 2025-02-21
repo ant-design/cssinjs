@@ -12,6 +12,7 @@ import { useToken } from './theme';
 
 interface ButtonToken extends DerivativeToken {
   buttonPadding: string;
+  buttonBorderBottomWidth: string;
 }
 
 // 通用框架
@@ -62,6 +63,7 @@ const genDefaultButtonStyle = (
   genSolidButtonStyle(prefixCls, token, () => ({
     backgroundColor: token.componentBackgroundColor,
     color: token.textColor,
+    borderWidth: token.buttonBorderBottomWidth,
 
     '&:hover': {
       borderColor: token.primaryColor,
@@ -137,6 +139,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
     },
     () => ({
       buttonPadding: '4px 8px',
+      buttonBorderBottomWidth: `calc(${token.borderWidth} * 2)`,
     }),
   );
 
