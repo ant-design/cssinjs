@@ -12,6 +12,8 @@ export type ExtractStyle<CacheValue> = (
   },
 ) => [order: number, styleId: string, style: string] | null;
 
+const effectMap = new Map<string, boolean>();
+
 export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
@@ -73,7 +75,15 @@ export default function useGlobalCache<CacheType>(
   // Remove if no need anymore
   useInsertionEffect(() => {
     buildCache(([times, cache]) => [times + 1, cache]);
-    onCacheEffect?.(cacheContent);
+    if (!effectMap.has(fullPathStr)) {
+      onCacheEffect?.(cacheContent);
+      effectMap.set(fullPathStr, true);
+
+      // 微任务清理混存，可以认为是单次 batch render 中只触发一次 effect
+      Promise.resolve().then(() => {
+        effectMap.delete(fullPathStr);
+      });
+    }
 
     return () => {
       globalCache.opUpdate(fullPathStr, (prevCache) => {
@@ -82,6 +92,7 @@ export default function useGlobalCache<CacheType>(
 
         if (nextCount === 0) {
           onCacheRemove?.(cache, false);
+          effectMap.delete(fullPathStr);
           return null;
         }
 
