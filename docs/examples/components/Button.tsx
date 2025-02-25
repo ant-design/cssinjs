@@ -1,6 +1,7 @@
-import {
+import type {
   CSSInterpolation,
-  CSSObject,
+  CSSObject} from '@ant-design/cssinjs';
+import {
   unit,
   useCSSVarRegister,
   useStyleRegister,
