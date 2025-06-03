@@ -9,7 +9,7 @@ import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
 import { contentQuotesLinter, hashedAnimationLinter } from '../linters';
-import type { HashPriority } from '../StyleContext';
+import type { HashPriority, LayerComposer } from '../StyleContext';
 import StyleContext, {
   ATTR_CACHE_PATH,
   ATTR_MARK,
@@ -128,7 +128,9 @@ function injectSelectorHash(
 export interface ParseConfig {
   hashId?: string;
   hashPriority?: HashPriority;
-  layer?: LayerConfig;
+  layer?: LayerConfig & {
+    composer?: LayerComposer;
+  };
   path?: string;
   transformers?: Transformer[];
   linters?: Linter[];
@@ -333,15 +335,17 @@ export const parseStyle = (
   if (!root) {
     styleStr = `{${styleStr}}`;
   } else if (layer) {
+    const { name, dependencies, composer } = layer;
     // fixme: https://github.com/thysultan/stylis/pull/339
     if (styleStr) {
-      styleStr = `@layer ${layer.name} {${styleStr}}`;
+      styleStr = `@layer ${name} {${styleStr}}`;
     }
 
-    if (layer.dependencies) {
-      effectStyle[`@layer ${layer.name}`] = layer.dependencies
-        .map((deps) => `@layer ${deps}, ${layer.name};`)
-        .join('\n');
+    if (dependencies) {
+      const dependency = new Set([...dependencies, name]);
+      const combinedDependencies =
+        composer?.(dependency) ?? Array.from(dependency).join(', ');
+      effectStyle[`@layer ${name}`] = `@layer ${combinedDependencies};`;
     }
   }
 
@@ -402,9 +406,10 @@ export default function useStyleRegister(
     transformers,
     linters,
     cache,
-    layer: enableLayer,
+    layer: ctxLayer,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
+  const enableLayer = 'composer' in (ctxLayer || {});
 
   const fullPath = [tokenKey];
   if (enableLayer) {
@@ -446,7 +451,12 @@ export default function useStyleRegister(
         const [parsedStyle, effectStyle] = parseStyle(styleObj, {
           hashId,
           hashPriority,
-          layer: enableLayer ? layer : undefined,
+          layer: enableLayer
+            ? {
+                ...layer!,
+                composer: ctxLayer!.composer,
+              }
+            : undefined,
           path: path.join('-'),
           transformers,
           linters,

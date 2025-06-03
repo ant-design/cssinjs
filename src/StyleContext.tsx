@@ -52,7 +52,13 @@ export function createCache() {
 
 export type HashPriority = 'low' | 'high';
 
-export interface StyleContextProps {
+export type LayerComposer = (dependency: ReadonlySet<string>) => string;
+export type LayerConfig = {
+  /** Define the hierarchical order here */
+  composer: LayerComposer;
+};
+
+export interface StyleContextValue {
   autoClear?: boolean;
   /** @private Test only. Not work in production. */
   mock?: 'server' | 'client';
@@ -77,37 +83,62 @@ export interface StyleContextProps {
    * Please note that `linters` do not support dynamic update.
    */
   linters?: Linter[];
-  /** Wrap css in a layer to avoid global style conflict */
-  layer?: boolean;
+  /**
+   * Wrap css in a layer to avoid global style conflict
+   * @see [MDN-CSS Layer](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer)
+   */
+  layer?: LayerConfig;
 }
 
-const StyleContext = React.createContext<StyleContextProps>({
+export const defaultLayerComposer: LayerComposer = (dependency) =>
+  Array.from(dependency).join();
+
+const noop = () => ``;
+
+const StyleContext = React.createContext<StyleContextValue>({
   hashPriority: 'low',
   cache: createCache(),
   defaultCache: true,
 });
 
-export type StyleProviderProps = Partial<StyleContextProps> & {
-  children?: React.ReactNode;
-};
+export interface StyleProviderProps
+  extends Omit<Partial<StyleContextValue>, 'layer'> {
+  layer?: boolean | LayerConfig;
+}
 
-export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
+export const StyleProvider = (
+  props: React.PropsWithChildren<StyleProviderProps>,
+) => {
   const { children, ...restProps } = props;
 
   const parentContext = React.useContext(StyleContext);
 
-  const context = useMemo<StyleContextProps>(
+  const context = useMemo<StyleContextValue>(
     () => {
-      const mergedContext: StyleContextProps = {
+      const mergedContext: StyleContextValue = {
         ...parentContext,
       };
 
-      (Object.keys(restProps) as (keyof StyleContextProps)[]).forEach((key) => {
+      (Object.keys(restProps) as (keyof StyleContextValue)[]).forEach((key) => {
         const value = restProps[key];
         if (restProps[key] !== undefined) {
           (mergedContext as any)[key] = value;
         }
       });
+
+      // Standardize layer
+      const { layer } = mergedContext;
+      if (typeof layer === 'boolean') {
+        mergedContext.layer = layer
+          ? { composer: defaultLayerComposer }
+          : { composer: noop };
+      } else if (typeof layer === 'object') {
+        mergedContext.layer = {
+          ...layer,
+          // Ensure composer is always a function
+          composer: layer.composer ?? defaultLayerComposer,
+        };
+      }
 
       const { cache } = restProps;
       mergedContext.cache = mergedContext.cache || createCache();
