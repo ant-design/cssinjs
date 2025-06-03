@@ -96,4 +96,45 @@ describe('layer', () => {
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles[0].innerHTML.trim()).toEqual('');
   });
+
+  // https://github.com/ant-design/pro-components/issues/8955
+  it('custom layer composer', () => {
+    const theme = createTheme(() => ({}));
+    const Demo = () => {
+      useStyleRegister(
+        {
+          theme,
+          token: { _tokenKey: 'test' },
+          path: ['shared'],
+          layer: {
+            name: 'pro',
+            dependencies: ['basic'],
+          },
+        },
+        () => ({
+          p: {
+            color: 'red',
+          },
+        }),
+      );
+      return null;
+    };
+
+    render(
+      <StyleProvider
+        layer={{
+          composer: (deps) =>
+            ['tw-base', ...Array.from(deps), 'tw-utils'].join(', '),
+        }}
+        cache={createCache()}
+      >
+        <Demo />
+      </StyleProvider>,
+    );
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles[0].innerHTML.trim()).toEqual(
+      '@layer tw-base,basic,pro,tw-utils;',
+    );
+  });
 });
