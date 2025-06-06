@@ -8,6 +8,9 @@ export function pathKey(keys: KeyType[]) {
   return keys.join(SPLIT);
 }
 
+/** Record update id for extract static style order. */
+let updateId = 0;
+
 class Entity {
   instanceId: string;
   constructor(instanceId: string) {
@@ -16,6 +19,9 @@ class Entity {
 
   /** @private Internal cache map. Do not access this directly */
   cache = new Map<string, ValueType>();
+
+  /** @private Record update times for each key */
+  updateTimes = new Map<string, number>();
 
   get(keys: KeyType[]): ValueType | null {
     return this.opGet(pathKey(keys));
@@ -43,8 +49,11 @@ class Entity {
 
     if (nextValue === null) {
       this.cache.delete(keyPathStr);
+      this.updateTimes.delete(keyPathStr);
     } else {
       this.cache.set(keyPathStr, nextValue);
+      this.updateTimes.set(keyPathStr, updateId);
+      updateId += 1;
     }
   }
 }

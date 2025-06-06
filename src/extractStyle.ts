@@ -59,7 +59,7 @@ export default function extractStyle(
   let styleText = '';
 
   styleKeys
-    .map<[number, string] | null>((key) => {
+    .map<[order: number, style: string, updateTime: number] | null>((key) => {
       const cachePath = key.replace(matchPrefixRegexp, '').replace(/%/g, '|');
       const [prefix] = key.split('%');
       const extractFn = ExtractStyleFns[prefix as keyof typeof ExtractStyleFns];
@@ -69,14 +69,20 @@ export default function extractStyle(
       if (!extractedStyle) {
         return null;
       }
+      const updateTime = cache.updateTimes.get(key) || 0;
       const [order, styleId, styleStr] = extractedStyle;
       if (key.startsWith('style')) {
         cachePathMap[cachePath] = styleId;
       }
-      return [order, styleStr];
+      return [order, styleStr, updateTime];
     })
     .filter(isNotNull)
-    .sort(([o1], [o2]) => o1 - o2)
+    .sort(([o1, , u1], [o2, , u2]) => {
+      if (o1 !== o2) {
+        return o1 - o2;
+      }
+      return u1 - u2;
+    })
     .forEach(([, style]) => {
       styleText += style;
     });
