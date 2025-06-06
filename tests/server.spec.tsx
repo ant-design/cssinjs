@@ -345,4 +345,74 @@ describe('SSR', () => {
     const pureStyle = extractStyle(cache, true);
     expect(pureStyle).toMatchSnapshot();
   });
+
+  it('extract with order', () => {
+    // Create 3 components without specified order: A, C, B
+    const A = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['a'] }, () => ({
+        '.a': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="a" />;
+    };
+    const C = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['c'] }, () => ({
+        '.c': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="c" />;
+    };
+    const B = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['b'] }, () => ({
+        '.b': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="b" />;
+    };
+
+    function testOrder(
+      node1: React.ReactElement,
+      node2: React.ReactElement,
+      node3: React.ReactElement,
+      componentMarks: string[],
+    ) {
+      const cache = createCache();
+
+      renderToString(
+        <StyleProvider cache={cache}>
+          {node1}
+          {node2}
+          {node3}
+        </StyleProvider>,
+      );
+
+      const plainStyle = extractStyle(cache, true);
+      const index1 = plainStyle.indexOf(`.${componentMarks[0]}{`);
+      const index2 = plainStyle.indexOf(`.${componentMarks[1]}{`);
+      const index3 = plainStyle.indexOf(`.${componentMarks[2]}{`);
+
+      expect(index1).toBeGreaterThanOrEqual(0);
+      expect(index2).toBeGreaterThan(index1);
+      expect(index3).toBeGreaterThan(index2);
+    }
+
+    // A B C
+    testOrder(<A />, <B />, <C />, ['a', 'b', 'c']);
+    // A C B
+    testOrder(<A />, <C />, <B />, ['a', 'c', 'b']);
+    // B A C
+    testOrder(<B />, <A />, <C />, ['b', 'a', 'c']);
+    // B C A
+    testOrder(<B />, <C />, <A />, ['b', 'c', 'a']);
+    // C A B
+    testOrder(<C />, <A />, <B />, ['c', 'a', 'b']);
+    // C B A
+    testOrder(<C />, <B />, <A />, ['c', 'b', 'a']);
+  });
 });
