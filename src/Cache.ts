@@ -23,6 +23,8 @@ class Entity {
   /** @private Record update times for each key */
   updateTimes = new Map<string, number>();
 
+  extracted: Set<string> = new Set();
+
   get(keys: KeyType[]): ValueType | null {
     return this.opGet(pathKey(keys));
   }
