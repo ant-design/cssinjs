@@ -165,5 +165,15 @@ describe('util', () => {
         '.hashed.btn-variant-outline,.hashed.btn-variant-dashed{color:red;}',
       );
     });
+
+    it('should add vendor prefixes when prefixer is true', () => {
+      const css = '.test{user-select:none;display:flex;}';
+      const normalized = normalizeStyle(css, { prefixer: true });
+
+      expect(normalized).toContain('-webkit-user-select:none;');
+      expect(normalized).toContain('display:-webkit-box;');
+      expect(normalized).toContain('display:-webkit-flex;');
+      expect(normalized).toContain('display:flex;');
+    });
   });
 });

@@ -4,7 +4,8 @@ import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
-import { compile, serialize, stringify } from 'stylis';
+import type { Middleware } from 'stylis';
+import { compile, middleware, prefixer, serialize, stringify } from 'stylis';
 import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
@@ -81,8 +82,20 @@ export interface CSSObject
 // ==                                 Parser                                 ==
 // ============================================================================
 // Preprocessor style content to browser support one
-export function normalizeStyle(styleStr: string) {
-  const serialized = serialize(compile(styleStr), stringify);
+export function normalizeStyle(
+  styleStr: string,
+  opt: {
+    prefixer?: boolean;
+  } = {},
+) {
+  const serialized = serialize(
+    compile(styleStr),
+    middleware(
+      [opt.prefixer && prefixer]
+        .filter(Boolean)
+        .concat(stringify) as Middleware[],
+    ),
+  );
   return serialized.replace(/\{%%%\:[^;];}/g, ';');
 }
 
@@ -403,6 +416,7 @@ export default function useStyleRegister(
     linters,
     cache,
     layer: enableLayer,
+    compatibility,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -452,7 +466,7 @@ export default function useStyleRegister(
           linters,
         });
 
-        const styleStr = normalizeStyle(parsedStyle);
+        const styleStr = normalizeStyle(parsedStyle, compatibility);
         const styleId = uniqueHash(fullPath, styleStr);
 
         return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];

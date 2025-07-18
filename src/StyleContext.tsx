@@ -79,6 +79,11 @@ export interface StyleContextProps {
   linters?: Linter[];
   /** Wrap css in a layer to avoid global style conflict */
   layer?: boolean;
+  /** Enable CSS compatibility processing (e.g. autoprefixer) */
+  compatibility?: {
+    /** Enable vendor prefixing for CSS properties. */
+    prefixer?: boolean;
+  };
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
@@ -110,6 +115,7 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
       });
 
       const { cache } = restProps;
+      mergedContext.compatibility ??= {};
       mergedContext.cache = mergedContext.cache || createCache();
       mergedContext.defaultCache = !cache && parentContext.defaultCache;
 
