@@ -1,3 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`transform > autoPrefix > should add vendor prefixes when autoPrefix transformer is used 1`] = `".box{-webkit-transform:translateX(10px);-moz-transform:translateX(10px);-ms-transform:translateX(10px);transform:translateX(10px);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;}"`;
+
 exports[`transform > legacyLogicalProperties > split with calc() and var() 1`] = `".box{margin-top:calc(var(--a) + var(--b));margin-bottom:calc(2px + var(--c));margin-left:calc(2px + 1px);margin-right:3px;}.antd-issue-47652{padding-left:calc(8px - var(--c));padding-right:calc(8px - var(--c));}.antd-issue-47707{padding-left:calc(50% - calc(var(--c) / 2) - var(-c));padding-right:calc(50% - calc(var(--c) / 2) - var(-c));}"`;

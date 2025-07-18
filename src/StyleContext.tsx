@@ -3,6 +3,7 @@ import isEqual from 'rc-util/lib/isEqual';
 import * as React from 'react';
 import CacheEntity from './Cache';
 import type { Linter } from './linters/interface';
+import { AUTO_PREFIX } from './transformers/autoPrefix';
 import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
@@ -79,8 +80,10 @@ export interface StyleContextProps {
   linters?: Linter[];
   /** Wrap css in a layer to avoid global style conflict */
   layer?: boolean;
-  /** Enable CSS compatibility processing (e.g. autoprefixer) */
-  compatibility?: {
+  /**
+   * @private Do not use in production.
+   */
+  internal_compatibility?: {
     /** Enable vendor prefixing for CSS properties. */
     prefixer?: boolean;
   };
@@ -92,9 +95,13 @@ const StyleContext = React.createContext<StyleContextProps>({
   defaultCache: true,
 });
 
-export type StyleProviderProps = Partial<StyleContextProps> & {
-  children?: React.ReactNode;
+type OmitInternal<T> = {
+  [K in keyof T as K extends `internal_${string}` ? never : K]: T[K];
 };
+
+export type StyleProviderProps = React.PropsWithChildren<
+  OmitInternal<Partial<StyleContextProps>>
+>;
 
 export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
   const { children, ...restProps } = props;
@@ -107,15 +114,30 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
         ...parentContext,
       };
 
-      (Object.keys(restProps) as (keyof StyleContextProps)[]).forEach((key) => {
+      (
+        Object.keys(restProps) as (keyof Omit<StyleProviderProps, 'children'>)[]
+      ).forEach((key) => {
         const value = restProps[key];
         if (restProps[key] !== undefined) {
           (mergedContext as any)[key] = value;
         }
       });
 
-      const { cache } = restProps;
-      mergedContext.compatibility ??= {};
+      const { cache, transformers } = restProps;
+
+      // ===== autoprefixer =====
+      mergedContext.internal_compatibility ??= {};
+
+      if (Array.isArray(transformers)) {
+        mergedContext.internal_compatibility.prefixer =
+          transformers.includes(AUTO_PREFIX);
+
+        // Remove AUTO_PREFIX from transformers to avoid double processing
+        mergedContext.transformers = transformers.filter(
+          (transformer) => transformer !== AUTO_PREFIX,
+        );
+      }
+
       mergedContext.cache = mergedContext.cache || createCache();
       mergedContext.defaultCache = !cache && parentContext.defaultCache;
 

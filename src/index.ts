@@ -18,6 +18,8 @@ import { createTheme, genCalc, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
+import autoPrefixTransformer from './transformers/autoPrefix';
+
 import { supportLogicProps, supportWhere, unit } from './util';
 import { token2CSSVar } from './util/css-variables';
 
@@ -37,6 +39,7 @@ export {
   // Transformer
   legacyLogicalPropertiesTransformer,
   px2remTransformer,
+  autoPrefixTransformer,
 
   // Linters
   logicalPropertiesLinter,

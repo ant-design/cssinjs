@@ -416,7 +416,7 @@ export default function useStyleRegister(
     linters,
     cache,
     layer: enableLayer,
-    compatibility,
+    internal_compatibility: compatibility,
   } = React.useContext(StyleContext);
   const tokenKey = token._tokenKey as string;
 
@@ -512,7 +512,7 @@ export default function useStyleRegister(
           // Inject layer style
           effectLayerKeys.forEach((effectKey) => {
             updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
+              normalizeStyle(effectStyle[effectKey], compatibility),
               `_layer-${effectKey}`,
               { ...mergedCSSConfig, prepend: true },
             );
@@ -536,7 +536,7 @@ export default function useStyleRegister(
           // Inject client side effect style
           effectRestKeys.forEach((effectKey) => {
             updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
+              normalizeStyle(effectStyle[effectKey], compatibility),
               `_effect-${effectKey}`,
               mergedCSSConfig,
             );
@@ -584,7 +584,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
     clientOnly,
     order,
   ]: StyleCacheValue = cache;
-  const { plain } = options || {};
+  const { plain, vendorPrefix } = options || {};
 
   // Skip client only style
   if (clientOnly) {
@@ -609,7 +609,9 @@ export const extract: ExtractStyle<StyleCacheValue> = (
       // Effect style can be reused
       if (!effectStyles[effectKey]) {
         effectStyles[effectKey] = true;
-        const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
+        const effectStyleStr = normalizeStyle(effectStyle[effectKey], {
+          prefixer: vendorPrefix,
+        });
         const effectStyleHTML = toStyleStr(
           effectStyleStr,
           tokenKey,

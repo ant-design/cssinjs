@@ -2,6 +2,7 @@ import {
   createTheme,
   StyleProvider,
   useStyleRegister,
+  autoPrefixTransformer
 } from '@ant-design/cssinjs';
 import React from 'react';
 
@@ -27,7 +28,7 @@ const CompatDemo: React.FC = () => {
 };
 
 export default () => (
-  <StyleProvider compatibility={{ prefixer: true }}>
+  <StyleProvider transformers={[autoPrefixTransformer()]}>
     <CompatDemo />
   </StyleProvider>
 );

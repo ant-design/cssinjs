@@ -10,6 +10,7 @@ export type ExtractStyle<CacheValue> = (
   effectStyles: Record<string, boolean>,
   options?: {
     plain?: boolean;
+    vendorPrefix?: boolean;
   },
 ) => [order: number, styleId: string, style: string] | null;
 

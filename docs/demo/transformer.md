@@ -12,3 +12,7 @@ nav:
 ### px2rem
 
 <code src="../examples/px2rem.tsx"></code>
+
+### autoPrefix
+
+<code src="../examples/autoPrefix.tsx"></code>

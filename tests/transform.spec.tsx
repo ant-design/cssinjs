@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import type { CSSInterpolation } from '../src';
 import {
+  autoPrefixTransformer,
   createCache,
   createTheme,
   legacyLogicalPropertiesTransformer,
@@ -159,8 +160,12 @@ describe('transform', () => {
       );
 
       const styleText = document.head.querySelector('style')?.innerHTML;
-      expect(styleText).toContain('padding-left:33px!important;padding-right:33px!important');
-      expect(styleText).toContain('margin-top:33px!important;margin-bottom:calc(2px + 3px)!important;}');
+      expect(styleText).toContain(
+        'padding-left:33px!important;padding-right:33px!important',
+      );
+      expect(styleText).toContain(
+        'margin-top:33px!important;margin-bottom:calc(2px + 3px)!important;}',
+      );
     });
 
     it('split with calc() and var()', () => {
@@ -181,7 +186,7 @@ describe('transform', () => {
             },
             '.antd-issue-47707': {
               paddingInline: str47707,
-            }
+            },
           }}
         />,
       );
@@ -386,6 +391,54 @@ describe('transform', () => {
 
         testPx2rem(options, css, expected);
       });
+    });
+  });
+
+  describe('autoPrefix', () => {
+    beforeEach(() => {
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      styles.forEach((style) => {
+        style.parentNode?.removeChild(style);
+      });
+    });
+
+    const Demo = ({ css }: { css: CSSInterpolation }) => {
+      useStyleRegister(
+        { theme: createTheme(() => ({})), token: {}, path: ['.box'] },
+        () => css,
+      );
+      return <div className="box" />;
+    };
+
+    it('should add vendor prefixes when autoPrefix transformer is used', () => {
+      const css: CSSInterpolation = {
+        '.box': {
+          transform: 'translateX(10px)',
+          userSelect: 'none',
+          display: 'flex',
+        },
+      };
+
+      render(
+        <StyleProvider
+          cache={createCache()}
+          transformers={[autoPrefixTransformer()]}
+        >
+          <Demo css={css} />
+        </StyleProvider>,
+      );
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(1);
+
+      const styleText = styles[0].innerHTML;
+
+      expect(styleText).toMatchSnapshot();
+
+      expect(styleText.includes('-webkit-transform:translateX(10px);')).toBeTruthy();
+      expect(styleText.includes('-webkit-user-select:none;')).toBeTruthy();
+      expect(styleText.includes('display:-webkit-box;')).toBeTruthy();
+      expect(styleText.includes('display:-webkit-flex;')).toBeTruthy();
     });
   });
 });
