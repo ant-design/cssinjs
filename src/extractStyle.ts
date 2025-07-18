@@ -36,9 +36,10 @@ export default function extractStyle(
     | {
         plain?: boolean;
         types?: ExtractStyleType | ExtractStyleType[];
+        once?: boolean;
       },
 ) {
-  const { plain = false, types = ['style', 'token', 'cssVar'] } =
+  const { plain = false, types = ['style', 'token', 'cssVar'], once = false } =
     typeof options === 'boolean' ? { plain: options } : options || {};
 
   const matchPrefixRegexp = new RegExp(
@@ -60,6 +61,10 @@ export default function extractStyle(
 
   styleKeys
     .map<[order: number, style: string, updateTime: number] | null>((key) => {
+      if (once && cache.extracted.has(key)) {
+        return null; // Skip if already extracted
+      }
+
       const cachePath = key.replace(matchPrefixRegexp, '').replace(/%/g, '|');
       const [prefix] = key.split('%');
       const extractFn = ExtractStyleFns[prefix as keyof typeof ExtractStyleFns];
@@ -74,6 +79,10 @@ export default function extractStyle(
       if (key.startsWith('style')) {
         cachePathMap[cachePath] = styleId;
       }
+
+      // record that this style has been extracted
+      cache.extracted.add(key);
+
       return [order, styleStr, updateTime];
     })
     .filter(isNotNull)
