@@ -17,6 +17,8 @@ class Entity {
   /** @private Internal cache map. Do not access this directly */
   cache = new Map<string, ValueType>();
 
+  extracted: Set<string> = new Set();
+
   get(keys: KeyType[]): ValueType | null {
     return this.opGet(pathKey(keys));
   }

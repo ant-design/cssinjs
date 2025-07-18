@@ -69,6 +69,12 @@ describe('SSR', () => {
     },
   });
 
+  const genCardStyle = (token: DerivativeToken): CSSInterpolation => ({
+    '.card': {
+      backgroundColor: token.primaryColor,
+    },
+  });
+
   const Box = ({ children }: { children?: React.ReactNode }) => {
     const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
 
@@ -77,6 +83,16 @@ describe('SSR', () => {
     ]);
 
     return wrapSSR(<div className="box">{children}</div>);
+  };
+
+  const Card = ({ children }: { children?: React.ReactNode }) => {
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      cssVar: { key: 'css-var-test' },
+    });
+
+    useStyleRegister({ theme, token, path: ['.card'] }, () => [genCardStyle(token)]);
+
+    return <div className="card">{children}</div>;
   };
 
   const IdHolder = () => {
@@ -441,4 +457,33 @@ describe('SSR', () => {
       ].join(''),
     );
   });
+
+  it('should extract once when once option is true', () => {
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache, {plain: true, once: true});
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Card />
+      </StyleProvider>,
+    );
+    const style2 = extractStyle(cache, {plain: true, once: true});
+
+    expect(style).toContain('.box');
+    expect(style).not.toContain('.card');
+
+    expect(style2).toContain('.card');
+    expect(style2).not.toContain('.box');
+  })
 });
