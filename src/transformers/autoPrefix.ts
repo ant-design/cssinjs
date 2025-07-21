@@ -1,5 +1,7 @@
 import type { Transformer } from './interface';
 
-const transform: Transformer = {};
+export const AUTO_PREFIX = {};
+
+const transform: Transformer = AUTO_PREFIX;
 
 export default transform;
