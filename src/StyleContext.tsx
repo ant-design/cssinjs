@@ -3,6 +3,7 @@ import isEqual from 'rc-util/lib/isEqual';
 import * as React from 'react';
 import CacheEntity from './Cache';
 import type { Linter } from './linters/interface';
+import { AUTO_PREFIX } from './transformers/autoPrefix';
 import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
@@ -78,15 +79,21 @@ export interface StyleContextProps {
   linters?: Linter[];
   /** Wrap css in a layer to avoid global style conflict */
   layer?: boolean;
+
+  /** Hardcode here since transformer not support take effect on serialize currently */
+  autoPrefix?: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
   hashPriority: 'low',
   cache: createCache(),
   defaultCache: true,
+  autoPrefix: false,
 });
 
-export type StyleProviderProps = Partial<StyleContextProps> & {
+export type StyleProviderProps = Partial<
+  Omit<StyleContextProps, 'autoPrefix'>
+> & {
   children?: React.ReactNode;
 };
 
@@ -101,16 +108,23 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
         ...parentContext,
       };
 
-      (Object.keys(restProps) as (keyof StyleContextProps)[]).forEach((key) => {
+      (
+        Object.keys(restProps) as (keyof Omit<StyleProviderProps, 'children'>)[]
+      ).forEach((key) => {
         const value = restProps[key];
         if (restProps[key] !== undefined) {
           (mergedContext as any)[key] = value;
         }
       });
 
-      const { cache } = restProps;
+      const { cache, transformers = [] } = restProps;
       mergedContext.cache = mergedContext.cache || createCache();
       mergedContext.defaultCache = !cache && parentContext.defaultCache;
+
+      // autoPrefix
+      if (transformers.includes(AUTO_PREFIX)) {
+        mergedContext.autoPrefix = true;
+      }
 
       return mergedContext;
     },

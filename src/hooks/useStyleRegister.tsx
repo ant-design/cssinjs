@@ -4,7 +4,7 @@ import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
-import { compile, serialize, stringify } from 'stylis';
+import { compile, middleware, prefixer, serialize, stringify } from 'stylis';
 import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
@@ -80,8 +80,11 @@ export interface CSSObject
 // ==                                 Parser                                 ==
 // ============================================================================
 // Preprocessor style content to browser support one
-export function normalizeStyle(styleStr: string) {
-  const serialized = serialize(compile(styleStr), stringify);
+export function normalizeStyle(styleStr: string, autoPrefix: boolean) {
+  const serialized = autoPrefix
+    ? serialize(compile(styleStr), middleware([prefixer, stringify]))
+    : serialize(compile(styleStr), stringify);
+
   return serialized.replace(/\{%%%\:[^;];}/g, ';');
 }
 
@@ -398,6 +401,7 @@ export default function useStyleRegister(
     linters,
     cache,
     layer: enableLayer,
+    autoPrefix,
   } = React.useContext(StyleContext);
 
   const fullPath: string[] = [hashId || ''];
@@ -438,7 +442,7 @@ export default function useStyleRegister(
         linters,
       });
 
-      const styleStr = normalizeStyle(parsedStyle);
+      const styleStr = normalizeStyle(parsedStyle, autoPrefix || false);
       const styleId = uniqueHash(fullPath, styleStr);
 
       return [styleStr, styleId, effectStyle, clientOnly, order];
@@ -486,7 +490,7 @@ export default function useStyleRegister(
         // Inject layer style
         effectLayerKeys.forEach((effectKey) => {
           updateCSS(
-            normalizeStyle(effectStyle[effectKey]),
+            normalizeStyle(effectStyle[effectKey], autoPrefix || false),
             `_layer-${effectKey}`,
             { ...mergedCSSConfig, prepend: true },
           );
@@ -507,7 +511,7 @@ export default function useStyleRegister(
         // Inject client side effect style
         effectRestKeys.forEach((effectKey) => {
           updateCSS(
-            normalizeStyle(effectStyle[effectKey]),
+            normalizeStyle(effectStyle[effectKey], autoPrefix || false),
             `_effect-${effectKey}`,
             mergedCSSConfig,
           );
@@ -524,7 +528,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
 ) => {
   const [styleStr, styleId, effectStyle, clientOnly, order]: StyleCacheValue =
     cache;
-  const { plain } = options || {};
+  const { plain, autoPrefix } = options || {};
 
   // Skip client only style
   if (clientOnly) {
@@ -549,7 +553,10 @@ export const extract: ExtractStyle<StyleCacheValue> = (
       // Effect style can be reused
       if (!effectStyles[effectKey]) {
         effectStyles[effectKey] = true;
-        const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
+        const effectStyleStr = normalizeStyle(
+          effectStyle[effectKey],
+          autoPrefix || false,
+        );
         const effectStyleHTML = toStyleStr(
           effectStyleStr,
           undefined,

@@ -40,6 +40,7 @@ describe('util', () => {
           },
           { hashId: 'hashed' },
         )[0],
+        false,
       );
 
       expect(str).toEqual(
@@ -95,7 +96,7 @@ describe('util', () => {
           },
         );
 
-        const str = normalizeStyle(parsedStyle[0]);
+        const str = normalizeStyle(parsedStyle[0], false);
 
         expect(str).toEqual('@layer test-layer{p.hashed{color:red;}}');
         expect(parsedStyle[1]).toEqual({
@@ -156,7 +157,7 @@ describe('util', () => {
         },
         { hashId: 'hashed' },
       );
-      const normalized = normalizeStyle(str);
+      const normalized = normalizeStyle(str, false);
 
       expect(str).toEqual(
         '.hashed&.btn-variant-outline,.hashed&.btn-variant-dashed{color:red;}',

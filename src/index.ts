@@ -16,6 +16,7 @@ import StyleContext, { createCache, StyleProvider } from './StyleContext';
 import type { AbstractCalculator, DerivativeFunc, TokenType } from './theme';
 import { createTheme, genCalc, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
+import autoPrefixTransformer from './transformers/autoPrefix';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
 import { supportLogicProps, supportWhere, unit } from './util';
@@ -35,6 +36,7 @@ export {
   getComputedToken,
 
   // Transformer
+  autoPrefixTransformer,
   legacyLogicalPropertiesTransformer,
   px2remTransformer,
 
