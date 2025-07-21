@@ -37,7 +37,7 @@ describe('autoPrefix', () => {
     render(
       <StyleProvider
         cache={createCache()}
-        transformers={[autoPrefixTransformer()]}
+        transformers={[autoPrefixTransformer]}
       >
         <Demo css={css} />
       </StyleProvider>,

@@ -45,7 +45,7 @@ const Demo = () => {
 };
 
 export default () => (
-  <StyleProvider transformers={[autoPrefixTransformer()]}>
+  <StyleProvider transformers={[autoPrefixTransformer]}>
     <Demo />
   </StyleProvider>
 );
