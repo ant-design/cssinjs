@@ -497,11 +497,13 @@ export default function useStyleRegister(
           // ================= Inject Layer Style =================
           // Inject layer style
           effectLayerKeys.forEach((effectKey) => {
-            updateCSS(
+            const effectLayerStyle = updateCSS(
               normalizeStyle(effectStyle[effectKey]),
               `_layer-${effectKey}`,
               { ...mergedCSSConfig, prepend: true },
             );
+            // fix effect style no CSS_IN_JS_INSTANCE
+            (effectLayerStyle as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
           });
 
           // ==================== Inject Style ====================
@@ -521,11 +523,13 @@ export default function useStyleRegister(
           // ================ Inject Effect Style =================
           // Inject client side effect style
           effectRestKeys.forEach((effectKey) => {
-            updateCSS(
+            const effectRestStyle = updateCSS(
               normalizeStyle(effectStyle[effectKey]),
               `_effect-${effectKey}`,
               mergedCSSConfig,
             );
+            // fix effect style no CSS_IN_JS_INSTANCE
+            (effectRestStyle as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
           });
         }
       },
