@@ -179,7 +179,7 @@ describe('animation', () => {
     });
   });
 
-  it('re-mount should not missing animation style', () => {
+  it('re-mount should not missing animation style', async () => {
     function genComp(cls: string) {
       return () => {
         const [token, hashId] = useCacheToken(theme, [baseToken], {
@@ -209,6 +209,8 @@ describe('animation', () => {
 
     // Clean up
     document.head.innerHTML = '';
+
+    await Promise.resolve();
 
     // Render again
     render(

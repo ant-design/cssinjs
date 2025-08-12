@@ -13,6 +13,8 @@ export type ExtractStyle<CacheValue> = (
   },
 ) => [order: number, styleId: string, style: string] | null;
 
+const effectMap = new Map<string, boolean>();
+
 export default function useGlobalCache<CacheType>(
   prefix: string,
   keyPath: KeyType[],
@@ -84,7 +86,15 @@ export default function useGlobalCache<CacheType>(
       // which will clear cache on the first time.
       buildCache(([times, cache]) => {
         if (polyfill && times === 0) {
-          onCacheEffect?.(cacheContent);
+          if (!effectMap.has(fullPathStr)) {
+            onCacheEffect?.(cacheContent);
+            effectMap.set(fullPathStr, true);
+
+            // 微任务清理缓存，可以认为是单次 batch render 中只触发一次 effect
+            Promise.resolve().then(() => {
+              effectMap.delete(fullPathStr);
+            });
+          }
         }
         return [times + 1, cache];
       });
@@ -97,6 +107,7 @@ export default function useGlobalCache<CacheType>(
           if (nextCount === 0) {
             // Always remove styles in useEffect callback
             register(() => {
+              effectMap.delete(fullPathStr);
               // With polyfill, registered callback will always be called synchronously
               // But without polyfill, it will be called in effect clean up,
               // And by that time this cache is cleaned up.
