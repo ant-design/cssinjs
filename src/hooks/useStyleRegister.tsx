@@ -357,9 +357,7 @@ export function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
 
-function Empty() {
-  return null;
-}
+
 
 export const STYLE_PREFIX = 'style';
 

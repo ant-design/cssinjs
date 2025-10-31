@@ -1,4 +1,4 @@
-import { HashPriority } from '../StyleContext';
+import type { HashPriority } from '../StyleContext';
 import { where } from '../util';
 
 export const token2CSSVar = (token: string, prefix = '') => {
