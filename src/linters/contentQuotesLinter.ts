@@ -11,7 +11,7 @@ const linter: Linter = (key, value, info) => {
       typeof value !== 'string' ||
       (contentValues.indexOf(value) === -1 &&
         !contentValuePattern.test(value) &&
-        !/^var\(--[a-zA-Z_-][a-zA-Z0-9_-]*\)$/.test(`${value}`) &&
+        !value.startsWith('var(') &&
         (value.charAt(0) !== value.charAt(value.length - 1) ||
           (value.charAt(0) !== '"' && value.charAt(0) !== "'")))
     ) {

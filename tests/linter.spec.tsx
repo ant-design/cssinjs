@@ -87,21 +87,246 @@ describe('style warning', () => {
     });
   });
 
-  it('content value should contain quotes', () => {
-    const genStyle = (): CSSObject => ({
-      content: 'test',
+  describe('contentQuotesLinter', () => {
+    it('should warn when content value is without quotes', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'test',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
     });
-    const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
-      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
-      return <div />;
-    };
-    render(<Demo />);
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `You seem to be using a value for 'content' without quotes`,
-      ),
-    );
+
+    it('should not warn when content value has double quotes', () => {
+      const genStyle = (): CSSObject => ({
+        content: '"test"',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn when content value has single quotes', () => {
+      const genStyle = (): CSSObject => ({
+        content: "'test'",
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content special values', () => {
+      const specialValues = ['normal', 'none', 'initial', 'inherit', 'unset'];
+      
+      specialValues.forEach(value => {
+        const genStyle = (): CSSObject => ({
+          content: value,
+        });
+        const Demo = () => {
+          const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+          useStyleRegister({ theme, token, path: [`content-${value}`] }, () => [genStyle()]);
+          return <div />;
+        };
+        render(<Demo />);
+      });
+      
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with attr() function', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'attr(data-content)',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-attr'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with url() function', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'url("image.jpg")',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-url'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with counters() function', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'counters(section, ".")',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-counters'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with gradient functions', () => {
+      const gradients = [
+        'linear-gradient(to right, red, blue)',
+        'repeating-linear-gradient(to right, red, blue)',
+        'radial-gradient(circle, red, blue)',
+        'repeating-radial-gradient(circle, red, blue)',
+        'conic-gradient(red, blue)',
+      ];
+      
+      gradients.forEach(gradient => {
+        const genStyle = (): CSSObject => ({
+          content: gradient,
+        });
+        const Demo = () => {
+          const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+          useStyleRegister({ theme, token, path: [`content-${gradient}`] }, () => [genStyle()]);
+          return <div />;
+        };
+        render(<Demo />);
+      });
+      
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with open-quote/close-quote', () => {
+      const quotes = ['open-quote', 'close-quote', 'no-open-quote', 'no-close-quote'];
+      
+      quotes.forEach(quote => {
+        const genStyle = (): CSSObject => ({
+          content: quote,
+        });
+        const Demo = () => {
+          const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+          useStyleRegister({ theme, token, path: [`content-${quote}`] }, () => [genStyle()]);
+          return <div />;
+        };
+        render(<Demo />);
+      });
+      
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for content with var() function', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'var(--content-value)',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-var'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should warn for mismatched quotes', () => {
+      const genStyle = (): CSSObject => ({
+        content: '"test\'',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-mismatched'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
+
+    it('should warn for single quote only at start', () => {
+      const genStyle = (): CSSObject => ({
+        content: "'test",
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-single-start'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
+
+    it('should warn for single quote only at end', () => {
+      const genStyle = (): CSSObject => ({
+        content: "test'",
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-single-end'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
+
+    it('should handle empty string content', () => {
+      const genStyle = (): CSSObject => ({
+        content: '',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-empty'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
+
+    it('should handle non-string content values', () => {
+      const genStyle = (): CSSObject => ({
+        content: 123 as any,
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], { cssVar: {key: 'css-var-test'}});
+        useStyleRegister({ theme, token, path: ['content-number'] }, () => [genStyle()]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
   });
 
   ['margin', 'padding', 'borderWidth', 'borderStyle'].forEach((prop) =>
