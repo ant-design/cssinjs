@@ -14,6 +14,7 @@ import {
   logicalPropertiesLinter,
   parentSelectorLinter,
 } from '../src/linters';
+import { resetWarned } from 'rc-util/lib/warning';
 
 interface DesignToken {
   primaryColor: string;
@@ -88,6 +89,9 @@ describe('style warning', () => {
   });
 
   describe('contentQuotesLinter', () => {
+    beforeAll(() => {
+      resetWarned()
+    });
     it('should not warn for content with var() function', () => {
       const genStyle = (): CSSObject => ({
         content: 'var(--content-value)',
