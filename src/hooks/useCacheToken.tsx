@@ -55,7 +55,8 @@ export interface Option<DerivativeToken, DesignToken> {
   /**
    * Transform token to css variables.
    */
-  cssVar?: {
+  cssVar: {
+    hashed?: boolean;
     /** Prefix for css variables */
     prefix?: string;
     /** Tokens that should not be appended with unit */
@@ -65,7 +66,7 @@ export interface Option<DerivativeToken, DesignToken> {
     /** Tokens that preserves origin value */
     preserve?: Record<string, boolean>;
     /** Key for current theme. Useful for customizing and should be unique */
-    key?: string;
+    key: string;
   };
 }
 
@@ -86,7 +87,7 @@ function removeStyleTags(key: string, instanceId: string) {
   }
 }
 
-const TOKEN_THRESHOLD = 0;
+const TOKEN_THRESHOLD = -1;
 
 // Remove will check current keys first
 function cleanTokenStyle(tokenKey: string, instanceId: string) {
@@ -134,9 +135,9 @@ export const getComputedToken = <
 export const TOKEN_PREFIX = 'token';
 
 type TokenCacheValue<DerivativeToken> = [
-  token: DerivativeToken & { _tokenKey: string; _themeKey: string },
+  token: DerivativeToken,
   hashId: string,
-  realToken: DerivativeToken & { _tokenKey: string },
+  realToken: DerivativeToken,
   cssVarStr: string,
   cssVarKey: string,
 ];
@@ -154,11 +155,12 @@ export default function useCacheToken<
 >(
   theme: Theme<any, any>,
   tokens: Partial<DesignToken>[],
-  option: Option<DerivativeToken, DesignToken> = {},
+  option: Option<DerivativeToken, DesignToken>,
 ): TokenCacheValue<DerivativeToken> {
   const {
     cache: { instanceId },
     container,
+    hashPriority,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -174,74 +176,60 @@ export default function useCacheToken<
   const tokenStr = flattenToken(mergedToken);
   const overrideTokenStr = flattenToken(override);
 
-  const cssVarStr = cssVar ? flattenToken(cssVar) : '';
+  const cssVarStr = flattenToken(cssVar);
 
   const cachedToken = useGlobalCache<TokenCacheValue<DerivativeToken>>(
     TOKEN_PREFIX,
     [salt, theme.id, tokenStr, overrideTokenStr, cssVarStr],
     () => {
-      let mergedDerivativeToken = compute
+      const mergedDerivativeToken = compute
         ? compute(mergedToken, override, theme)
         : getComputedToken(mergedToken, override, theme, formatToken);
-
-      // Replace token value with css variables
       const actualToken = { ...mergedDerivativeToken };
-      let cssVarsStr = '';
-      if (!!cssVar) {
-        [mergedDerivativeToken, cssVarsStr] = transformToken(
-          mergedDerivativeToken,
-          cssVar.key!,
-          {
-            prefix: cssVar.prefix,
-            ignore: cssVar.ignore,
-            unitless: cssVar.unitless,
-            preserve: cssVar.preserve,
-          },
-        );
-      }
 
       // Optimize for `useStyleRegister` performance
-      const tokenKey = token2key(mergedDerivativeToken, salt);
-      mergedDerivativeToken._tokenKey = tokenKey;
-      actualToken._tokenKey = token2key(actualToken, salt);
+      const mergedSalt = `${salt}_${cssVar.prefix}`;
+      const hashId = hash(mergedSalt);
+      const hashCls = `${hashPrefix}-${hash(mergedSalt)}`;
+      actualToken._tokenKey = token2key(actualToken, mergedSalt);
 
-      const themeKey = cssVar?.key ?? tokenKey;
-      mergedDerivativeToken._themeKey = themeKey;
-      recordCleanToken(themeKey);
-
-      const hashId = `${hashPrefix}-${hash(tokenKey)}`;
-      mergedDerivativeToken._hashId = hashId; // Not used
-
-      return [
+      // Replace token value with css variables
+      const [tokenWithCssVar, cssVarsStr] = transformToken(
         mergedDerivativeToken,
-        hashId,
-        actualToken,
-        cssVarsStr,
-        cssVar?.key || '',
-      ];
+        cssVar.key,
+        {
+          prefix: cssVar.prefix,
+          ignore: cssVar.ignore,
+          unitless: cssVar.unitless,
+          preserve: cssVar.preserve,
+          hashPriority,
+          hashCls: cssVar.hashed ? hashCls : undefined,
+        },
+      ) as [any, string];
+      tokenWithCssVar._hashId = hashId;
+
+      recordCleanToken(cssVar.key);
+      return [tokenWithCssVar, hashCls, actualToken, cssVarsStr, cssVar.key];
     },
-    (cache) => {
+    ([, , , , themeKey]) => {
       // Remove token will remove all related style
-      cleanTokenStyle(cache[0]._themeKey, instanceId);
+      cleanTokenStyle(themeKey, instanceId);
     },
-    ([token, , , cssVarsStr]) => {
-      if (cssVar && cssVarsStr) {
-        const style = updateCSS(
-          cssVarsStr,
-          hash(`css-variables-${token._themeKey}`),
-          {
-            mark: ATTR_MARK,
-            prepend: 'queue',
-            attachTo: container,
-            priority: -999,
-          },
-        );
-
-        (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
-
-        // Used for `useCacheToken` to remove on batch when token removed
-        style.setAttribute(ATTR_TOKEN, token._themeKey);
+    ([, , , cssVarsStr, themeKey]) => {
+      if (!cssVarsStr) {
+        return;
       }
+      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), {
+        mark: ATTR_MARK,
+        prepend: 'queue',
+        attachTo: container,
+        priority: -999,
+      });
+
+      (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
+
+      // Used for `useCacheToken` to remove on batch when token removed
+      style.setAttribute(ATTR_TOKEN, themeKey);
     },
   );
 

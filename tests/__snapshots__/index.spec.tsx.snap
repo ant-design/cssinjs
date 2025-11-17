@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`csssinjs > hash & nest style 1`] = `":where(.css-dev-only-do-not-override-27r9pa) a{color:red;}"`;
+
+exports[`csssinjs > hash 1`] = `":where(.css-dev-only-do-not-override-27r9pa).a,:where(.css-dev-only-do-not-override-27r9pa).b,:where(.css-dev-only-do-not-override-27r9pa).c .d{background:red;}"`;
+
+exports[`csssinjs > hash 2`] = `":where(.css-dev-only-do-not-override-27r9pa).a,:where(.css-dev-only-do-not-override-27r9pa).b,:where(.css-dev-only-do-not-override-27r9pa).c .d{background:red;}"`;
+
+exports[`csssinjs > hash 3`] = `":where(.css-dev-only-do-not-override-27r9pa).a,:where(.css-dev-only-do-not-override-27r9pa).b,:where(.css-dev-only-do-not-override-27r9pa).c .d{background:red;}"`;
+
+exports[`csssinjs > hash only changes if salt or cssVar prefix changes 1`] = `":where(.css-dev-only-do-not-override-w8uoem).css-var-test{--rc-test-color-primary:red;}"`;
+
+exports[`csssinjs > hash only changes if salt or cssVar prefix changes 2`] = `":where(.css-dev-only-do-not-override-w8uoem).css-var-test{--rc-test-color-primary:blue;}"`;
+
+exports[`csssinjs > serialize nest object token 1`] = `"hp43io"`;

@@ -4,7 +4,7 @@ import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
-import { compile, serialize, stringify } from 'stylis';
+import { compile, middleware, prefixer, serialize, stringify } from 'stylis';
 import type { Theme, Transformer } from '..';
 import type Keyframes from '../Keyframes';
 import type { Linter } from '../linters';
@@ -13,7 +13,6 @@ import type { HashPriority } from '../StyleContext';
 import StyleContext, {
   ATTR_CACHE_PATH,
   ATTR_MARK,
-  ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
 import { isClientSide, toStyleStr } from '../util';
@@ -81,8 +80,11 @@ export interface CSSObject
 // ==                                 Parser                                 ==
 // ============================================================================
 // Preprocessor style content to browser support one
-export function normalizeStyle(styleStr: string) {
-  const serialized = serialize(compile(styleStr), stringify);
+export function normalizeStyle(styleStr: string, autoPrefix: boolean) {
+  const serialized = autoPrefix
+    ? serialize(compile(styleStr), middleware([prefixer, stringify]))
+    : serialize(compile(styleStr), stringify);
+
   return serialized.replace(/\{%%%\:[^;];}/g, ';');
 }
 
@@ -355,15 +357,12 @@ export function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
 
-function Empty() {
-  return null;
-}
+
 
 export const STYLE_PREFIX = 'style';
 
 type StyleCacheValue = [
   styleStr: string,
-  tokenKey: string,
   styleId: string,
   effectStyle: Record<string, string>,
   clientOnly: boolean | undefined,
@@ -391,22 +390,19 @@ export default function useStyleRegister(
   },
   styleFn: () => CSSInterpolation,
 ) {
-  const { token, path, hashId, layer, nonce, clientOnly, order = 0 } = info;
+  const { path, hashId, layer, nonce, clientOnly, order = 0 } = info;
   const {
-    autoClear,
     mock,
-    defaultCache,
     hashPriority,
     container,
-    ssrInline,
     transformers,
     linters,
     cache,
     layer: enableLayer,
+    autoPrefix,
   } = React.useContext(StyleContext);
-  const tokenKey = token._tokenKey as string;
 
-  const fullPath = [tokenKey];
+  const fullPath: string[] = [hashId || ''];
   if (enableLayer) {
     fullPath.push('layer');
   }
@@ -418,143 +414,109 @@ export default function useStyleRegister(
     isMergedClientSide = mock === 'client';
   }
 
-  const [cachedStyleStr, cachedTokenKey, cachedStyleId] =
-    useGlobalCache<StyleCacheValue>(
-      STYLE_PREFIX,
-      fullPath,
-      // Create cache if needed
-      () => {
-        const cachePath = fullPath.join('|');
+  useGlobalCache<StyleCacheValue>(
+    STYLE_PREFIX,
+    fullPath,
+    // Create cache if needed
+    () => {
+      const cachePath = fullPath.join('|');
 
-        // Get style from SSR inline style directly
-        if (existPath(cachePath)) {
-          const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
-          if (inlineCacheStyleStr) {
-            return [
-              inlineCacheStyleStr,
-              tokenKey,
-              styleHash,
-              {},
-              clientOnly,
-              order,
-            ];
-          }
+      // Get style from SSR inline style directly
+      if (existPath(cachePath)) {
+        const [inlineCacheStyleStr, styleHash] = getStyleAndHash(cachePath);
+        if (inlineCacheStyleStr) {
+          return [inlineCacheStyleStr, styleHash, {}, clientOnly, order];
+        }
+      }
+
+      // Generate style
+      const styleObj = styleFn();
+      const [parsedStyle, effectStyle] = parseStyle(styleObj, {
+        hashId,
+        hashPriority,
+        layer: enableLayer ? layer : undefined,
+        path: path.join('-'),
+        transformers,
+        linters,
+      });
+
+      const styleStr = normalizeStyle(parsedStyle, autoPrefix || false);
+      const styleId = uniqueHash(fullPath, styleStr);
+
+      return [styleStr, styleId, effectStyle, clientOnly, order];
+    },
+
+    // Remove cache if no need
+    (cacheValue, fromHMR) => {
+      const [, styleId] = cacheValue;
+      if (fromHMR && isClientSide) {
+        removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
+      }
+    },
+
+    // Effect: Inject style here
+    (cacheValue) => {
+      const [styleStr, styleId, effectStyle, , priority] = cacheValue;
+      if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
+        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+          mark: ATTR_MARK,
+          prepend: enableLayer ? false : 'queue',
+          attachTo: container,
+          priority,
+        };
+
+        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+
+        if (nonceStr) {
+          mergedCSSConfig.csp = { nonce: nonceStr };
         }
 
-        // Generate style
-        const styleObj = styleFn();
-        const [parsedStyle, effectStyle] = parseStyle(styleObj, {
-          hashId,
-          hashPriority,
-          layer: enableLayer ? layer : undefined,
-          path: path.join('-'),
-          transformers,
-          linters,
+        // ================= Split Effect Style =================
+        // We will split effectStyle here since @layer should be at the top level
+        const effectLayerKeys: string[] = [];
+        const effectRestKeys: string[] = [];
+
+        Object.keys(effectStyle).forEach((key) => {
+          if (key.startsWith('@layer')) {
+            effectLayerKeys.push(key);
+          } else {
+            effectRestKeys.push(key);
+          }
         });
 
-        const styleStr = normalizeStyle(parsedStyle);
-        const styleId = uniqueHash(fullPath, styleStr);
+        // ================= Inject Layer Style =================
+        // Inject layer style
+        effectLayerKeys.forEach((effectKey) => {
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey], autoPrefix || false),
+            `_layer-${effectKey}`,
+            { ...mergedCSSConfig, prepend: true },
+          );
+        });
 
-        return [styleStr, tokenKey, styleId, effectStyle, clientOnly, order];
-      },
+        // ==================== Inject Style ====================
+        // Inject style
+        const style = updateCSS(styleStr, styleId, mergedCSSConfig);
 
-      // Remove cache if no need
-      ([, , styleId], fromHMR) => {
-        if ((fromHMR || autoClear) && isClientSide) {
-          removeCSS(styleId, { mark: ATTR_MARK, attachTo: container });
+        (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
+
+        // Debug usage. Dev only
+        if (process.env.NODE_ENV !== 'production') {
+          style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
         }
-      },
 
-      // Effect: Inject style here
-      ([styleStr, _, styleId, effectStyle]) => {
-        if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
-          const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
-            mark: ATTR_MARK,
-            prepend: enableLayer ? false : 'queue',
-            attachTo: container,
-            priority: order,
-          };
-
-          const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-
-          if (nonceStr) {
-            mergedCSSConfig.csp = { nonce: nonceStr };
-          }
-
-          // ================= Split Effect Style =================
-          // We will split effectStyle here since @layer should be at the top level
-          const effectLayerKeys: string[] = [];
-          const effectRestKeys: string[] = [];
-
-          Object.keys(effectStyle).forEach((key) => {
-            if (key.startsWith('@layer')) {
-              effectLayerKeys.push(key);
-            } else {
-              effectRestKeys.push(key);
-            }
-          });
-
-          // ================= Inject Layer Style =================
-          // Inject layer style
-          effectLayerKeys.forEach((effectKey) => {
-            updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
-              `_layer-${effectKey}`,
-              { ...mergedCSSConfig, prepend: true },
-            );
-          });
-
-          // ==================== Inject Style ====================
-          // Inject style
-          const style = updateCSS(styleStr, styleId, mergedCSSConfig);
-
-          (style as any)[CSS_IN_JS_INSTANCE] = cache.instanceId;
-
-          // Used for `useCacheToken` to remove on batch when token removed
-          style.setAttribute(ATTR_TOKEN, tokenKey);
-
-          // Debug usage. Dev only
-          if (process.env.NODE_ENV !== 'production') {
-            style.setAttribute(ATTR_CACHE_PATH, fullPath.join('|'));
-          }
-
-          // ================ Inject Effect Style =================
-          // Inject client side effect style
-          effectRestKeys.forEach((effectKey) => {
-            updateCSS(
-              normalizeStyle(effectStyle[effectKey]),
-              `_effect-${effectKey}`,
-              mergedCSSConfig,
-            );
-          });
-        }
-      },
-    );
-
-  return (node: React.ReactElement) => {
-    let styleNode: React.ReactElement;
-
-    if (!ssrInline || isMergedClientSide || !defaultCache) {
-      styleNode = <Empty />;
-    } else {
-      styleNode = (
-        <style
-          {...{
-            [ATTR_TOKEN]: cachedTokenKey,
-            [ATTR_MARK]: cachedStyleId,
-          }}
-          dangerouslySetInnerHTML={{ __html: cachedStyleStr }}
-        />
-      );
-    }
-
-    return (
-      <>
-        {styleNode}
-        {node}
-      </>
-    );
-  };
+        // ================ Inject Effect Style =================
+        // Inject client side effect style
+        effectRestKeys.forEach((effectKey) => {
+          updateCSS(
+            normalizeStyle(effectStyle[effectKey], autoPrefix || false),
+            `_effect-${effectKey}`,
+            mergedCSSConfig,
+          );
+        });
+      }
+    },
+  );
 }
 
 export const extract: ExtractStyle<StyleCacheValue> = (
@@ -562,15 +524,9 @@ export const extract: ExtractStyle<StyleCacheValue> = (
   effectStyles,
   options,
 ) => {
-  const [
-    styleStr,
-    tokenKey,
-    styleId,
-    effectStyle,
-    clientOnly,
-    order,
-  ]: StyleCacheValue = cache;
-  const { plain } = options || {};
+  const [styleStr, styleId, effectStyle, clientOnly, order]: StyleCacheValue =
+    cache;
+  const { plain, autoPrefix } = options || {};
 
   // Skip client only style
   if (clientOnly) {
@@ -587,7 +543,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
   };
 
   // ====================== Style ======================
-  keyStyleText = toStyleStr(styleStr, tokenKey, styleId, sharedAttrs, plain);
+  keyStyleText = toStyleStr(styleStr, undefined, styleId, sharedAttrs, plain);
 
   // =============== Create effect style ===============
   if (effectStyle) {
@@ -595,10 +551,13 @@ export const extract: ExtractStyle<StyleCacheValue> = (
       // Effect style can be reused
       if (!effectStyles[effectKey]) {
         effectStyles[effectKey] = true;
-        const effectStyleStr = normalizeStyle(effectStyle[effectKey]);
+        const effectStyleStr = normalizeStyle(
+          effectStyle[effectKey],
+          autoPrefix || false,
+        );
         const effectStyleHTML = toStyleStr(
           effectStyleStr,
-          tokenKey,
+          undefined,
           `_effect-${effectKey}`,
           sharedAttrs,
           plain,

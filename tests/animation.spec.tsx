@@ -53,7 +53,7 @@ describe('animation', () => {
     ];
 
     const Box = () => {
-      const [token] = useCacheToken(theme, [baseToken]);
+      const [token] = useCacheToken(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
 
       useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle()]);
 
@@ -67,10 +67,10 @@ describe('animation', () => {
       render(<Box />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(2);
+      expect(styles).toHaveLength(3);
 
-      expect(styles[0].innerHTML).toEqual('.box{animation:anim 1s;}');
-      expect(styles[1].innerHTML).toEqual(
+      expect(styles[1].innerHTML).toEqual('.box{animation:anim 1s;}');
+      expect(styles[2].innerHTML).toEqual(
         '@keyframes anim{to{transform:rotate(360deg);}}',
       );
     });
@@ -81,7 +81,7 @@ describe('animation', () => {
       let testHashId = '';
 
       const Demo = () => {
-        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        const [token, hashId] = useCacheToken(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
         testHashId = hashId;
         useStyleRegister(
           { theme, token, path: ['keyframes-hashed'], hashId },
@@ -92,12 +92,12 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(2);
+      expect(styles).toHaveLength(3);
 
-      expect(styles[0].innerHTML).toEqual(
+      expect(styles[1].innerHTML).toEqual(
         `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
       );
-      expect(styles[1].innerHTML).toEqual(
+      expect(styles[2].innerHTML).toEqual(
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
@@ -106,7 +106,7 @@ describe('animation', () => {
       let testHashId = '';
 
       const Demo = () => {
-        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        const [token, hashId] = useCacheToken(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
         testHashId = hashId;
         useStyleRegister(
           { theme, token, path: ['keyframes-in-CSSObject'], hashId },
@@ -117,12 +117,12 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(2);
+      expect(styles).toHaveLength(3);
 
-      expect(styles[0].innerHTML).toEqual(
+      expect(styles[1].innerHTML).toEqual(
         `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
       );
-      expect(styles[1].innerHTML).toEqual(
+      expect(styles[2].innerHTML).toEqual(
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
@@ -131,7 +131,7 @@ describe('animation', () => {
       let testHashId = '';
 
       const Demo = () => {
-        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        const [token, hashId] = useCacheToken(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
         testHashId = hashId;
         useStyleRegister(
           { theme, token, path: ['keyframes-not-declared'], hashId },
@@ -142,12 +142,12 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(2);
+      expect(styles).toHaveLength(3);
 
-      expect(styles[0].innerHTML).toEqual(
+      expect(styles[1].innerHTML).toEqual(
         `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
       );
-      expect(styles[1].innerHTML).toEqual(
+      expect(styles[2].innerHTML).toEqual(
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
@@ -157,7 +157,7 @@ describe('animation', () => {
       const anim = animation;
 
       const Demo = () => {
-        const [token, hashId] = useCacheToken(theme, [baseToken]);
+        const [token, hashId] = useCacheToken(theme, [baseToken], { cssVar: {key: 'css-var-test'}});
         testHashId = hashId;
         useStyleRegister(
           { theme, token, path: ['keyframes-declared-once'], hashId },
@@ -168,22 +168,23 @@ describe('animation', () => {
       render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(2);
+      expect(styles).toHaveLength(3);
 
-      expect(styles[0].innerHTML).toEqual(
+      expect(styles[1].innerHTML).toEqual(
         `:where(.${testHashId}).demo{animation-name:${testHashId}-anim;}`,
       );
-      expect(styles[1].innerHTML).toEqual(
+      expect(styles[2].innerHTML).toEqual(
         `@keyframes ${testHashId}-anim{to{transform:rotate(360deg);}}`,
       );
     });
   });
 
-  it('re-mount should not missing animation style', () => {
+  it('re-mount should not missing animation style', async () => {
     function genComp(cls: string) {
       return () => {
         const [token, hashId] = useCacheToken(theme, [baseToken], {
           salt: 're-mount',
+          cssVar: {key: 'css-var-test'}
         });
 
         useStyleRegister({ theme, token, path: [cls], hashId }, () => [
@@ -205,10 +206,12 @@ describe('animation', () => {
       </StyleProvider>,
     );
 
-    expect(document.querySelectorAll('style')).toHaveLength(3);
+    expect(document.querySelectorAll('style')).toHaveLength(4);
 
     // Clean up
     document.head.innerHTML = '';
+
+    await Promise.resolve();
 
     // Render again
     render(
@@ -217,6 +220,6 @@ describe('animation', () => {
         <Box2 />
       </StyleProvider>,
     );
-    expect(document.querySelectorAll('style')).toHaveLength(3);
+    expect(document.querySelectorAll('style')).toHaveLength(4);
   });
 });

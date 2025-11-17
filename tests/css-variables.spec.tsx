@@ -62,7 +62,7 @@ const theme = createTheme(derivative);
 type DesignTokenProviderProps = {
   token?: Partial<DesignToken>;
   hashed?: string | boolean;
-  cssVar?: {
+  cssVar: {
     key: string;
     prefix?: string;
   };
@@ -70,7 +70,10 @@ type DesignTokenProviderProps = {
 
 const DesignTokenContext = React.createContext<DesignTokenProviderProps>({
   token: defaultDesignToken,
-  hashed: true,
+  hashed: false,
+  cssVar: {
+    key: 'css-var-root'
+  }
 });
 
 const DesignTokenProvider: React.FC<
@@ -232,96 +235,6 @@ describe('CSS Variables', () => {
     });
   });
 
-  it('could mix with non-css-var', () => {
-    const { container } = render(
-      <>
-        <Box className="non-css-var" />
-        <DesignTokenProvider
-          theme={{
-            token: {
-              primaryColor: '#1677ff',
-            },
-            cssVar: {
-              key: 'apple',
-            },
-          }}
-        >
-          <Box className="css-var" />
-          <DesignTokenProvider
-            theme={{
-              token: {
-                borderWidth: 2,
-              },
-              cssVar: {
-                key: 'banana',
-              },
-            }}
-          >
-            <Box className="css-var-2" />
-          </DesignTokenProvider>
-          <DesignTokenProvider
-            theme={{
-              token: {
-                borderWidth: 3,
-              },
-            }}
-          >
-            <Box className="non-css-var-2" />
-          </DesignTokenProvider>
-        </DesignTokenProvider>
-      </>,
-    );
-
-    const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(7);
-
-    const nonCssVarBox = container.querySelector('.non-css-var')!;
-    expect(nonCssVarBox).toHaveStyle({
-      lineHeight: '1.5',
-      border: '1px solid black',
-      backgroundColor: '#1890ff',
-      color: '#5c21ff',
-    });
-
-    const cssVarBox = container.querySelector('.css-var')!;
-    expect(cssVarBox).toHaveStyle({
-      '--rc-line-height': '1.5',
-      '--rc-border-width': '1px',
-      '--rc-border-color': 'black',
-      '--rc-primary-color': '#1677ff',
-      '--rc-box-box-color': '#5c21ff',
-      lineHeight: 'var(--rc-line-height)',
-      border: 'var(--rc-border-width) solid var(--rc-border-color)',
-      backgroundColor: 'var(--rc-primary-color)',
-      color: 'var(--rc-box-box-color)',
-    });
-
-    const cssVarBox2 = container.querySelector('.css-var-2')!;
-    expect(cssVarBox2).toHaveClass('banana');
-    expect(cssVarBox2).not.toHaveClass('apple');
-    expect(cssVarBox2).toHaveStyle({
-      '--rc-line-height': '1.5',
-      '--rc-border-width': '2px',
-      '--rc-border-color': 'black',
-      '--rc-primary-color': '#1677ff',
-      '--rc-box-box-color': '#5c21ff',
-      lineHeight: 'var(--rc-line-height)',
-      border: 'var(--rc-border-width) solid var(--rc-border-color)',
-      backgroundColor: 'var(--rc-primary-color)',
-      color: 'var(--rc-box-box-color)',
-    });
-
-    const nonCssVarBox2 = container.querySelector('.non-css-var-2')!;
-    expect(nonCssVarBox2).not.toHaveClass('banana');
-    expect(nonCssVarBox2).not.toHaveClass('apple');
-    expect(nonCssVarBox2).toHaveStyle({
-      lineHeight: '1.5',
-      border: '3px solid black',
-      backgroundColor: '#1677ff',
-      color: '#5c21ff',
-    });
-  });
-
   it('dynamic', () => {
     const Demo = (props: { token?: Partial<DerivativeToken> }) => (
       <DesignTokenProvider
@@ -362,7 +275,7 @@ describe('CSS Variables', () => {
 
   it('could autoClear', () => {
     const { rerender } = render(
-      <StyleProvider autoClear>
+      <StyleProvider>
         <DesignTokenProvider
           theme={{
             cssVar: {
@@ -379,7 +292,7 @@ describe('CSS Variables', () => {
     expect(styles.length).toBe(3);
 
     rerender(
-      <StyleProvider autoClear>
+      <StyleProvider>
         <DesignTokenProvider
           theme={{
             cssVar: {
@@ -393,7 +306,9 @@ describe('CSS Variables', () => {
     );
 
     styles = Array.from(document.head.querySelectorAll('style'));
+    // component style still remains
     expect(styles.length).toBe(1);
+    expect(styles[0].textContent).toContain('.box{');
   });
 
   it('support ssr', () => {
@@ -423,6 +338,7 @@ describe('CSS Variables', () => {
             key: 'apple',
             prefix: 'app',
           },
+          hashed: true
         }}
       >
         <Box className="target" />
@@ -431,6 +347,7 @@ describe('CSS Variables', () => {
 
     let styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles.length).toBe(3);
+
     expect(
       styles.some((style) => style.textContent?.includes('var(--app-')),
     ).toBe(true);
@@ -445,6 +362,7 @@ describe('CSS Variables', () => {
             key: 'apple',
             prefix: 'bank',
           },
+          hashed: true
         }}
       >
         <Box className="target" />
