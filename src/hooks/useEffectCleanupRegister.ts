@@ -1,13 +1,9 @@
 import { warning } from 'rc-util/lib/warning';
-import * as React from 'react';
-
-const fullClone = {
-  ...React,
-};
-const { useInsertionEffect } = fullClone;
+import { useEffect } from 'react';
+import type { DependencyList } from 'react';
 
 // DO NOT register functions in useEffect cleanup function, or functions that registered will never be called.
-const useCleanupRegister = (deps?: React.DependencyList) => {
+const useEffectCleanupRegister = (deps?: DependencyList) => {
   const effectCleanups: (() => void)[] = [];
   let cleanupFlag = false;
   function register(fn: () => void) {
@@ -23,7 +19,7 @@ const useCleanupRegister = (deps?: React.DependencyList) => {
     effectCleanups.push(fn);
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Compatible with strict mode
     cleanupFlag = false;
     return () => {
@@ -36,15 +32,5 @@ const useCleanupRegister = (deps?: React.DependencyList) => {
 
   return register;
 };
-
-const useRun = () => {
-  return function (fn: () => void) {
-    fn();
-  };
-};
-
-// Only enable register in React 18
-const useEffectCleanupRegister =
-  typeof useInsertionEffect !== 'undefined' ? useCleanupRegister : useRun;
 
 export default useEffectCleanupRegister;

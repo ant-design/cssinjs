@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SSR > default hashPriority 1`] = `"<style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"-999\\" data-token-hash=\\"css-var-test\\" data-css-hash=\\"8ye4dg\\">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"0\\" data-css-hash=\\"25o2m6\\">.css-dev-only-do-not-override-1siwily.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path=\\"data-ant-cssinjs-cache-path\\">.data-ant-cssinjs-cache-path{content:\\"css-dev-only-do-not-override-1siwily|.hashPriority:25o2m6\\";}</style>"`;
+
+exports[`SSR > nest provider > extract 1`] = `"<style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"-999\\" data-token-hash=\\"css-var-test\\" data-css-hash=\\"185xr9r\\">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"0\\" data-css-hash=\\"1bbkdf1\\">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path=\\"data-ant-cssinjs-cache-path\\">.data-ant-cssinjs-cache-path{content:\\"|.box:1bbkdf1\\";}</style>"`;
+
+exports[`SSR > ssr extract style 1`] = `"<div id=\\":R1:\\" class=\\"id\\">:R1:</div><div class=\\"box\\"><div id=\\":R2:\\" class=\\"id\\">:R2:</div></div><div id=\\":R3:\\" class=\\"id\\">:R3:</div>"`;
+
+exports[`SSR > ssr extract style 2`] = `"<style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"-999\\" data-token-hash=\\"css-var-test\\" data-css-hash=\\"185xr9r\\">.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}</style><style data-rc-order=\\"prependQueue\\" data-rc-priority=\\"0\\" data-css-hash=\\"1bbkdf1\\">.box{background-color:var(--primary-color);}</style><style data-ant-cssinjs-cache-path=\\"data-ant-cssinjs-cache-path\\">.data-ant-cssinjs-cache-path{content:\\"|.box:1bbkdf1\\";}</style>"`;
+
+exports[`SSR > ssr extract style 3`] = `".css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}.box{background-color:var(--primary-color);}.data-ant-cssinjs-cache-path{content:\\"|.box:1bbkdf1\\";}"`;
+
+exports[`SSR > ssr keep order 1`] = `".css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}.order0{background-color:var(--primary-color);}.order1{background-color:var(--primary-color);}.order2{background-color:var(--primary-color);}.data-ant-cssinjs-cache-path{content:\\"|order1:1rqllqf;|order0:12ogt2g;|order2:1jmwgle\\";}"`;

@@ -30,13 +30,15 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     ignore?: Record<string, boolean>;
     scope?: string;
     token: any;
+    hashId?: string;
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, scope = '' } = config;
+  const { key, prefix, unitless, ignore, token, hashId, scope = '' } = config;
   const {
     cache: { instanceId },
     container,
+    hashPriority,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
@@ -52,6 +54,8 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
         unitless,
         ignore,
         scope,
+        hashPriority,
+        hashCls: hashId,
       });
       const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];

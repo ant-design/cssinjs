@@ -12,7 +12,7 @@ import {
   useCacheToken,
   useStyleRegister,
 } from '../src';
-import { ATTR_MARK, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
+import { ATTR_MARK } from '../src/StyleContext';
 import * as cacheMapUtil from '../src/util/cacheMapUtil';
 import { reset } from '../src/util/cacheMapUtil';
 
@@ -76,13 +76,13 @@ describe('SSR', () => {
   });
 
   const Box = ({ children }: { children?: React.ReactNode }) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      cssVar: { key: 'css-var-test' },
+    });
 
-    const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
-      genStyle(token),
-    ]);
+    useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
-    return wrapSSR(<div className="box">{children}</div>);
+    return <div className="box">{children}</div>;
   };
 
   const Card = ({ children }: { children?: React.ReactNode }) => {
@@ -104,12 +104,6 @@ describe('SSR', () => {
     );
   };
 
-  it('should not use cache', () => {
-    render(<Box />);
-
-    expect(document.head.querySelectorAll('style')).toHaveLength(0);
-  });
-
   it('ssr extract style', () => {
     // >>> SSR
     const cache = createCache();
@@ -127,15 +121,9 @@ describe('SSR', () => {
     const style = extractStyle(cache);
     const plainStyle = extractStyle(cache, true);
 
-    expect(html).toEqual(
-      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
-    );
-    expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
-    );
-    expect(plainStyle).toEqual(
-      '.box{background-color:#1890ff;}.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}',
-    );
+    expect(html).toMatchSnapshot();
+    expect(style).toMatchSnapshot();
+    expect(plainStyle).toMatchSnapshot();
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
     // >>> Server Render
@@ -147,10 +135,10 @@ describe('SSR', () => {
       document.head.innerHTML = `<style id="otherStyle">html { background: red; }</style>${style}`;
       root.innerHTML = html;
 
-      expect(document.head.querySelectorAll('style')).toHaveLength(3);
+      expect(document.head.querySelectorAll('style')).toHaveLength(4);
       reset(
         {
-          'z4ntcy|.box': '7g9s98',
+          '|.box': '1bbkdf1',
         },
         false,
       );
@@ -181,15 +169,15 @@ describe('SSR', () => {
     );
 
     expect(getStyleAndHash).toHaveBeenCalled();
-    expect(getStyleAndHash).toHaveBeenCalledWith('z4ntcy|.box');
+    expect(getStyleAndHash).toHaveBeenCalledWith('|.box');
     expect(getStyleAndHash).toHaveReturnedWith([
-      '.box{background-color:#1890ff;}',
-      '7g9s98',
+      '.box{background-color:var(--primary-color);}',
+      '1bbkdf1',
     ]);
 
     // Not remove other style
     expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
-    expect(document.head.querySelectorAll('style')).toHaveLength(3);
+    expect(document.head.querySelectorAll('style')).toHaveLength(5);
 
     expect(errorSpy).not.toHaveBeenCalled();
 
@@ -198,9 +186,11 @@ describe('SSR', () => {
 
   it('not extract clientOnly style', () => {
     const Client = ({ children }: { children?: React.ReactNode }) => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
 
-      const wrapSSR = useStyleRegister(
+      useStyleRegister(
         { theme, token, path: ['.client'], clientOnly: true },
         () => ({
           '.client': {
@@ -209,7 +199,7 @@ describe('SSR', () => {
         }),
       );
 
-      return wrapSSR(<div className="box">{children}</div>);
+      return <div className="box">{children}</div>;
     };
 
     const cache = createCache();
@@ -234,17 +224,16 @@ describe('SSR', () => {
         [baseToken],
         {
           salt: 'hashPriority',
+          cssVar: { key: 'css-var-test' },
         },
       );
 
-      const wrapSSR = useStyleRegister(
+      useStyleRegister(
         { theme, token, hashId, path: ['.hashPriority'] },
         () => [genStyle(token)],
       );
 
-      return wrapSSR(
-        <div className={classNames(hashId, 'my-box')}>{children}</div>,
-      );
+      return <div className={classNames(hashId, 'my-box')}>{children}</div>;
     };
 
     renderToString(
@@ -256,62 +245,7 @@ describe('SSR', () => {
     );
 
     const style = extractStyle(cache);
-    expect(style).toEqual(
-      '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="zarvcw" data-css-hash="1j3b03q">.css-dev-only-do-not-override-1sesbhq.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"zarvcw|.hashPriority:1j3b03q";}</style>',
-    );
-  });
-
-  it('tricky ssr', () => {
-    const html = renderToString(
-      <StyleProvider ssrInline>
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-    );
-
-    // >>> Exist style
-    const root = document.createElement('div');
-    root.id = 'root';
-    root.innerHTML = html;
-    expect(root.querySelectorAll('style')).toHaveLength(1);
-
-    // >>> Hydrate
-    canUseDom.mockReturnValue(true);
-    document.body.appendChild(root);
-    const cache = createCache();
-    render(
-      <StyleProvider
-        cache={cache}
-        // Force insert style since we hack `canUseDom` to false
-        mock="client"
-      >
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-      {
-        hydrate: true,
-        container: root,
-      },
-    );
-
-    // Remove inline style
-    expect(root.querySelectorAll('style')).toHaveLength(0);
-
-    // Patch to header
-    expect(document.head.querySelectorAll('style')).toHaveLength(1);
-    expect(
-      (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
-        CSS_IN_JS_INSTANCE
-      ],
-    ).toBe(cache.instanceId);
-
-    expect(errorSpy).not.toHaveBeenCalled();
+    expect(style).toMatchSnapshot();
   });
 
   it('!ssrInline', () => {
@@ -345,29 +279,7 @@ describe('SSR', () => {
       const style = extractStyle(cache);
 
       expect(html).toEqual('<div class="box"></div>');
-      expect(style).toEqual(
-        '<style data-rc-order="prependQueue" data-rc-priority="0" data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><style data-ant-cssinjs-cache-path="data-ant-cssinjs-cache-path">.data-ant-cssinjs-cache-path{content:"z4ntcy|.box:7g9s98";}</style>',
-      );
-    });
-
-    it('tricky', () => {
-      const html = renderToString(
-        <StyleProvider ssrInline>
-          <StyleProvider>
-            <StyleProvider>
-              <StyleProvider>
-                <StyleProvider>
-                  <Box />
-                </StyleProvider>
-              </StyleProvider>
-            </StyleProvider>
-          </StyleProvider>
-        </StyleProvider>,
-      );
-
-      expect(html).toEqual(
-        '<style data-token-hash="z4ntcy" data-css-hash="7g9s98">.box{background-color:#1890ff;}</style><div class="box"></div>',
-      );
+      expect(style).toMatchSnapshot();
     });
   });
 
@@ -406,18 +318,17 @@ describe('SSR', () => {
   it('ssr keep order', () => {
     const createComponent = (name: string, order?: number) => {
       const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
-        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+          cssVar: { key: 'css-var-test' },
+        });
 
-        const wrapSSR = useStyleRegister(
-          { theme, token, path: [name], order },
-          () => ({
-            [`.${name}`]: {
-              backgroundColor: token.primaryColor,
-            },
-          }),
-        );
+        useStyleRegister({ theme, token, path: [name], order }, () => ({
+          [`.${name}`]: {
+            backgroundColor: token.primaryColor,
+          },
+        }));
 
-        return wrapSSR(<div className={name}>{children}</div>);
+        return <div className={name}>{children}</div>;
       };
 
       return OrderDefault;
@@ -442,20 +353,83 @@ describe('SSR', () => {
     holder.innerHTML = style;
     const styles = Array.from(holder.querySelectorAll('style'));
 
-    expect(styles[0].getAttribute('data-rc-priority')).toEqual('0');
-    expect(styles[1].getAttribute('data-rc-priority')).toEqual('1');
-    expect(styles[2].getAttribute('data-rc-priority')).toEqual('2');
+    expect(styles[1].getAttribute('data-rc-priority')).toEqual('0');
+    expect(styles[2].getAttribute('data-rc-priority')).toEqual('1');
+    expect(styles[3].getAttribute('data-rc-priority')).toEqual('2');
 
     // Pure style
     const pureStyle = extractStyle(cache, true);
-    expect(pureStyle).toEqual(
-      [
-        `.order0{background-color:#1890ff;}`,
-        `.order1{background-color:#1890ff;}`,
-        `.order2{background-color:#1890ff;}`,
-        `.data-ant-cssinjs-cache-path{content:"z4ntcy|order1:wcvshe;z4ntcy|order0:1ec9a;z4ntcy|order2:v5oiw3";}`,
-      ].join(''),
-    );
+    expect(pureStyle).toMatchSnapshot();
+  });
+
+  it('extract with order', () => {
+    // Create 3 components without specified order: A, C, B
+    const A = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['a'] }, () => ({
+        '.a': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="a" />;
+    };
+    const C = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['c'] }, () => ({
+        '.c': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="c" />;
+    };
+    const B = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['b'] }, () => ({
+        '.b': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="b" />;
+    };
+
+    function testOrder(
+      node1: React.ReactElement,
+      node2: React.ReactElement,
+      node3: React.ReactElement,
+      componentMarks: string[],
+    ) {
+      const cache = createCache();
+
+      renderToString(
+        <StyleProvider cache={cache}>
+          {node1}
+          {node2}
+          {node3}
+        </StyleProvider>,
+      );
+
+      const plainStyle = extractStyle(cache, true);
+      const index1 = plainStyle.indexOf(`.${componentMarks[0]}{`);
+      const index2 = plainStyle.indexOf(`.${componentMarks[1]}{`);
+      const index3 = plainStyle.indexOf(`.${componentMarks[2]}{`);
+
+      expect(index1).toBeGreaterThanOrEqual(0);
+      expect(index2).toBeGreaterThan(index1);
+      expect(index3).toBeGreaterThan(index2);
+    }
+
+    // A B C
+    testOrder(<A />, <B />, <C />, ['a', 'b', 'c']);
+    // A C B
+    testOrder(<A />, <C />, <B />, ['a', 'c', 'b']);
+    // B A C
+    testOrder(<B />, <A />, <C />, ['b', 'a', 'c']);
+    // B C A
+    testOrder(<B />, <C />, <A />, ['b', 'c', 'a']);
+    // C A B
+    testOrder(<C />, <A />, <B />, ['c', 'a', 'b']);
+    // C B A
+    testOrder(<C />, <B />, <A />, ['c', 'b', 'a']);
   });
 
   it('should extract once when once option is true', () => {

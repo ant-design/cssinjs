@@ -2,6 +2,7 @@ import hash from '@emotion/hash';
 import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import { ATTR_MARK, ATTR_TOKEN } from '../StyleContext';
+import type { HashPriority } from '../StyleContext';
 import { Theme } from '../theme';
 
 // Create a cache for memo concat
@@ -186,4 +187,16 @@ export function toStyleStr(
     .join(' ');
 
   return `<style ${attrStr}>${style}</style>`;
+}
+
+export function where(options?: {
+  hashPriority?: HashPriority;
+  hashCls?: string;
+}) {
+  const { hashCls, hashPriority = 'low' } = options || {};
+  if (!hashCls) {
+    return '';
+  }
+  const hashSelector = `.${hashCls}`;
+  return hashPriority === 'low' ? `:where(${hashSelector})` : hashSelector;
 }
