@@ -439,7 +439,8 @@ describe('csssinjs', () => {
   });
 
   // https://github.com/ant-design/cssinjs/issues/189
-  it('should cleanup style when unmount', () => {
+  // style will not be removed in 2.0
+  it.skip('should cleanup style when unmount', () => {
     const container = document.createElement('div');
 
     const CssVarBox = () => {
@@ -448,6 +449,7 @@ describe('csssinjs', () => {
         [{ primaryColor: 'red' }],
         {
           salt: 'test',
+          cssVar: { key: 'css-var-test' },
         },
       );
 
@@ -466,7 +468,7 @@ describe('csssinjs', () => {
     };
 
     const { unmount } = render(
-      <StyleProvider cache={createCache()} container={container} autoClear>
+      <StyleProvider cache={createCache()} container={container}>
         <Box />
         <CssVarBox />
       </StyleProvider>,

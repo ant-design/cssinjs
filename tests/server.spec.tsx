@@ -75,12 +75,6 @@ describe('SSR', () => {
     },
   });
 
-  const genCardStyle = (token: DerivativeToken): CSSInterpolation => ({
-    '.card': {
-      backgroundColor: token.primaryColor,
-    },
-  });
-
   const Box = ({ children }: { children?: React.ReactNode }) => {
     const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
       cssVar: { key: 'css-var-test' },
@@ -89,16 +83,6 @@ describe('SSR', () => {
     useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
     return <div className="box">{children}</div>;
-  };
-
-  const Card = ({ children }: { children?: React.ReactNode }) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
-      cssVar: { key: 'css-var-test' },
-    });
-
-    useStyleRegister({ theme, token, path: ['.card'] }, () => [genCardStyle(token)]);
-
-    return <div className="card">{children}</div>;
   };
 
   const Card = ({ children }: { children?: React.ReactNode }) => {
