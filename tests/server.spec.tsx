@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import type { SpyInstance } from 'vitest';

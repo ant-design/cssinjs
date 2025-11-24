@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import type { ReactElement, ReactNode } from 'react';
 import * as React from 'react';
 import { StrictMode } from 'react';

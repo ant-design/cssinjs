@@ -1,6 +1,6 @@
 import { TinyColor } from '@ctrl/tinycolor';
 import { render } from '@testing-library/react';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { expect } from 'vitest';

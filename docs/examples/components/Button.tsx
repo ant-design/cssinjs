@@ -1,6 +1,6 @@
 import type { CSSInterpolation, CSSObject } from '@ant-design/cssinjs';
 import { unit, useCSSVarRegister, useStyleRegister } from '@ant-design/cssinjs';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import React from 'react';
 import type { DerivativeToken } from './theme';
 import { useToken } from './theme';
