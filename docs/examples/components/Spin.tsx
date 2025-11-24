@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import { clsx } from 'clsx';
 import React from 'react';
 import type { DerivativeToken } from './theme';
 import { useToken } from './theme';
@@ -41,14 +41,11 @@ const Spin = ({ className, ...restProps }: SpinProps) => {
   const [theme, token, hashId] = useToken();
 
   // 全局注册，内部会做缓存优化
-  useStyleRegister(
-    { theme, token, hashId, path: [prefixCls] },
-    () => [genSpinStyle(prefixCls, token)],
-  );
+  useStyleRegister({ theme, token, hashId, path: [prefixCls] }, () => [
+    genSpinStyle(prefixCls, token),
+  ]);
 
-  return (
-    <div className={classNames(prefixCls, hashId, className)} {...restProps} />
-  );
+  return <div className={clsx(prefixCls, hashId, className)} {...restProps} />;
 };
 
 export default Spin;

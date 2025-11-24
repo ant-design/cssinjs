@@ -1,4 +1,4 @@
-import { warning } from 'rc-util/lib/warning';
+import { warning } from '@rc-component/util/lib/warning';
 import type { DerivativeFunc, TokenType } from './interface';
 
 let uuid = 0;

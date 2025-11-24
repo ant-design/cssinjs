@@ -1,5 +1,5 @@
 import hash from '@emotion/hash';
-import { updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import { updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
 import { useContext } from 'react';
 import StyleContext, {
   ATTR_MARK,
@@ -96,7 +96,7 @@ function cleanTokenStyle(tokenKey: string, instanceId: string) {
   const cleanableKeyList = new Set<string>();
   tokenKeys.forEach((value, key) => {
     if (value <= 0) cleanableKeyList.add(key);
-  })
+  });
 
   // Should keep tokens under threshold for not to insert style too often
   if (tokenKeys.size - cleanableKeyList.size > TOKEN_THRESHOLD) {
@@ -252,7 +252,7 @@ export const extract: ExtractStyle<TokenCacheValue<any>> = (
   const order = -999;
 
   // ====================== Style ======================
-  // Used for rc-util
+  // Used for @rc-component/util
   const sharedAttrs = {
     'data-rc-order': 'prependQueue',
     'data-rc-priority': `${order}`,

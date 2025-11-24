@@ -1,4 +1,4 @@
-import devWarning from 'rc-util/lib/warning';
+import devWarning from '@rc-component/util/lib/warning';
 import type { LinterInfo } from './interface';
 
 export function lintWarning(message: string, info: LinterInfo) {

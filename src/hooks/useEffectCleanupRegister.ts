@@ -1,6 +1,6 @@
-import { warning } from 'rc-util/lib/warning';
-import { useEffect } from 'react';
+import { warning } from '@rc-component/util/lib/warning';
 import type { DependencyList } from 'react';
+import { useEffect } from 'react';
 
 // DO NOT register functions in useEffect cleanup function, or functions that registered will never be called.
 const useEffectCleanupRegister = (deps?: DependencyList) => {

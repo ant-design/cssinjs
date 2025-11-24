@@ -1,5 +1,5 @@
-import useMemo from 'rc-util/lib/hooks/useMemo';
-import isEqual from 'rc-util/lib/isEqual';
+import useMemo from '@rc-component/util/lib/hooks/useMemo';
+import isEqual from '@rc-component/util/lib/isEqual';
 import * as React from 'react';
 import CacheEntity from './Cache';
 import type { Linter } from './linters/interface';
