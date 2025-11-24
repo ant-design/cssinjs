@@ -1,8 +1,8 @@
 import hash from '@emotion/hash';
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
-import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
-import { ATTR_MARK, ATTR_TOKEN } from '../StyleContext';
+import canUseDom from '@rc-component/util/lib/Dom/canUseDom';
+import { removeCSS, updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
 import type { HashPriority } from '../StyleContext';
+import { ATTR_MARK, ATTR_TOKEN } from '../StyleContext';
 import { Theme } from '../theme';
 
 // Create a cache for memo concat

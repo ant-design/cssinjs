@@ -1,4 +1,4 @@
-import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
+import { removeCSS, updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
 import { useContext } from 'react';
 import StyleContext, {
   ATTR_MARK,
@@ -101,7 +101,7 @@ export const extract: ExtractStyle<CSSVarCacheValue<any>> = (
   const order = -999;
 
   // ====================== Style ======================
-  // Used for rc-util
+  // Used for @rc-component/util
   const sharedAttrs = {
     'data-rc-order': 'prependQueue',
     'data-rc-priority': `${order}`,

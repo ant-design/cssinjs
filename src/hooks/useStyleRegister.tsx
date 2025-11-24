@@ -1,6 +1,6 @@
 import hash from '@emotion/hash';
+import { removeCSS, updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
 import type * as CSS from 'csstype';
-import { removeCSS, updateCSS } from 'rc-util/lib/Dom/dynamicCSS';
 import * as React from 'react';
 // @ts-ignore
 import unitless from '@emotion/unitless';
@@ -357,8 +357,6 @@ export function uniqueHash(path: (string | number)[], styleStr: string) {
   return hash(`${path.join('%')}${styleStr}`);
 }
 
-
-
 export const STYLE_PREFIX = 'style';
 
 type StyleCacheValue = [
@@ -536,7 +534,7 @@ export const extract: ExtractStyle<StyleCacheValue> = (
   let keyStyleText = styleStr;
 
   // ====================== Share ======================
-  // Used for rc-util
+  // Used for @rc-component/util
   const sharedAttrs = {
     'data-rc-order': 'prependQueue',
     'data-rc-priority': `${order}`,

@@ -36,7 +36,7 @@ const baseToken: DesignToken = {
 const theme = new Theme(derivative);
 
 const canUseDom = vi.hoisted(() => vi.fn(() => false));
-vi.mock('rc-util/lib/Dom/canUseDom', () => {
+vi.mock('@rc-component/util/lib/Dom/canUseDom', () => {
   return {
     default: canUseDom,
   };
@@ -90,7 +90,9 @@ describe('SSR', () => {
       cssVar: { key: 'css-var-test' },
     });
 
-    useStyleRegister({ theme, token, path: ['.card'] }, () => [genCardStyle(token)]);
+    useStyleRegister({ theme, token, path: ['.card'] }, () => [
+      genCardStyle(token),
+    ]);
 
     return <div className="card">{children}</div>;
   };
@@ -445,19 +447,19 @@ describe('SSR', () => {
       </StyleProvider>,
     );
 
-    const style = extractStyle(cache, {plain: true, once: true});
+    const style = extractStyle(cache, { plain: true, once: true });
 
     renderToString(
       <StyleProvider cache={cache}>
         <Card />
       </StyleProvider>,
     );
-    const style2 = extractStyle(cache, {plain: true, once: true});
+    const style2 = extractStyle(cache, { plain: true, once: true });
 
     expect(style).toContain('.box');
     expect(style).not.toContain('.card');
 
     expect(style2).toContain('.card');
     expect(style2).not.toContain('.box');
-  })
+  });
 });

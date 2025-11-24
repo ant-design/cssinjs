@@ -1,4 +1,4 @@
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
+import canUseDom from '@rc-component/util/lib/Dom/canUseDom';
 import { ATTR_MARK } from '../StyleContext';
 
 export const ATTR_CACHE_MAP = 'data-ant-cssinjs-cache-path';
