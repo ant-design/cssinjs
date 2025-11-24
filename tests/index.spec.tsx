@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import classNames from 'classnames';
+import clsx from 'clsx';
 import type { ReactElement, ReactNode } from 'react';
 import * as React from 'react';
 import { StrictMode } from 'react';
@@ -237,7 +237,7 @@ describe('csssinjs', () => {
         genHashStyle(),
       ]);
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { unmount } = render(<Holder />);
@@ -337,7 +337,7 @@ describe('csssinjs', () => {
         () => [genDemoStyle(token)],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { rerender } = render(<Demo />);
@@ -409,7 +409,7 @@ describe('csssinjs', () => {
         () => [{ '&': genStyle1(token) }, { '': genStyle2() }],
       );
 
-      return <div className={classNames('box')} />;
+      return <div className={clsx('box')} />;
     };
 
     render(<Demo />);
@@ -532,7 +532,7 @@ describe('csssinjs', () => {
 
       return (
         <StyleProvider cache={cache}>
-          <div className={classNames('box', hashId)} />
+          <div className={clsx('box', hashId)} />
         </StyleProvider>
       );
     };
@@ -578,7 +578,7 @@ describe('csssinjs', () => {
         () => [genDemoStyle()],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     render(<Demo />);
@@ -606,7 +606,7 @@ describe('csssinjs', () => {
         () => [genDemoStyle()],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     render(<Demo />);
@@ -653,7 +653,7 @@ describe('csssinjs', () => {
         () => [genDemoStyle(token)],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { rerender } = render(<Demo myToken="test" />);
@@ -727,7 +727,7 @@ describe('csssinjs', () => {
         return (
           <>
             <Style token={token} hashId={hashId} />
-            <div className={classNames('box', hashId)}>{children}</div>
+            <div className={clsx('box', hashId)}>{children}</div>
           </>
         );
       };
@@ -807,7 +807,7 @@ describe('csssinjs', () => {
           }),
         );
 
-        return <div className={classNames('box', hashId)}>{children}</div>;
+        return <div className={clsx('box', hashId)}>{children}</div>;
       };
 
       const { rerender } = render(wrapper(<Demo myToken="token1" />));
@@ -857,7 +857,7 @@ describe('csssinjs', () => {
         genHashStyle(),
       ]);
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { unmount } = render(<Holder />);
@@ -905,7 +905,7 @@ describe('csssinjs', () => {
         () => [genHashStyle(token)],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { rerender } = render(<Demo salt="test" />);

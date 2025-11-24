@@ -1,6 +1,6 @@
 import { TinyColor } from '@ctrl/tinycolor';
 import { render } from '@testing-library/react';
-import classNames from 'classnames';
+import clsx from 'clsx';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { expect } from 'vitest';
@@ -72,8 +72,8 @@ const DesignTokenContext = React.createContext<DesignTokenProviderProps>({
   token: defaultDesignToken,
   hashed: false,
   cssVar: {
-    key: 'css-var-root'
-  }
+    key: 'css-var-root',
+  },
 });
 
 const DesignTokenProvider: React.FC<
@@ -190,7 +190,7 @@ const useStyle = () => {
 const Box = (props: { className?: string }) => {
   const cls = useStyle();
 
-  return <div className={classNames(cls, 'box', props.className)} />;
+  return <div className={clsx(cls, 'box', props.className)} />;
 };
 
 describe('CSS Variables', () => {
@@ -338,7 +338,7 @@ describe('CSS Variables', () => {
             key: 'apple',
             prefix: 'app',
           },
-          hashed: true
+          hashed: true,
         }}
       >
         <Box className="target" />
@@ -362,7 +362,7 @@ describe('CSS Variables', () => {
             key: 'apple',
             prefix: 'bank',
           },
-          hashed: true
+          hashed: true,
         }}
       >
         <Box className="target" />
