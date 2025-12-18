@@ -1,5 +1,5 @@
 import { StyleProvider, Theme, useStyleRegister } from '@ant-design/cssinjs';
-import { clsx } from 'clsx';
+import classix from 'classix';
 import React from 'react';
 
 const theme = new Theme([() => ({})]);
@@ -49,7 +49,7 @@ const Div = ({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => {
     }),
   );
 
-  return <div className={clsx(className, 'layer-div')} {...rest} />;
+  return <div className={classix(className, 'layer-div')} {...rest} />;
 };
 
 export default function App() {

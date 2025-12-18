@@ -1,6 +1,6 @@
 import type { CSSInterpolation, CSSObject } from '@ant-design/cssinjs';
 import { unit, useCSSVarRegister, useStyleRegister } from '@ant-design/cssinjs';
-import { clsx } from 'clsx';
+import classix from 'classix';
 import React from 'react';
 import type { DerivativeToken } from './theme';
 import { useToken } from './theme';
@@ -160,7 +160,7 @@ const Button = ({ className, type, ...restProps }: ButtonProps) => {
 
   return (
     <button
-      className={clsx(prefixCls, typeCls, hashId, className, cssVarKey)}
+      className={classix(prefixCls, typeCls, hashId, className, cssVarKey)}
       {...restProps}
     />
   );

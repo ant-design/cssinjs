@@ -1,6 +1,6 @@
 import type { CSSInterpolation } from '@ant-design/cssinjs';
 import { useStyleRegister } from '@ant-design/cssinjs';
-import { clsx } from 'clsx';
+import classix from 'classix';
 import React from 'react';
 import type { DerivativeToken } from './components/theme';
 import { DesignTokenContext, useToken } from './components/theme';
@@ -49,7 +49,7 @@ const genComponent = (genStyle: typeof genStyle1) => {
     ]);
 
     return (
-      <div className={clsx(prefixCls, hashId, className)} {...restProps} />
+      <div className={classix(prefixCls, hashId, className)} {...restProps} />
     );
   };
 };

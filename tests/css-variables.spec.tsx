@@ -1,6 +1,6 @@
 import { TinyColor } from '@ctrl/tinycolor';
 import { render } from '@testing-library/react';
-import { clsx } from 'clsx';
+import classix from 'classix';
 import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { expect } from 'vitest';
@@ -190,7 +190,7 @@ const useStyle = () => {
 const Box = (props: { className?: string }) => {
   const cls = useStyle();
 
-  return <div className={clsx(cls, 'box', props.className)} />;
+  return <div className={classix(cls, 'box', props.className)} />;
 };
 
 describe('CSS Variables', () => {

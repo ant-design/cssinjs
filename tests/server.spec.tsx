@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { clsx } from 'clsx';
+import classix from 'classix';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import type { SpyInstance } from 'vitest';
@@ -235,7 +235,7 @@ describe('SSR', () => {
         () => [genStyle(token)],
       );
 
-      return <div className={clsx(hashId, 'my-box')}>{children}</div>;
+      return <div className={classix(hashId, 'my-box')}>{children}</div>;
     };
 
     renderToString(

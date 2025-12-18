@@ -1,4 +1,4 @@
-import { clsx } from 'clsx';
+import classix from 'classix';
 import React from 'react';
 import type { DerivativeToken } from './theme';
 import { useToken } from './theme';
@@ -45,7 +45,7 @@ const Spin = ({ className, ...restProps }: SpinProps) => {
     genSpinStyle(prefixCls, token),
   ]);
 
-  return <div className={clsx(prefixCls, hashId, className)} {...restProps} />;
+  return <div className={classix(prefixCls, hashId, className)} {...restProps} />;
 };
 
 export default Spin;
