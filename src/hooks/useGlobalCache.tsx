@@ -80,7 +80,7 @@ export default function useGlobalCache<CacheType>(
       onCacheEffect?.(cacheContent);
       effectMap.set(fullPathStr, true);
 
-      // 微任务清理混存，可以认为是单次 batch render 中只触发一次 effect
+      // 微任务清理缓存，可以认为是单次 batch render 中只触发一次 effect
       Promise.resolve().then(() => {
         effectMap.delete(fullPathStr);
       });
