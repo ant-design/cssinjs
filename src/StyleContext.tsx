@@ -23,8 +23,7 @@ export function createCache() {
     const { firstChild } = document.head;
 
     Array.from(styles).forEach((style) => {
-      (style as any)[CSS_IN_JS_INSTANCE] =
-        (style as any)[CSS_IN_JS_INSTANCE] || cssinjsInstanceId;
+      (style as any)[CSS_IN_JS_INSTANCE] ||= cssinjsInstanceId;
 
       // Not force move if no head
       if ((style as any)[CSS_IN_JS_INSTANCE] === cssinjsInstanceId) {
