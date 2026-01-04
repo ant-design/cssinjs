@@ -190,7 +190,7 @@ export default function useCacheToken<
       // Optimize for `useStyleRegister` performance
       const mergedSalt = `${salt}_${cssVar.prefix}`;
       const hashId = hash(mergedSalt);
-      const hashCls = `${hashPrefix}-${hash(mergedSalt)}`;
+      const hashCls = `${hashPrefix}-${hashId}`;
       actualToken._tokenKey = token2key(actualToken, mergedSalt);
 
       // Replace token value with css variables

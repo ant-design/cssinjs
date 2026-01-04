@@ -15,7 +15,7 @@ import StyleContext, {
   ATTR_MARK,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, toStyleStr } from '../util';
+import { isClientSide, toStyleStr, where } from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -100,15 +100,13 @@ function isCompoundCSSProperty(value: CSSObject[string]) {
 function injectSelectorHash(
   key: string,
   hashId: string,
-  hashPriority?: HashPriority,
+  hashPriority: HashPriority = 'high',
 ) {
   if (!hashId) {
     return key;
   }
 
-  const hashClassName = `.${hashId}`;
-  const hashSelector =
-    hashPriority === 'low' ? `:where(${hashClassName})` : hashClassName;
+  const hashSelector = where({ hashCls: hashId, hashPriority });
 
   // 注入 hashId
   const keys = key.split(',').map((k) => {
