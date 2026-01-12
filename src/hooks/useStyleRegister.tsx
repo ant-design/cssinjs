@@ -323,8 +323,8 @@ export const parseStyle = (
               appendStyle(key, item);
             });
           } else {
-            // Convert undefined to 0 for padding
-            if (key.toLowerCase() === 'padding' && isNullable(actualValue)) {
+            // 如果是 padding 属性，并且值为 undefined，则转换为 0
+            if (key.startsWith('padding') && isNullable(actualValue)) {
               appendStyle(key, 0);
             } else {
               appendStyle(key, actualValue);
