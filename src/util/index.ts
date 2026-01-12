@@ -204,3 +204,7 @@ export function where(options?: {
 export const isNullable = <T>(val: T): val is Extract<T, null | undefined> => {
   return val === null || val === undefined;
 };
+
+export const normalizeValue = <T>(val: T) => {
+  return isNullable(val) ? 0 : val;
+};
