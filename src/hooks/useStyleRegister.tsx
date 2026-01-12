@@ -15,7 +15,7 @@ import StyleContext, {
   ATTR_MARK,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, toStyleStr, where } from '../util';
+import { isClientSide, isNullable, toStyleStr, where } from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -323,7 +323,12 @@ export const parseStyle = (
               appendStyle(key, item);
             });
           } else {
-            appendStyle(key, actualValue);
+            // Convert undefined to 0 for padding
+            if (key.toLowerCase() === 'padding' && isNullable(actualValue)) {
+              appendStyle(key, 0);
+            } else {
+              appendStyle(key, actualValue);
+            }
           }
         }
       });

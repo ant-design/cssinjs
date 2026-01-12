@@ -200,3 +200,7 @@ export function where(options?: {
   const hashSelector = `.${hashCls}`;
   return hashPriority === 'low' ? `:where(${hashSelector})` : hashSelector;
 }
+
+export const isNullable = <T>(val: T): val is Extract<T, null | undefined> => {
+  return val === null || val === undefined;
+};
