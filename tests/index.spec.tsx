@@ -948,4 +948,36 @@ describe('csssinjs', () => {
     );
     expect(styles3[2].innerHTML).not.toEqual(style);
   });
+
+  it('should skip appendStyle when value is null or undefined', () => {
+    const genStyle = (): CSSInterpolation => ({
+      '.undefined-test': {
+        padding: undefined,
+      },
+    });
+
+    const Demo: React.FC = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-undefined-to-zero'] },
+        genStyle,
+      );
+
+      const className = clsx('undefined-test', hashId);
+
+      return <div className={className}>test</div>;
+    };
+
+    render(<Demo />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+
+    const styleContent = styles[styles.length - 1];
+
+    expect(styleContent.innerHTML).not.toContain('padding');
+  });
 });

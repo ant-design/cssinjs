@@ -15,7 +15,7 @@ import StyleContext, {
   ATTR_MARK,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, toStyleStr, where } from '../util';
+import { isClientSide, isNonNullable, toStyleStr, where } from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -323,7 +323,9 @@ export const parseStyle = (
               appendStyle(key, item);
             });
           } else {
-            appendStyle(key, actualValue);
+            if (isNonNullable(actualValue)) {
+              appendStyle(key, actualValue);
+            }
           }
         }
       });
