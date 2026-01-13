@@ -978,6 +978,6 @@ describe('csssinjs', () => {
 
     const styleContent = styles[styles.length - 1];
 
-    expect(styleContent.innerHTML).toContain('padding:0');
+    expect(styleContent.innerHTML).not.toContain('padding');
   });
 });
