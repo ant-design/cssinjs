@@ -949,7 +949,7 @@ describe('csssinjs', () => {
     expect(styles3[2].innerHTML).not.toEqual(style);
   });
 
-  it('should convert undefined value to 0 for padding', () => {
+  it('should skip appendStyle when value is null or undefined', () => {
     const genStyle = (): CSSInterpolation => ({
       '.undefined-test': {
         padding: undefined,
