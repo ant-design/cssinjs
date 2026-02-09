@@ -42,7 +42,8 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const stylePath = [...config.path, key, scope, tokenKey];
+  const scopeKey = Array.isArray(scope) ? scope.join('@@') : scope;
+  const stylePath = [...config.path, key, scopeKey, tokenKey];
 
   const cache = useGlobalCache<CSSVarCacheValue<V, T>>(
     CSS_VAR_PREFIX,

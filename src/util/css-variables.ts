@@ -24,7 +24,11 @@ export const serializeCSSVar = <T extends Record<string, any>>(
   }
 
   const baseSelector = `${where({ hashCls, hashPriority })}.${hashId}`;
-  const scopes = Array.isArray(scope) ? scope : scope ? [scope] : [];
+  const scopes = Array.isArray(scope)
+    ? scope.filter(Boolean)
+    : scope
+    ? [scope]
+    : [];
   const selector = scopes.length
     ? scopes.map((s) => `${baseSelector}.${s}`).join(', ')
     : baseSelector;
