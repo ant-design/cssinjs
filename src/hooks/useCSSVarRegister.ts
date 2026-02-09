@@ -28,13 +28,13 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     prefix?: string;
     unitless?: Record<string, boolean>;
     ignore?: Record<string, boolean>;
-    scope?: string;
+    scope?: string | string[];
     token: any;
     hashId?: string;
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, hashId, scope = '' } = config;
+  const { key, prefix, unitless, ignore, token, hashId, scope } = config;
   const {
     cache: { instanceId },
     container,

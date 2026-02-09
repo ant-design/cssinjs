@@ -13,18 +13,23 @@ export const serializeCSSVar = <T extends Record<string, any>>(
   cssVars: T,
   hashId: string,
   options?: {
-    scope?: string;
+    scope?: string | string[];
     hashCls?: string;
     hashPriority?: HashPriority;
   },
 ) => {
-  const { hashCls, hashPriority = 'low' } = options || {};
+  const { hashCls, hashPriority = 'low', scope } = options || {};
   if (!Object.keys(cssVars).length) {
     return '';
   }
-  return `${where({ hashCls, hashPriority })}.${hashId}${
-    options?.scope ? `.${options.scope}` : ''
-  }{${Object.entries(cssVars)
+
+  const baseSelector = `${where({ hashCls, hashPriority })}.${hashId}`;
+  const scopes = Array.isArray(scope) ? scope : scope ? [scope] : [];
+  const selector = scopes.length
+    ? scopes.map((s) => `${baseSelector}.${s}`).join(', ')
+    : baseSelector;
+
+  return `${selector}{${Object.entries(cssVars)
     .map(([key, value]) => `${key}:${value};`)
     .join('')}}`;
 };
@@ -53,7 +58,7 @@ export const transformToken = <
     preserve?: {
       [key in keyof T]?: boolean;
     };
-    scope?: string;
+    scope?: string | string[];
     hashCls?: string;
     hashPriority?: HashPriority;
   },
