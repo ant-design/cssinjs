@@ -28,13 +28,13 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     prefix?: string;
     unitless?: Record<string, boolean>;
     ignore?: Record<string, boolean>;
-    scope?: string;
+    scope?: string | string[];
     token: any;
     hashId?: string;
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, hashId, scope = '' } = config;
+  const { key, prefix, unitless, ignore, token, hashId, scope } = config;
   const {
     cache: { instanceId },
     container,
@@ -42,7 +42,8 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
-  const stylePath = [...config.path, key, scope, tokenKey];
+  const scopeKey = Array.isArray(scope) ? scope.join('@@') : scope;
+  const stylePath = [...config.path, key, scopeKey, tokenKey];
 
   const cache = useGlobalCache<CSSVarCacheValue<V, T>>(
     CSS_VAR_PREFIX,
