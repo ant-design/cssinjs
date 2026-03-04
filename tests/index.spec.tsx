@@ -507,26 +507,46 @@ describe('csssinjs', () => {
     test('function', () => 'bamboo');
   });
 
-  describe('StyleProvider nonce for CSS var', () => {
-    function testWithStyleProvider(name: string, nonce: string | (() => string)) {
-      it(name, () => {
-        const { unmount } = render(
-          <StyleProvider cache={createCache()} nonce={nonce}>
-            <Box />
-          </StyleProvider>,
-        );
+  describe('useCacheToken with nonce parameter', () => {
+    it('should apply nonce from parameter (string)', () => {
+      const NonceBox = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+          cssVar: {
+            key: 'css-var-test',
+          },
+          nonce: 'bamboo',
+        });
 
-        const styles = Array.from(document.head.querySelectorAll('style'));
-        // Box 组件使用 useCacheToken 注册 CSS var，应该有 nonce
-        const cssVarStyle = styles.find(s => s.innerHTML.includes('--primary-color'));
-        expect(cssVarStyle).toBeDefined();
-        expect(cssVarStyle?.nonce).toBe('bamboo');
-        // unmount 后样式清理行为取决于 cache 配置
-      });
-    }
+        return <div className="box-nonced">{token.primaryColor}</div>;
+      };
+      
+      render(<NonceBox />);
 
-    testWithStyleProvider('string', 'bamboo');
-    testWithStyleProvider('function', () => 'bamboo');
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      const cssVarStyle = styles.find(s => s.innerHTML.includes('--primary-color'));
+      expect(cssVarStyle).toBeDefined();
+      expect(cssVarStyle?.nonce).toBe('bamboo');
+    });
+
+    it('should apply nonce from parameter (function)', () => {
+      const NonceBox = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+          cssVar: {
+            key: 'css-var-test',
+          },
+          nonce: () => 'bamboo',
+        });
+
+        return <div className="box-nonced">{token.primaryColor}</div>;
+      };
+      
+      render(<NonceBox />);
+
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      const cssVarStyle = styles.find(s => s.innerHTML.includes('--primary-color'));
+      expect(cssVarStyle).toBeDefined();
+      expect(cssVarStyle?.nonce).toBe('bamboo');
+    });
   });
 
   it('should not insert style with different instanceId', () => {
