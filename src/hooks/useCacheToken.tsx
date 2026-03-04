@@ -161,6 +161,7 @@ export default function useCacheToken<
     cache: { instanceId },
     container,
     hashPriority,
+    nonce,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -219,12 +220,19 @@ export default function useCacheToken<
       if (!cssVarsStr) {
         return;
       }
-      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), {
+      const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
         priority: -999,
-      });
+      };
+
+      const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+      if (nonceStr) {
+        mergedCSSConfig.csp = { nonce: nonceStr };
+      }
+
+      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), mergedCSSConfig);
 
       (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
 

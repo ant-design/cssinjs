@@ -39,6 +39,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     cache: { instanceId },
     container,
     hashPriority,
+    nonce,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
@@ -70,12 +71,19 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       if (!cssVarsStr) {
         return;
       }
-      const style = updateCSS(cssVarsStr, styleId, {
+      const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
         priority: -999,
-      });
+      };
+
+      const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+      if (nonceStr) {
+        mergedCSSConfig.csp = { nonce: nonceStr };
+      }
+
+      const style = updateCSS(cssVarsStr, styleId, mergedCSSConfig);
 
       (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
 

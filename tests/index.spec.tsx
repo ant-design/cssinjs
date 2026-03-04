@@ -507,6 +507,28 @@ describe('csssinjs', () => {
     test('function', () => 'bamboo');
   });
 
+  describe('StyleProvider nonce for CSS var', () => {
+    function testWithStyleProvider(name: string, nonce: string | (() => string)) {
+      it(name, () => {
+        const { unmount } = render(
+          <StyleProvider cache={createCache()} nonce={nonce}>
+            <Box />
+          </StyleProvider>,
+        );
+
+        const styles = Array.from(document.head.querySelectorAll('style'));
+        // Box 组件使用 useCacheToken 注册 CSS var，应该有 nonce
+        const cssVarStyle = styles.find(s => s.innerHTML.includes('--primary-color'));
+        expect(cssVarStyle).toBeDefined();
+        expect(cssVarStyle?.nonce).toBe('bamboo');
+        // unmount 后样式清理行为取决于 cache 配置
+      });
+    }
+
+    testWithStyleProvider('string', 'bamboo');
+    testWithStyleProvider('function', () => 'bamboo');
+  });
+
   it('should not insert style with different instanceId', () => {
     const genDemoStyle = (token: DerivativeToken): CSSInterpolation => ({
       div: {
