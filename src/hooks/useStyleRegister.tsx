@@ -15,7 +15,7 @@ import StyleContext, {
   ATTR_MARK,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, isNonNullable, toStyleStr, where } from '../util';
+import { injectCSPNonce, isClientSide, isNonNullable, toStyleStr, where } from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -463,11 +463,7 @@ export default function useStyleRegister(
           priority,
         };
 
-        const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-
-        if (nonceStr) {
-          mergedCSSConfig.csp = { nonce: nonceStr };
-        }
+        injectCSPNonce(mergedCSSConfig, nonce);
 
         // ================= Split Effect Style =================
         // We will split effectStyle here since @layer should be at the top level

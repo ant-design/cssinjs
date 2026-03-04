@@ -204,3 +204,18 @@ export function where(options?: {
 export const isNonNullable = <T>(val: T): val is NonNullable<T> => {
   return val !== undefined && val !== null;
 };
+
+export type Nonce = string | (() => string);
+
+/**
+ * Get nonce value and inject it into CSS config if available.
+ */
+export function injectCSPNonce<T extends { csp?: { nonce?: string } }>(
+  config: T,
+  nonce: Nonce | undefined,
+) {
+  const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+  if (nonceStr) {
+    config.csp = { nonce: nonceStr };
+  }
+}
