@@ -5,7 +5,7 @@ import StyleContext, {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, toStyleStr } from '../util';
+import { isClientSide, mergeCSSConfig, toStyleStr } from '../util';
 import type { TokenWithCSSVar } from '../util/css-variables';
 import { transformToken } from '../util/css-variables';
 import type { ExtractStyle } from './useGlobalCache';
@@ -71,17 +71,15 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       if (!cssVarsStr) {
         return;
       }
-      const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
-        mark: ATTR_MARK,
-        prepend: 'queue',
-        attachTo: container,
-        priority: -999,
-      };
-
-      const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
-      if (nonceStr) {
-        mergedCSSConfig.csp = { nonce: nonceStr };
-      }
+      const mergedCSSConfig = mergeCSSConfig<Parameters<typeof updateCSS>[2]>(
+        {
+          mark: ATTR_MARK,
+          prepend: 'queue',
+          attachTo: container,
+          priority: -999,
+        },
+        nonce,
+      );
 
       const style = updateCSS(cssVarsStr, styleId, mergedCSSConfig);
 
