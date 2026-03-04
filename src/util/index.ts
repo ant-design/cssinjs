@@ -158,7 +158,10 @@ export const isClientSide = canUseDom();
 /**
  * Merge CSS injection configuration with nonce support
  */
-export function mergeCSSConfig<T extends Record<string, any>>(
+/**
+ * Merge CSS injection configuration with nonce support
+ */
+export function mergeCSSConfig<T>(
   config: T,
   nonce?: string | (() => string),
 ): T {
