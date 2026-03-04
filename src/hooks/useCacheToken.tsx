@@ -67,6 +67,7 @@ export interface Option<DerivativeToken, DesignToken> {
     preserve?: Record<string, boolean>;
     /** Key for current theme. Useful for customizing and should be unique */
     key: string;
+    nonce?: string | (() => string);
   };
 }
 
@@ -161,7 +162,6 @@ export default function useCacheToken<
     cache: { instanceId },
     container,
     hashPriority,
-    nonce,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -169,6 +169,7 @@ export default function useCacheToken<
     formatToken,
     getComputedToken: compute,
     cssVar,
+    nonce,
   } = option;
 
   // Basic - We do basic cache here

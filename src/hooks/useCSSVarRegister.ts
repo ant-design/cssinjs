@@ -31,15 +31,15 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     scope?: string | string[];
     token: any;
     hashId?: string;
+    nonce?: string | (() => string);
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, hashId, scope } = config;
+  const { key, prefix, unitless, ignore, token, hashId, scope, nonce } = config;
   const {
     cache: { instanceId },
     container,
     hashPriority,
-    nonce,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
