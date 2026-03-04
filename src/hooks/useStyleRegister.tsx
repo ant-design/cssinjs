@@ -15,7 +15,13 @@ import StyleContext, {
   ATTR_MARK,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { injectCSPNonce, isClientSide, isNonNullable, toStyleStr, where } from '../util';
+import {
+  injectCSPNonce,
+  isClientSide,
+  isNonNullable,
+  toStyleStr,
+  where,
+} from '../util';
 import {
   CSS_FILE_STYLE,
   existPath,
@@ -456,14 +462,14 @@ export default function useStyleRegister(
     (cacheValue) => {
       const [styleStr, styleId, effectStyle, , priority] = cacheValue;
       if (isMergedClientSide && styleStr !== CSS_FILE_STYLE) {
-        const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+        let mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
           mark: ATTR_MARK,
           prepend: enableLayer ? false : 'queue',
           attachTo: container,
           priority,
         };
 
-        injectCSPNonce(mergedCSSConfig, nonce);
+        mergedCSSConfig = injectCSPNonce(mergedCSSConfig, nonce);
 
         // ================= Split Effect Style =================
         // We will split effectStyle here since @layer should be at the top level

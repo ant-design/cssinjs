@@ -71,14 +71,14 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       if (!cssVarsStr) {
         return;
       }
-      const mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
+      let mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
         priority: -999,
       };
 
-      injectCSPNonce(mergedCSSConfig, nonce);
+      mergedCSSConfig = injectCSPNonce(mergedCSSConfig, nonce);
 
       const style = updateCSS(cssVarsStr, styleId, mergedCSSConfig);
 
