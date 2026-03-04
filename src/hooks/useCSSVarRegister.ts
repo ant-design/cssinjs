@@ -5,7 +5,7 @@ import StyleContext, {
   ATTR_TOKEN,
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
-import { isClientSide, toStyleStr } from '../util';
+import { injectCSPNonce, isClientSide, toStyleStr } from '../util';
 import type { TokenWithCSSVar } from '../util/css-variables';
 import { transformToken } from '../util/css-variables';
 import type { ExtractStyle } from './useGlobalCache';
@@ -31,10 +31,11 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     scope?: string | string[];
     token: any;
     hashId?: string;
+    nonce?: string | (() => string);
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, token, hashId, scope } = config;
+  const { key, prefix, unitless, ignore, token, hashId, scope, nonce } = config;
   const {
     cache: { instanceId },
     container,
@@ -70,12 +71,16 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
       if (!cssVarsStr) {
         return;
       }
-      const style = updateCSS(cssVarsStr, styleId, {
+      let mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
         priority: -999,
-      });
+      };
+
+      mergedCSSConfig = injectCSPNonce(mergedCSSConfig, nonce);
+
+      const style = updateCSS(cssVarsStr, styleId, mergedCSSConfig);
 
       (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
 

@@ -7,7 +7,13 @@ import StyleContext, {
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
 import type Theme from '../theme/Theme';
-import { flattenToken, memoResult, token2key, toStyleStr } from '../util';
+import {
+  flattenToken,
+  injectCSPNonce,
+  memoResult,
+  token2key,
+  toStyleStr,
+} from '../util';
 import { transformToken } from '../util/css-variables';
 import type { ExtractStyle } from './useGlobalCache';
 import useGlobalCache from './useGlobalCache';
@@ -68,6 +74,12 @@ export interface Option<DerivativeToken, DesignToken> {
     /** Key for current theme. Useful for customizing and should be unique */
     key: string;
   };
+
+  /**
+   * CSP nonce for style element.
+   * Can be a string or a function that returns a string.
+   */
+  nonce?: string | (() => string);
 }
 
 const tokenKeys = new Map<string, number>();
@@ -168,6 +180,7 @@ export default function useCacheToken<
     formatToken,
     getComputedToken: compute,
     cssVar,
+    nonce,
   } = option;
 
   // Basic - We do basic cache here
@@ -219,12 +232,20 @@ export default function useCacheToken<
       if (!cssVarsStr) {
         return;
       }
-      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), {
+      let mergedCSSConfig: Parameters<typeof updateCSS>[2] = {
         mark: ATTR_MARK,
         prepend: 'queue',
         attachTo: container,
         priority: -999,
-      });
+      };
+
+      mergedCSSConfig = injectCSPNonce(mergedCSSConfig, nonce);
+
+      const style = updateCSS(
+        cssVarsStr,
+        hash(`css-var-${themeKey}`),
+        mergedCSSConfig,
+      );
 
       (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
 

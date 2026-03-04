@@ -14,6 +14,7 @@ import {
   useCSSVarRegister,
   useStyleRegister,
 } from '../src';
+import { ATTR_TOKEN } from '../src/StyleContext';
 
 export interface DesignToken {
   primaryColor: string;
@@ -579,5 +580,97 @@ describe('CSS Variables', () => {
     expect(cssVarStyle?.textContent).toMatch(
       /\.orange\.box,\s*\.orange\.container\{/,
     );
+  });
+
+  describe('nonce', () => {
+    function testCacheTokenNonce(
+      name: string,
+      nonce: string | (() => string),
+    ) {
+      it(`useCacheToken - ${name}`, () => {
+        const CacheTokenNonceBox = () => {
+          useCacheToken<DerivativeToken, DesignToken>(
+            theme,
+            [defaultDesignToken],
+            {
+              salt: '',
+              cssVar: {
+                prefix: 'rc',
+                key: 'nonce-cache-token',
+              },
+              nonce,
+            },
+          );
+
+          return <div />;
+        };
+
+        render(
+          <StyleProvider cache={createCache()}>
+            <CacheTokenNonceBox />
+          </StyleProvider>,
+        );
+
+        const styles = Array.from(document.head.querySelectorAll('style'));
+        const cacheTokenStyle = styles.find((style) =>
+          style.getAttribute(ATTR_TOKEN) === 'nonce-cache-token',
+        );
+        expect(cacheTokenStyle).toBeDefined();
+        expect(cacheTokenStyle!.nonce).toBe('bamboo');
+      });
+    }
+
+    testCacheTokenNonce('string', 'bamboo');
+    testCacheTokenNonce('function', () => 'bamboo');
+
+    function testCSSVarRegisterNonce(
+      name: string,
+      nonce: string | (() => string),
+    ) {
+      it(`useCSSVarRegister - ${name}`, () => {
+        const CSSVarNonceBox = () => {
+          const [token, hashId, realToken] = useCacheToken<
+            DerivativeToken,
+            DesignToken
+          >(theme, [defaultDesignToken], {
+            salt: '',
+            cssVar: {
+              prefix: 'rc',
+              key: 'nonce-css-var',
+            },
+          });
+
+          useCSSVarRegister(
+            {
+              path: ['NonceBox'],
+              key: 'nonce-css-var',
+              token: realToken,
+              prefix: 'rc-nonce',
+              hashId,
+              nonce,
+            },
+            () => ({ testColor: '#ff0000' }),
+          );
+
+          return <div />;
+        };
+
+        render(
+          <StyleProvider cache={createCache()}>
+            <CSSVarNonceBox />
+          </StyleProvider>,
+        );
+
+        const styles = Array.from(document.head.querySelectorAll('style'));
+        const cssVarStyle = styles.find((style) =>
+          style.textContent?.includes('--rc-nonce-test-color'),
+        );
+        expect(cssVarStyle).toBeDefined();
+        expect(cssVarStyle!.nonce).toBe('bamboo');
+      });
+    }
+
+    testCSSVarRegisterNonce('string', 'bamboo');
+    testCSSVarRegisterNonce('function', () => 'bamboo');
   });
 });
