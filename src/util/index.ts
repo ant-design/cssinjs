@@ -216,6 +216,6 @@ export function injectCSPNonce<T extends { csp?: { nonce?: string } }>(
 ) {
   const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
   if (nonceStr) {
-    config.csp = { nonce: nonceStr };
+    config.csp = { ...config.csp, nonce: nonceStr };
   }
 }
