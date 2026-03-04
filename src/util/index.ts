@@ -155,6 +155,28 @@ export function supportLogicProps(): boolean {
 
 export const isClientSide = canUseDom();
 
+/**
+ * Merge CSS injection configuration with nonce support
+ */
+/**
+ * Merge CSS injection configuration with nonce support
+ */
+export function mergeCSSConfig<T>(
+  config: T,
+  nonce?: string | (() => string),
+): T {
+  if (!nonce) {
+    return config;
+  }
+  
+  const mergedConfig = { ...config };
+  const nonceStr = typeof nonce === 'function' ? nonce() : nonce;
+  if (nonceStr) {
+    (mergedConfig as any).csp = { nonce: nonceStr };
+  }
+  
+  return mergedConfig;
+}
 export function unit(num: string | number) {
   if (typeof num === 'number') {
     return `${num}px`;
