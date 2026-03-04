@@ -78,11 +78,9 @@ export interface StyleContextProps {
   linters?: Linter[];
   /** Wrap css in a layer to avoid global style conflict */
   layer?: boolean;
+
   /** Hardcode here since transformer not support take effect on serialize currently */
   autoPrefix?: boolean;
-
-  /** Nonce for CSP (Content Security Policy) */
-  nonce?: string | (() => string);
 }
 
 const StyleContext = React.createContext<StyleContextProps>({

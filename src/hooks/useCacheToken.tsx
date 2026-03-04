@@ -7,7 +7,7 @@ import StyleContext, {
   CSS_IN_JS_INSTANCE,
 } from '../StyleContext';
 import type Theme from '../theme/Theme';
-import { flattenToken, memoResult, mergeCSSConfig, token2key, toStyleStr } from '../util';
+import { flattenToken, memoResult, token2key, toStyleStr } from '../util';
 import { transformToken } from '../util/css-variables';
 import type { ExtractStyle } from './useGlobalCache';
 import useGlobalCache from './useGlobalCache';
@@ -161,7 +161,6 @@ export default function useCacheToken<
     cache: { instanceId },
     container,
     hashPriority,
-    nonce,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -220,17 +219,12 @@ export default function useCacheToken<
       if (!cssVarsStr) {
         return;
       }
-      const mergedCSSConfig = mergeCSSConfig<Parameters<typeof updateCSS>[2]>(
-        {
-          mark: ATTR_MARK,
-          prepend: 'queue',
-          attachTo: container,
-          priority: -999,
-        },
-        nonce,
-      );
-
-      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), mergedCSSConfig);
+      const style = updateCSS(cssVarsStr, hash(`css-var-${themeKey}`), {
+        mark: ATTR_MARK,
+        prepend: 'queue',
+        attachTo: container,
+        priority: -999,
+      });
 
       (style as any)[CSS_IN_JS_INSTANCE] = instanceId;
 
