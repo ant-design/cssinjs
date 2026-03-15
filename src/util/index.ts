@@ -155,12 +155,16 @@ export function supportLogicProps(): boolean {
 
 export const isClientSide = canUseDom();
 
-export function unit(num: string | number) {
-  if (typeof num === 'number') {
+export const isNumber = (val: any): val is number => {
+  return typeof val === 'number' && !Number.isNaN(val);
+};
+
+export const unit = (num: string | number) => {
+  if (isNumber(num)) {
     return `${num}px`;
   }
   return num;
-}
+};
 
 export function toStyleStr(
   style: string,
