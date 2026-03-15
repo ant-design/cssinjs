@@ -1,4 +1,4 @@
-import { isNumber } from '@/util';
+import { isNumber } from '../../util';
 import AbstractCalculator from './calculator';
 
 const CALC_UNIT = 'CALC_UNIT';
