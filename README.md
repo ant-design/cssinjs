@@ -25,7 +25,19 @@ https://ant-design.github.io/cssinjs/
 
 ## Install
 
-[![@ant-design/cssinjs](https://nodei.co/npm/@ant-design/cssinjs.png)](https://npmjs.org/package/@ant-design/cssinjs)
+```bash
+npm install @ant-design/cssinjs
+```
+
+or
+
+```bash
+yarn add @ant-design/cssinjs
+```
+
+```bash
+pnpm add @ant-design/cssinjs
+```
 
 ## Development
 
@@ -62,6 +74,39 @@ Create theme object. When same algorithm provided, it will return same object.
 ### Design Token related API
 
 Since `@ant-design/cssinjs` use strong constraints for cache hit performance, we recommend to view demo `basic.tsx` for usage and `animation.tsx` for animation usage.
+
+### extractStyle
+
+Extracts the styles from the cache and returns them as a string.
+
+#### Parameters
+
+- `cache` (Cache): The cache instance containing the styles.
+- `options` (object | boolean, optional): Options for extracting the styles.
+  - `plain` (boolean, optional): If true, the styles will be returned in plain format. Default is false.
+  - `types` (string | string[], optional): The types of styles to extract. Default is ['style', 'token', 'cssVar'].
+
+#### Returns
+
+- (string): The extracted styles as a string.
+
+#### Example
+
+```typescript
+import { extractStyle, createCache } from '@ant-design/cssinjs';
+
+// 创建并填充缓存
+const cache = createCache();
+// 注意：在实际使用中，缓存通常会在渲染组件时自动填充
+
+// 提取样式
+const styles = extractStyle(cache, { plain: true, types: ['style', 'token'] });
+
+// 使用提取的样式
+const styleElement = document.createElement('style');
+styleElement.innerHTML = styles;
+document.head.appendChild(styleElement);
+```
 
 ## Transform
 

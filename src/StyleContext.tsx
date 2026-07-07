@@ -1,29 +1,34 @@
-import useMemo from 'rc-util/lib/hooks/useMemo';
-import isEqual from 'rc-util/lib/isEqual';
+import useMemo from '@rc-component/util/lib/hooks/useMemo';
+import isEqual from '@rc-component/util/lib/isEqual';
 import * as React from 'react';
 import CacheEntity from './Cache';
 import type { Linter } from './linters/interface';
+import { AUTO_PREFIX } from './transformers/autoPrefix';
 import type { Transformer } from './transformers/interface';
 
 export const ATTR_TOKEN = 'data-token-hash';
 export const ATTR_MARK = 'data-css-hash';
-export const ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
+export const ATTR_CACHE_PATH = 'data-cache-path';
 
 // Mark css-in-js instance in style element
 export const CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
-export const CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 
 export function createCache() {
+  const cssinjsInstanceId = Math.random().toString(12).slice(2);
+
+  // Tricky SSR: Move all inline style to the head.
+  // PS: We do not recommend tricky mode.
   if (typeof document !== 'undefined' && document.head && document.body) {
     const styles = document.body.querySelectorAll(`style[${ATTR_MARK}]`) || [];
     const { firstChild } = document.head;
 
     Array.from(styles).forEach((style) => {
-      (style as any)[CSS_IN_JS_INSTANCE] =
-        (style as any)[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID;
+      (style as any)[CSS_IN_JS_INSTANCE] ||= cssinjsInstanceId;
 
       // Not force move if no head
-      document.head.insertBefore(style, firstChild);
+      if ((style as any)[CSS_IN_JS_INSTANCE] === cssinjsInstanceId) {
+        document.head.insertBefore(style, firstChild);
+      }
     });
 
     // Deduplicate of moved styles
@@ -32,7 +37,7 @@ export function createCache() {
       (style) => {
         const hash = style.getAttribute(ATTR_MARK)!;
         if (styleHash[hash]) {
-          if ((style as any)[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+          if ((style as any)[CSS_IN_JS_INSTANCE] === cssinjsInstanceId) {
             style.parentNode?.removeChild(style);
           }
         } else {
@@ -42,13 +47,12 @@ export function createCache() {
     );
   }
 
-  return new CacheEntity();
+  return new CacheEntity(cssinjsInstanceId);
 }
 
 export type HashPriority = 'low' | 'high';
 
 export interface StyleContextProps {
-  autoClear?: boolean;
   /** @private Test only. Not work in production. */
   mock?: 'server' | 'client';
   /**
@@ -72,15 +76,23 @@ export interface StyleContextProps {
    * Please note that `linters` do not support dynamic update.
    */
   linters?: Linter[];
+  /** Wrap css in a layer to avoid global style conflict */
+  layer?: boolean;
+
+  /** Hardcode here since transformer not support take effect on serialize currently */
+  autoPrefix?: boolean;
 }
 
 const StyleContext = React.createContext<StyleContextProps>({
   hashPriority: 'low',
   cache: createCache(),
   defaultCache: true,
+  autoPrefix: false,
 });
 
-export type StyleProviderProps = Partial<StyleContextProps> & {
+export type StyleProviderProps = Partial<
+  Omit<StyleContextProps, 'autoPrefix'>
+> & {
   children?: React.ReactNode;
 };
 
@@ -95,16 +107,23 @@ export const StyleProvider: React.FC<StyleProviderProps> = (props) => {
         ...parentContext,
       };
 
-      (Object.keys(restProps) as (keyof StyleContextProps)[]).forEach((key) => {
+      (
+        Object.keys(restProps) as (keyof Omit<StyleProviderProps, 'children'>)[]
+      ).forEach((key) => {
         const value = restProps[key];
         if (restProps[key] !== undefined) {
           (mergedContext as any)[key] = value;
         }
       });
 
-      const { cache } = restProps;
+      const { cache, transformers = [] } = restProps;
       mergedContext.cache = mergedContext.cache || createCache();
       mergedContext.defaultCache = !cache && parentContext.defaultCache;
+
+      // autoPrefix
+      if (transformers.includes(AUTO_PREFIX)) {
+        mergedContext.autoPrefix = true;
+      }
 
       return mergedContext;
     },

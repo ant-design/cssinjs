@@ -1,3 +1,4 @@
+import { resetWarned } from '@rc-component/util/lib/warning';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import {
@@ -31,7 +32,7 @@ const derivative = (designToken: DesignToken): DerivativeToken => ({
 const theme = new Theme(derivative);
 
 describe('style warning', () => {
-  const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
   afterEach(() => {
     errorSpy.mockReset();
@@ -67,7 +68,9 @@ describe('style warning', () => {
           [prop]: 1,
         });
         const Demo = () => {
-          const [token] = useCacheToken<DerivativeToken>(theme, []);
+          const [token] = useCacheToken<DerivativeToken>(theme, [], {
+            cssVar: { key: 'css-var-test' },
+          });
           useStyleRegister({ theme, token, path: [`${prop}`] }, () => [
             genStyle(),
           ]);
@@ -87,21 +90,46 @@ describe('style warning', () => {
     });
   });
 
-  it('content value should contain quotes', () => {
-    const genStyle = (): CSSObject => ({
-      content: 'test',
+  describe('contentQuotesLinter', () => {
+    beforeAll(() => {
+      resetWarned();
     });
-    const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
-      useStyleRegister({ theme, token, path: ['content'] }, () => [genStyle()]);
-      return <div />;
-    };
-    render(<Demo />);
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `You seem to be using a value for 'content' without quotes`,
-      ),
-    );
+    it('should not warn for content with var() function', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'var(--content-value)',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
+        useStyleRegister({ theme, token, path: ['content-var'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+    it('should warn when content value is without quotes', () => {
+      const genStyle = (): CSSObject => ({
+        content: 'test',
+      });
+      const Demo = () => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
+        useStyleRegister({ theme, token, path: ['content'] }, () => [
+          genStyle(),
+        ]);
+        return <div />;
+      };
+      render(<Demo />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `You seem to be using a value for 'content' without quotes`,
+        ),
+      );
+    });
   });
 
   ['margin', 'padding', 'borderWidth', 'borderStyle'].forEach((prop) =>
@@ -110,7 +138,9 @@ describe('style warning', () => {
         [prop]: '0 1px 0 3px',
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
         return <div />;
       };
@@ -133,7 +163,9 @@ describe('style warning', () => {
         [prop]: 'left',
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: [prop] }, () => [genStyle()]);
         return <div />;
       };
@@ -162,7 +194,9 @@ describe('style warning', () => {
         borderRadius: value,
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister(
           { theme, token, path: [`borderRadius: ${value}`] },
           () => [genStyle()],
@@ -187,7 +221,9 @@ describe('style warning', () => {
       content: { _skip_check_: true, value: 'content' },
     });
     const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      const [token] = useCacheToken<DerivativeToken>(theme, [], {
+        cssVar: { key: 'css-var-test' },
+      });
       useStyleRegister({ theme, token, path: ['content_skip'] }, () => [
         genStyle(),
       ]);
@@ -202,7 +238,9 @@ describe('style warning', () => {
       content: '',
     });
     const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      const [token] = useCacheToken<DerivativeToken>(theme, [], {
+        cssVar: { key: 'css-var-test' },
+      });
       useStyleRegister({ theme, token, path: ['component-msg'] }, () => [
         genStyle(),
       ]);
@@ -221,7 +259,9 @@ describe('style warning', () => {
       },
     });
     const Demo = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, []);
+      const [token] = useCacheToken<DerivativeToken>(theme, [], {
+        cssVar: { key: 'css-var-test' },
+      });
       useStyleRegister({ theme, token, path: ['selector-in-warning'] }, () => [
         genStyle(),
       ]);
@@ -252,7 +292,9 @@ describe('style warning', () => {
       animation: anim.getName(),
     });
     const Demo = () => {
-      const [token, hashId] = useCacheToken<DerivativeToken>(theme, []);
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        cssVar: { key: 'css-var-test' },
+      });
       useStyleRegister(
         { theme, token, path: ['anim-hashed-animation'], hashId },
         () => [genStyle(), anim],
@@ -278,7 +320,9 @@ describe('style warning', () => {
         },
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: ['content'] }, () => [
           genStyle(),
         ]);
@@ -308,7 +352,9 @@ describe('style warning', () => {
         },
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister(
           { theme, token, path: ['attribute selector in :not'] },
           () => [genStyle()],
@@ -342,7 +388,9 @@ describe('style warning', () => {
         },
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: ['parent selector'] }, () => [
           genStyle(),
         ]);
@@ -370,7 +418,9 @@ describe('style warning', () => {
         },
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: ['parent selector2'] }, () => [
           genStyle(),
         ]);
@@ -400,7 +450,9 @@ describe('style warning', () => {
         },
       });
       const Demo = () => {
-        const [token] = useCacheToken<DerivativeToken>(theme, []);
+        const [token] = useCacheToken<DerivativeToken>(theme, [], {
+          cssVar: { key: 'css-var-test' },
+        });
         useStyleRegister({ theme, token, path: ['parent selector3'] }, () => [
           genStyle(),
         ]);

@@ -26,8 +26,10 @@ assets/**/*.css
 build
 lib
 es
+dist
 yarn.lock
 package-lock.json
+pnpm-lock.yaml
 coverage/
 .doc
 
@@ -41,3 +43,5 @@ coverage/
 .dumi/tmp
 .dumi/tmp-production
 .dumi/tmp-test
+
+bun.lockb

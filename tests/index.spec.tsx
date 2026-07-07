@@ -1,19 +1,20 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
-import classNames from 'classnames';
+import { clsx } from 'clsx';
+import type { ReactElement, ReactNode } from 'react';
+import * as React from 'react';
+import { StrictMode } from 'react';
+import { describe, expect } from 'vitest';
+import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
+  createCache,
+  createTheme,
+  StyleProvider,
   Theme,
   useCacheToken,
+  useCSSVarRegister,
   useStyleRegister,
-  StyleProvider,
-  createCache,
 } from '../src';
-import type { CSSInterpolation } from '../src';
-import {
-  ATTR_TOKEN,
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-} from '../src/StyleContext';
+import { ATTR_MARK, ATTR_TOKEN, CSS_IN_JS_INSTANCE } from '../src/StyleContext';
 
 interface DesignToken {
   primaryColor: string;
@@ -55,7 +56,11 @@ describe('csssinjs', () => {
   }
 
   const Box = ({ propToken = baseToken }: BoxProps) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [propToken]);
+    const [token] = useCacheToken<DerivativeToken>(theme, [propToken], {
+      cssVar: {
+        key: 'css-var-test',
+      },
+    });
 
     useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
 
@@ -81,11 +86,13 @@ describe('csssinjs', () => {
       );
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2); // css var and style
 
-      const style = styles[0];
-      expect(style.innerHTML).toEqual(
-        '.box{width:93px;line-height:1;background-color:#1890ff;}',
+      expect(styles[0].innerHTML).toEqual(
+        '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}',
+      );
+      expect(styles[1].innerHTML).toEqual(
+        '.box{width:93px;line-height:1;background-color:var(--primary-color);}',
       );
 
       // Default not remove style
@@ -95,45 +102,60 @@ describe('csssinjs', () => {
 
     // We will not remove style immediately,
     // but remove when second style patched.
-    it('remove old style to ensure style set only exist one', () => {
-      const getBox = (props?: BoxProps) => <Box {...props} />;
+    describe('remove old style to ensure style set only exist one', () => {
+      function test(
+        name: string,
+        wrapperFn?: (node: React.ReactElement) => React.ReactElement,
+      ) {
+        it(name, () => {
+          const getBox = (props?: BoxProps) => {
+            const box: React.ReactElement = <Box {...props} />;
 
-      const { rerender } = render(getBox());
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+            return wrapperFn?.(box) || box;
+          };
 
-      // First change
-      rerender(
-        getBox({
-          propToken: {
-            primaryColor: 'red',
-          },
-        }),
-      );
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+          const { rerender } = render(getBox());
+          expect(document.head.querySelectorAll('style')).toHaveLength(2);
 
-      // Second change
-      rerender(
-        getBox({
-          propToken: {
-            primaryColor: 'green',
-          },
-        }),
-      );
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+          // First change
+          rerender(
+            getBox({
+              propToken: {
+                primaryColor: 'red',
+              },
+            }),
+          );
+          expect(document.head.querySelectorAll('style')).toHaveLength(2);
+
+          // Second change
+          rerender(
+            getBox({
+              propToken: {
+                primaryColor: 'green',
+              },
+            }),
+          );
+          expect(document.head.querySelectorAll('style')).toHaveLength(2);
+        });
+      }
+
+      test('normal');
+
+      test('StrictMode', (ele) => <React.StrictMode>{ele}</React.StrictMode>);
     });
 
-    it('remove style when unmount', () => {
+    it('remain style when unmount', () => {
       const Demo = () => (
-        <StyleProvider autoClear>
+        <StyleProvider>
           <Box />
         </StyleProvider>
       );
 
       const { unmount } = render(<Demo />);
-      expect(document.head.querySelectorAll('style')).toHaveLength(1);
+      expect(document.head.querySelectorAll('style')).toHaveLength(2);
 
       unmount();
-      expect(document.head.querySelectorAll('style')).toHaveLength(0);
+      expect(document.head.querySelectorAll('style')).toHaveLength(1);
     });
   });
 
@@ -151,7 +173,9 @@ describe('csssinjs', () => {
     });
 
     const Nest = () => {
-      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
 
       useStyleRegister({ theme, token, path: ['.parent'] }, () => [
         genNestStyle(token),
@@ -163,31 +187,37 @@ describe('csssinjs', () => {
     render(<Nest />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(1);
+    expect(styles).toHaveLength(2);
 
-    const style = styles[0];
-    expect(style.innerHTML).toEqual(
-      '.parent .child{background:#1890ff;}.parent .child:hover{border-color:#1890ff;}',
+    expect(styles[0].innerHTML).toEqual(
+      '.css-var-test{--primary-color:#1890ff;--primary-color-disabled:#1890ff;}',
+    );
+    expect(styles[1].innerHTML).toEqual(
+      '.parent .child{background:var(--primary-color);}.parent .child:hover{border-color:var(--primary-color);}',
     );
   });
 
   it('serialize nest object token', () => {
     const TokenShower = (): any => {
-      const [token] = useCacheToken(theme, [
-        {
-          nest: {
-            nothing: 1,
+      const [, , token] = useCacheToken(
+        theme,
+        [
+          {
+            nest: {
+              nothing: 1,
+            },
           },
-        },
-      ]);
+        ],
+        { cssVar: { key: 'css-var-test' } },
+      );
 
-      return token._tokenKey;
+      return (token as any)._tokenKey;
     };
 
     const { container } = render(<TokenShower />);
 
     // src/util.tsx - token2key func
-    expect(container.textContent).toEqual('rqtnqb');
+    expect(container.textContent).toMatchSnapshot();
   });
 
   it('hash', () => {
@@ -200,30 +230,24 @@ describe('csssinjs', () => {
     const Holder = () => {
       const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
         salt: 'test',
+        cssVar: { key: 'css-var-test' },
       });
 
       useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
         genHashStyle(),
       ]);
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { unmount } = render(<Holder />);
 
     const styles = Array.from(document.head.querySelectorAll('style'));
     expect(styles).toHaveLength(1);
-
     const style = styles[0];
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).a',
-    );
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).b',
-    );
-    expect(style.innerHTML).toContain(
-      ':where(.css-dev-only-do-not-override-6dmvpu).c .d',
-    );
+    expect(style.innerHTML).toMatchSnapshot();
+    expect(style.innerHTML).toMatchSnapshot();
+    expect(style.innerHTML).toMatchSnapshot();
 
     unmount();
   });
@@ -249,6 +273,7 @@ describe('csssinjs', () => {
       override: object;
     }) => {
       const [token] = useCacheToken<MyDerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
         override,
         formatToken: (origin: DerivativeToken) => ({
           ...origin,
@@ -277,11 +302,14 @@ describe('csssinjs', () => {
       const { unmount } = render(<Demo />);
 
       const styles = Array.from(document.head.querySelectorAll('style'));
-      expect(styles).toHaveLength(1);
+      expect(styles).toHaveLength(2);
 
-      const style = styles[0];
-      expect(style.innerHTML).toContain('background-color:#010203;');
-      expect(style.innerHTML).toContain('color:#010203;');
+      expect(styles[0].innerHTML).toEqual(
+        '.css-var-test{--primary-color:#010203;--primary-color-disabled:#1890ff;--color:#010203;}',
+      );
+      expect(styles[1].innerHTML).toContain(
+        '.box{width:93px;line-height:1;background-color:var(--primary-color);color:var(--color);}',
+      );
 
       unmount();
     });
@@ -300,6 +328,7 @@ describe('csssinjs', () => {
         [{ primaryColor: colorPrimary }],
         {
           salt: 'test',
+          cssVar: { key: 'css-var-test' },
         },
       );
 
@@ -308,7 +337,7 @@ describe('csssinjs', () => {
         () => [genDemoStyle(token)],
       );
 
-      return <div className={classNames('box', hashId)} />;
+      return <div className={clsx('box', hashId)} />;
     };
 
     const { rerender } = render(<Demo />);
@@ -317,7 +346,7 @@ describe('csssinjs', () => {
     expect(
       Array.from(styles).some((style) => style.innerHTML.includes('color:red')),
     ).toBeTruthy();
-    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+    const instanceId = (styles[0] as any)[CSS_IN_JS_INSTANCE];
 
     rerender(<Demo colorPrimary="blue" />);
     const stylesRe = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
@@ -327,17 +356,12 @@ describe('csssinjs', () => {
         style.innerHTML.includes('color:blue'),
       ),
     ).toBeTruthy();
-    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(CSS_IN_JS_INSTANCE_ID);
+    expect((styles[0] as any)[CSS_IN_JS_INSTANCE]).toBe(instanceId);
     (stylesRe[0] as any)[CSS_IN_JS_INSTANCE] = '123';
 
     rerender(<Demo colorPrimary="yellow" />);
     const stylesRe2 = document.querySelectorAll(`style[${ATTR_TOKEN}]`);
-    expect(stylesRe2.length).toBe(2);
-    expect(
-      Array.from(stylesRe2).some((style) =>
-        style.innerHTML.includes('color:blue'),
-      ),
-    ).toBeTruthy();
+    expect(stylesRe2.length).toBe(1);
     expect(
       Array.from(stylesRe2).some((style) =>
         style.innerHTML.includes('color:yellow'),
@@ -365,6 +389,7 @@ describe('csssinjs', () => {
         [{ primaryColor: colorPrimary }],
         {
           salt: 'test',
+          cssVar: { key: 'css-var-test' },
         },
       );
       hash = hashId;
@@ -384,16 +409,18 @@ describe('csssinjs', () => {
         () => [{ '&': genStyle1(token) }, { '': genStyle2() }],
       );
 
-      return <div className={classNames('box')} />;
+      return <div className={clsx('box')} />;
     };
 
     render(<Demo />);
     const styles = Array.from(document.head.querySelectorAll('style'));
-    expect(styles).toHaveLength(2);
+    expect(styles).toHaveLength(3);
 
-    expect(styles[0].innerHTML).toBe('a{color:red;}div{color:blue;}');
     expect(styles[1].innerHTML).toBe(
-      `:where(.${hash}) a{color:red;}:where(.${hash}) div{color:blue;}`,
+      'a{color:var(--primary-color);}div{color:blue;}',
+    );
+    expect(styles[2].innerHTML).toBe(
+      `:where(.${hash}) a{color:var(--primary-color);}:where(.${hash}) div{color:blue;}`,
     );
   });
 
@@ -408,6 +435,549 @@ describe('csssinjs', () => {
       </StyleProvider>,
     );
 
-    expect(container.querySelectorAll('style')).toHaveLength(1);
+    expect(container.querySelectorAll('style')).toHaveLength(2);
+  });
+
+  // https://github.com/ant-design/cssinjs/issues/189
+  // style will not be removed in 2.0
+  it.skip('should cleanup style when unmount', () => {
+    const container = document.createElement('div');
+
+    const CssVarBox = () => {
+      const [token] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: 'red' }],
+        {
+          salt: 'test',
+          cssVar: { key: 'css-var-test' },
+        },
+      );
+
+      useCSSVarRegister(
+        {
+          key: 'color-2',
+          path: ['cssinjs-cleanup-style-when-unmount'],
+          token,
+        },
+        () => ({
+          token: token.primaryColor,
+        }),
+      );
+
+      return null;
+    };
+
+    const { unmount } = render(
+      <StyleProvider cache={createCache()} container={container}>
+        <Box />
+        <CssVarBox />
+      </StyleProvider>,
+    );
+
+    expect(container.querySelectorAll('style')).toHaveLength(2);
+    unmount();
+    expect(container.querySelectorAll('style')).toHaveLength(0);
+  });
+
+  describe('nonce', () => {
+    function test(name: string, nonce: string | (() => string)) {
+      it(name, () => {
+        const NonceBox = () => {
+          useStyleRegister(
+            { theme, token: {}, path: ['.nonce'], nonce },
+            () => [],
+          );
+
+          return <div />;
+        };
+
+        render(
+          <StyleProvider cache={createCache()}>
+            <NonceBox />
+          </StyleProvider>,
+        );
+
+        const styles = Array.from(document.head.querySelectorAll('style'));
+        expect(styles).toHaveLength(1);
+        expect(styles[0].nonce).toBe('bamboo');
+      });
+    }
+
+    test('string', 'bamboo');
+    test('function', () => 'bamboo');
+  });
+
+  it('should not insert style with different instanceId', () => {
+    const genDemoStyle = (token: DerivativeToken): CSSInterpolation => ({
+      div: {
+        color: token.primaryColor,
+      },
+    });
+
+    const Demo = ({ colorPrimary = 'red' }) => {
+      const cache = createCache();
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: colorPrimary }],
+        {
+          salt: 'test',
+          cssVar: { key: 'css-var-test' },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-instance-should-not-insert'] },
+        () => [genDemoStyle(token)],
+      );
+
+      return (
+        <StyleProvider cache={cache}>
+          <div className={clsx('box', hashId)} />
+        </StyleProvider>
+      );
+    };
+
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `.app { color: red }`;
+    styleTag.setAttribute(ATTR_MARK, 'test');
+    (styleTag as any)[CSS_IN_JS_INSTANCE] = '123';
+    document.body.appendChild(styleTag);
+    const childContainer = document.createElement('div');
+    childContainer.className = 'test';
+    document.body.appendChild(childContainer);
+
+    render(<Demo />, { container: childContainer });
+    expect(document.body);
+    expect(document.querySelectorAll(`style[${ATTR_MARK}]`).length).toBe(3);
+    expect(document.body.querySelectorAll(`style[${ATTR_MARK}]`).length).toBe(
+      1,
+    );
+    expect(document.body.querySelector(`style[${ATTR_MARK}]`)?.innerHTML).toBe(
+      `.app { color: red }`,
+    );
+  });
+
+  it('support multi value', () => {
+    const genDemoStyle = (): CSSInterpolation => ({
+      div: {
+        color: {
+          _multi_value_: true,
+          value: ['red', 'blue'],
+        },
+      },
+    });
+
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-multi-value'] },
+        () => [genDemoStyle()],
+      );
+
+      return <div className={clsx('box', hashId)} />;
+    };
+
+    render(<Demo />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+    expect(styles[0].innerHTML).toContain('color:red;color:blue;');
+  });
+
+  it('should support undefined value', () => {
+    const genDemoStyle = (): CSSInterpolation => ({
+      div: {
+        color: undefined,
+      },
+    });
+
+    const Demo = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-undefined-value'] },
+        () => [genDemoStyle()],
+      );
+
+      return <div className={clsx('box', hashId)} />;
+    };
+
+    render(<Demo />);
+  });
+
+  it('should support custom getComputedToken', () => {
+    const genDemoStyle = (token: any): CSSInterpolation => ({
+      div: {
+        color: token.myToken,
+        background: token.primaryColor,
+      },
+    });
+
+    const Demo = ({
+      myToken,
+      theme: customTheme,
+    }: {
+      myToken?: string;
+      theme?: DerivativeFunc<any, any>;
+    }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [{ primaryColor: 'blue' }],
+        {
+          cssVar: { key: 'css-var-test' },
+          salt: 'test',
+          override: {
+            myToken,
+            theme: customTheme && createTheme(customTheme),
+          },
+          getComputedToken: (origin, override: any, myTheme) => {
+            const mergedToken = myTheme.getDerivativeToken(origin);
+            return {
+              ...mergedToken,
+              myToken: override.myToken,
+              ...(override.theme?.getDerivativeToken(mergedToken) ?? {}),
+            };
+          },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-getComputedToken'] },
+        () => [genDemoStyle(token)],
+      );
+
+      return <div className={clsx('box', hashId)} />;
+    };
+
+    const { rerender } = render(<Demo myToken="test" />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(2);
+    expect(styles[0].innerHTML).toContain('--my-token:test');
+    expect(styles[0].innerHTML).toContain('--primary-color:blue');
+
+    rerender(<Demo myToken="apple" />);
+
+    const styles2 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles2).toHaveLength(2);
+    expect(styles2[0].innerHTML).toContain('--my-token:apple');
+    expect(styles2[0].innerHTML).toContain('--primary-color:blue');
+
+    rerender(
+      <Demo
+        myToken="banana"
+        theme={(origin) => ({ ...origin, primaryColor: 'green' })}
+      />,
+    );
+
+    const styles3 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles3).toHaveLength(2);
+    expect(styles3[0].innerHTML).toContain('--my-token:banana');
+    expect(styles3[0].innerHTML).toContain('--primary-color:green');
+  });
+
+  describe('should not cleanup token before finishing rendering', () => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const genDemoStyle = (token: any): CSSInterpolation => ({
+        '.box': {
+          color: token.primaryColor,
+        },
+      });
+
+      const Style = ({ token, hashId }: { token: any; hashId: string }) => {
+        useStyleRegister(
+          {
+            theme,
+            token,
+            hashId,
+            path: ['cssinjs-cleanup-token-after-render', hashId],
+          },
+          () => [genDemoStyle(token)],
+        );
+
+        return null;
+      };
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+            cssVar: { key: `css-var-${myToken}` },
+          },
+        );
+
+        return (
+          <>
+            <Style token={token} hashId={hashId} />
+            <div className={clsx('box', hashId)}>{children}</div>
+          </>
+        );
+      };
+
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(2);
+      expect(styles[0].innerHTML).toContain('--primary-color:token1');
+
+      rerender(
+        wrapper(
+          <Demo myToken="token2">
+            <Demo myToken="token1" />
+          </Demo>,
+        ),
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(3);
+
+      expect(styles2[1].innerHTML).toContain('--primary-color:token2');
+      expect(styles2[0].innerHTML).toContain('--primary-color:token1');
+
+      rerender(wrapper(<Demo myToken="token1" />));
+      const styles3 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles3).toHaveLength(2);
+      expect(styles3[0].innerHTML).toContain('--primary-color:token1');
+
+      expect(spy).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          '[Ant Design CSS-in-JS] You are registering a cleanup function after unmount',
+        ),
+      );
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
+    });
+
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
+  });
+
+  describe('should not cleanup style when unmount and mount', () => {
+    const test = (
+      wrapper: (node: ReactElement) => ReactElement = (node) => node,
+    ) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const Demo = ({
+        myToken,
+        children,
+      }: {
+        myToken?: string;
+        children?: ReactNode;
+      }) => {
+        const [token, hashId] = useCacheToken<DerivativeToken>(
+          theme,
+          [{ primaryColor: myToken }],
+          {
+            salt: 'test',
+            cssVar: { key: 'css-var-test' },
+          },
+        );
+
+        useCSSVarRegister(
+          {
+            key: 'color',
+            path: ['cssinjs-cleanup-style-when-remount'],
+            token,
+          },
+          () => ({
+            token: token.primaryColor,
+          }),
+        );
+
+        return <div className={clsx('box', hashId)}>{children}</div>;
+      };
+
+      const { rerender } = render(wrapper(<Demo myToken="token1" />));
+      const styles = Array.from(document.head.querySelectorAll('style'));
+      expect(styles).toHaveLength(2);
+
+      rerender(
+        wrapper(
+          <div>
+            <Demo myToken="token1" />
+          </div>,
+        ),
+      );
+      const styles2 = Array.from(document.head.querySelectorAll('style'));
+      expect(styles2).toHaveLength(2);
+
+      spy.mockRestore();
+    };
+
+    it('normal', () => {
+      test();
+    });
+
+    it('strict mode', () => {
+      test((node) => {
+        return <StrictMode>{node}</StrictMode>;
+      });
+    });
+  });
+
+  it('hash & nest style', () => {
+    const genHashStyle = (): CSSInterpolation => ({
+      '&': {
+        a: {
+          color: 'red',
+        },
+      },
+    });
+
+    const Holder = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister({ theme, token, hashId, path: ['holder'] }, () => [
+        genHashStyle(),
+      ]);
+
+      return <div className={clsx('box', hashId)} />;
+    };
+
+    const { unmount } = render(<Holder />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(1);
+
+    const style = styles[0];
+    expect(style.innerHTML).toMatchSnapshot();
+
+    unmount();
+  });
+
+  it('hash only changes if salt or cssVar prefix changes', () => {
+    const genHashStyle = (token: any): CSSInterpolation => ({
+      '.box': {
+        color: token.colorPrimary,
+      },
+    });
+
+    const Demo = ({
+      salt,
+      prefix = 'rc-test',
+      token: customToken = { colorPrimary: 'red' },
+    }: {
+      salt: string;
+      prefix?: string;
+      token?: any;
+    }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [customToken],
+        {
+          salt,
+          cssVar: {
+            key: 'css-var-test',
+            prefix,
+            hashed: true,
+          },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['test-hash-change'] },
+        () => [genHashStyle(token)],
+      );
+
+      return <div className={clsx('box', hashId)} />;
+    };
+
+    const { rerender } = render(<Demo salt="test" />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    expect(styles).toHaveLength(2);
+    expect(styles[0].innerHTML).toMatchSnapshot();
+
+    const style = styles[1].innerHTML;
+    expect(style).toContain('.box{color:var(--rc-test-color-primary);}');
+
+    rerender(<Demo salt="test" />);
+    const styles2 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles2).toHaveLength(2);
+    expect(styles2[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles2[1].innerHTML).toEqual(style);
+
+    // token 不影响样式
+    rerender(<Demo salt="test" token={{ colorPrimary: 'blue' }} />);
+    const styles4 = Array.from(document.head.querySelectorAll('style'));
+    expect(styles4).toHaveLength(2);
+    expect(styles4[0].innerHTML).toMatchSnapshot();
+    expect(styles4[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles4[1].innerHTML).toEqual(style);
+
+    rerender(<Demo salt="test2" />);
+    const styles3 = Array.from(document.head.querySelectorAll('style'));
+    // 这里生成了新的组件样式，但是 css 变量没变，所以多了一个
+    expect(styles3).toHaveLength(3);
+    expect(styles3[1].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[1].innerHTML).toEqual(style);
+    expect(styles3[2].innerHTML).toContain(
+      '.box{color:var(--rc-test-color-primary);}',
+    );
+    expect(styles3[2].innerHTML).not.toEqual(style);
+  });
+
+  it('should skip appendStyle when value is null or undefined', () => {
+    const genStyle = (): CSSInterpolation => ({
+      '.undefined-test': {
+        padding: undefined,
+      },
+    });
+
+    const Demo: React.FC = () => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(theme, [], {
+        salt: 'test',
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['cssinjs-undefined-to-zero'] },
+        genStyle,
+      );
+
+      const className = clsx('undefined-test', hashId);
+
+      return <div className={className}>test</div>;
+    };
+
+    render(<Demo />);
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+
+    const styleContent = styles[styles.length - 1];
+
+    expect(styleContent.innerHTML).not.toContain('padding');
   });
 });

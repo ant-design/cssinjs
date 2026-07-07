@@ -1,8 +1,4 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import { createCache } from '../src';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
 import { ATTR_MARK } from '../src/StyleContext';
 
 describe('SSR-Order', () => {

@@ -1,23 +1,20 @@
+import { render } from '@testing-library/react';
+import { clsx } from 'clsx';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import { render } from '@testing-library/react';
+import type { SpyInstance } from 'vitest';
+import type { CSSInterpolation } from '../src';
 import {
+  createCache,
+  extractStyle,
+  StyleProvider,
   Theme,
   useCacheToken,
   useStyleRegister,
-  StyleProvider,
-  extractStyle,
-  createCache,
 } from '../src';
-import type { CSSInterpolation } from '../src';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import canUseDom from 'rc-util/lib/Dom/canUseDom';
-import {
-  CSS_IN_JS_INSTANCE,
-  CSS_IN_JS_INSTANCE_ID,
-  ATTR_MARK,
-} from '../src/StyleContext';
-import classNames from 'classnames';
+import { ATTR_MARK } from '../src/StyleContext';
+import * as cacheMapUtil from '../src/util/cacheMapUtil';
+import { reset } from '../src/util/cacheMapUtil';
 
 interface DesignToken {
   primaryColor: string;
@@ -38,20 +35,24 @@ const baseToken: DesignToken = {
 
 const theme = new Theme(derivative);
 
-let mockCanUseDom = false;
-
-jest.mock('rc-util/lib/Dom/canUseDom', () => () => mockCanUseDom);
+const canUseDom = vi.hoisted(() => vi.fn(() => false));
+vi.mock('@rc-component/util/lib/Dom/canUseDom', () => {
+  return {
+    default: canUseDom,
+  };
+});
 
 describe('SSR', () => {
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: SpyInstance;
 
   beforeAll(() => {
-    errorSpy = jest.spyOn(console, 'error');
+    errorSpy = vi.spyOn(console, 'error');
   });
 
   beforeEach(() => {
-    mockCanUseDom = false;
+    canUseDom.mockReturnValue(false);
 
+    reset();
     errorSpy.mockReset();
 
     const styles = Array.from(document.head.querySelectorAll('style'));
@@ -68,14 +69,32 @@ describe('SSR', () => {
     },
   });
 
-  const Box = ({ children }: { children?: React.ReactNode }) => {
-    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken]);
+  const genCardStyle = (token: DerivativeToken): CSSInterpolation => ({
+    '.card': {
+      backgroundColor: token.primaryColor,
+    },
+  });
 
-    const wrapSSR = useStyleRegister({ theme, token, path: ['.box'] }, () => [
-      genStyle(token),
+  const Box = ({ children }: { children?: React.ReactNode }) => {
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      cssVar: { key: 'css-var-test' },
+    });
+
+    useStyleRegister({ theme, token, path: ['.box'] }, () => [genStyle(token)]);
+
+    return <div className="box">{children}</div>;
+  };
+
+  const Card = ({ children }: { children?: React.ReactNode }) => {
+    const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+      cssVar: { key: 'css-var-test' },
+    });
+
+    useStyleRegister({ theme, token, path: ['.card'] }, () => [
+      genCardStyle(token),
     ]);
 
-    return wrapSSR(<div className="box">{children}</div>);
+    return <div className="card">{children}</div>;
   };
 
   const IdHolder = () => {
@@ -86,12 +105,6 @@ describe('SSR', () => {
       </div>
     );
   };
-
-  it('should not use cache', () => {
-    render(<Box />);
-
-    expect(document.head.querySelectorAll('style')).toHaveLength(0);
-  });
 
   it('ssr extract style', () => {
     // >>> SSR
@@ -108,13 +121,11 @@ describe('SSR', () => {
     );
 
     const style = extractStyle(cache);
+    const plainStyle = extractStyle(cache, true);
 
-    expect(html).toEqual(
-      '<div id=":R1:" class="id">:R1:</div><div class="box"><div id=":Ra:" class="id">:Ra:</div></div><div id=":R3:" class="id">:R3:</div>',
-    );
-    expect(style).toEqual(
-      '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style>',
-    );
+    expect(html).toMatchSnapshot();
+    expect(style).toMatchSnapshot();
+    expect(plainStyle).toMatchSnapshot();
     expect(document.head.querySelectorAll('style')).toHaveLength(0);
 
     // >>> Server Render
@@ -126,93 +137,21 @@ describe('SSR', () => {
       document.head.innerHTML = `<style id="otherStyle">html { background: red; }</style>${style}`;
       root.innerHTML = html;
 
-      expect(document.head.querySelectorAll('style')).toHaveLength(2);
+      expect(document.head.querySelectorAll('style')).toHaveLength(4);
+      reset(
+        {
+          '|.box': '1bbkdf1',
+        },
+        false,
+      );
     };
 
     // >>> Hydrate
     prepareEnv();
-    mockCanUseDom = true;
-    render(
-      <StyleProvider
-        cache={cache}
-        // Force insert style since we hack `canUseDom` to false
-        mock="client"
-      >
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-      {
-        hydrate: true,
-        container: root,
-      },
-    );
-    // Not remove other style
-    expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
-    expect(document.head.querySelectorAll('style')).toHaveLength(2);
+    canUseDom.mockReturnValue(true);
 
-    expect(errorSpy).not.toHaveBeenCalled();
-  });
+    const getStyleAndHash = vi.spyOn(cacheMapUtil, 'getStyleAndHash');
 
-  it('default hashPriority', () => {
-    // >>> SSR
-    const cache = createCache();
-
-    const MyBox = ({ children }: { children?: React.ReactNode }) => {
-      const [token, hashId] = useCacheToken<DerivativeToken>(
-        theme,
-        [baseToken],
-        {
-          salt: 'hashPriority',
-        },
-      );
-
-      const wrapSSR = useStyleRegister(
-        { theme, token, hashId, path: ['.hashPriority'] },
-        () => [genStyle(token)],
-      );
-
-      return wrapSSR(
-        <div className={classNames(hashId, 'my-box')}>{children}</div>,
-      );
-    };
-
-    renderToString(
-      <StyleProvider cache={cache} hashPriority="high">
-        <MyBox>
-          <IdHolder />
-        </MyBox>
-      </StyleProvider>,
-    );
-
-    const style = extractStyle(cache);
-    expect(style).toEqual(
-      '<style data-token-hash="1gt9vg4" data-css-hash="1fyoi4y">.css-dev-only-do-not-override-1cs5t9t.box{background-color:#1890ff;}</style>',
-    );
-  });
-
-  it('tricky ssr', () => {
-    const html = renderToString(
-      <StyleProvider ssrInline>
-        <IdHolder />
-        <Box>
-          <IdHolder />
-        </Box>
-        <IdHolder />
-      </StyleProvider>,
-    );
-
-    // >>> Exist style
-    const root = document.createElement('div');
-    root.id = 'root';
-    root.innerHTML = html;
-    expect(root.querySelectorAll('style')).toHaveLength(1);
-
-    // >>> Hydrate
-    mockCanUseDom = true;
-    document.body.appendChild(root);
     render(
       <StyleProvider
         cache={createCache()}
@@ -231,18 +170,84 @@ describe('SSR', () => {
       },
     );
 
-    // Remove inline style
-    expect(root.querySelectorAll('style')).toHaveLength(0);
+    expect(getStyleAndHash).toHaveBeenCalled();
+    expect(getStyleAndHash).toHaveBeenCalledWith('|.box');
+    expect(getStyleAndHash).toHaveReturnedWith([
+      '.box{background-color:var(--primary-color);}',
+      '1bbkdf1',
+    ]);
 
-    // Patch to header
-    expect(document.head.querySelectorAll('style')).toHaveLength(1);
-    expect(
-      (document.head.querySelector(`style[${ATTR_MARK}]`) as any)[
-        CSS_IN_JS_INSTANCE
-      ],
-    ).toBe(CSS_IN_JS_INSTANCE_ID);
+    // Not remove other style
+    expect(document.head.querySelectorAll('#otherStyle')).toHaveLength(1);
+    expect(document.head.querySelectorAll('style')).toHaveLength(5);
 
     expect(errorSpy).not.toHaveBeenCalled();
+
+    getStyleAndHash.mockRestore();
+  });
+
+  it('not extract clientOnly style', () => {
+    const Client = ({ children }: { children?: React.ReactNode }) => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+
+      useStyleRegister(
+        { theme, token, path: ['.client'], clientOnly: true },
+        () => ({
+          '.client': {
+            backgroundColor: token.primaryColor,
+          },
+        }),
+      );
+
+      return <div className="box">{children}</div>;
+    };
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Client />
+      </StyleProvider>,
+    );
+
+    const plainStyle = extractStyle(cache, true);
+    expect(plainStyle).not.toContain('client');
+  });
+
+  it('default hashPriority', () => {
+    // >>> SSR
+    const cache = createCache();
+
+    const MyBox = ({ children }: { children?: React.ReactNode }) => {
+      const [token, hashId] = useCacheToken<DerivativeToken>(
+        theme,
+        [baseToken],
+        {
+          salt: 'hashPriority',
+          cssVar: { key: 'css-var-test' },
+        },
+      );
+
+      useStyleRegister(
+        { theme, token, hashId, path: ['.hashPriority'] },
+        () => [genStyle(token)],
+      );
+
+      return <div className={clsx(hashId, 'my-box')}>{children}</div>;
+    };
+
+    renderToString(
+      <StyleProvider cache={cache} hashPriority="high">
+        <MyBox>
+          <IdHolder />
+        </MyBox>
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache);
+    expect(style).toMatchSnapshot();
   });
 
   it('!ssrInline', () => {
@@ -276,29 +281,185 @@ describe('SSR', () => {
       const style = extractStyle(cache);
 
       expect(html).toEqual('<div class="box"></div>');
-      expect(style).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style>',
-      );
+      expect(style).toMatchSnapshot();
     });
+  });
 
-    it('tricky', () => {
-      const html = renderToString(
-        <StyleProvider ssrInline>
-          <StyleProvider>
-            <StyleProvider>
-              <StyleProvider>
-                <StyleProvider>
-                  <Box />
-                </StyleProvider>
-              </StyleProvider>
-            </StyleProvider>
-          </StyleProvider>
+  it('ssr hydrate should clean not exist style', () => {
+    canUseDom.mockReturnValue(true);
+
+    reset(
+      {
+        exist: 'exist',
+        notExist: 'notExist',
+      },
+      false,
+    );
+
+    const getStyleAndHash = vi.spyOn(cacheMapUtil, 'getStyleAndHash');
+
+    document.head.innerHTML = `<style ${ATTR_MARK}="exist">.test{}</style>`;
+
+    // Exist check
+    cacheMapUtil.getStyleAndHash('exist');
+    expect(getStyleAndHash).toHaveReturnedWith(['.test{}', 'exist']);
+
+    // Not Exist check
+    getStyleAndHash.mockClear();
+    cacheMapUtil.getStyleAndHash('notExist');
+    expect(getStyleAndHash).toHaveReturnedWith([null, 'notExist']);
+
+    // Call again will get undefined since cache cleaned
+    getStyleAndHash.mockClear();
+    cacheMapUtil.getStyleAndHash('notExist');
+    expect(getStyleAndHash).toHaveReturnedWith([null, undefined]);
+
+    getStyleAndHash.mockRestore();
+  });
+
+  it('ssr keep order', () => {
+    const createComponent = (name: string, order?: number) => {
+      const OrderDefault = ({ children }: { children?: React.ReactNode }) => {
+        const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+          cssVar: { key: 'css-var-test' },
+        });
+
+        useStyleRegister({ theme, token, path: [name], order }, () => ({
+          [`.${name}`]: {
+            backgroundColor: token.primaryColor,
+          },
+        }));
+
+        return <div className={name}>{children}</div>;
+      };
+
+      return OrderDefault;
+    };
+
+    const Order0 = createComponent('order0', 0);
+    const Order1 = createComponent('order1', 1);
+    const Order2 = createComponent('order2', 2);
+
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Order1 />
+        <Order0 />
+        <Order2 />
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache);
+    const holder = document.createElement('div');
+    holder.innerHTML = style;
+    const styles = Array.from(holder.querySelectorAll('style'));
+
+    expect(styles[1].getAttribute('data-rc-priority')).toEqual('0');
+    expect(styles[2].getAttribute('data-rc-priority')).toEqual('1');
+    expect(styles[3].getAttribute('data-rc-priority')).toEqual('2');
+
+    // Pure style
+    const pureStyle = extractStyle(cache, true);
+    expect(pureStyle).toMatchSnapshot();
+  });
+
+  it('extract with order', () => {
+    // Create 3 components without specified order: A, C, B
+    const A = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['a'] }, () => ({
+        '.a': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="a" />;
+    };
+    const C = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['c'] }, () => ({
+        '.c': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="c" />;
+    };
+    const B = () => {
+      const [token] = useCacheToken<DerivativeToken>(theme, [baseToken], {
+        cssVar: { key: 'css-var-test' },
+      });
+      useStyleRegister({ theme, token, path: ['b'] }, () => ({
+        '.b': { backgroundColor: token.primaryColor },
+      }));
+      return <div className="b" />;
+    };
+
+    function testOrder(
+      node1: React.ReactElement,
+      node2: React.ReactElement,
+      node3: React.ReactElement,
+      componentMarks: string[],
+    ) {
+      const cache = createCache();
+
+      renderToString(
+        <StyleProvider cache={cache}>
+          {node1}
+          {node2}
+          {node3}
         </StyleProvider>,
       );
 
-      expect(html).toEqual(
-        '<style data-token-hash="u4cay0" data-css-hash="gn1jfq">.box{background-color:#1890ff;}</style><div class="box"></div>',
-      );
-    });
+      const plainStyle = extractStyle(cache, true);
+      const index1 = plainStyle.indexOf(`.${componentMarks[0]}{`);
+      const index2 = plainStyle.indexOf(`.${componentMarks[1]}{`);
+      const index3 = plainStyle.indexOf(`.${componentMarks[2]}{`);
+
+      expect(index1).toBeGreaterThanOrEqual(0);
+      expect(index2).toBeGreaterThan(index1);
+      expect(index3).toBeGreaterThan(index2);
+    }
+
+    // A B C
+    testOrder(<A />, <B />, <C />, ['a', 'b', 'c']);
+    // A C B
+    testOrder(<A />, <C />, <B />, ['a', 'c', 'b']);
+    // B A C
+    testOrder(<B />, <A />, <C />, ['b', 'a', 'c']);
+    // B C A
+    testOrder(<B />, <C />, <A />, ['b', 'c', 'a']);
+    // C A B
+    testOrder(<C />, <A />, <B />, ['c', 'a', 'b']);
+    // C B A
+    testOrder(<C />, <B />, <A />, ['c', 'b', 'a']);
+  });
+
+  it('should extract once when once option is true', () => {
+    const cache = createCache();
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <IdHolder />
+        <Box>
+          <IdHolder />
+        </Box>
+        <IdHolder />
+      </StyleProvider>,
+    );
+
+    const style = extractStyle(cache, { plain: true, once: true });
+
+    renderToString(
+      <StyleProvider cache={cache}>
+        <Card />
+      </StyleProvider>,
+    );
+    const style2 = extractStyle(cache, { plain: true, once: true });
+
+    expect(style).toContain('.box');
+    expect(style).not.toContain('.card');
+
+    expect(style2).toContain('.card');
+    expect(style2).not.toContain('.box');
   });
 });

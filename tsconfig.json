@@ -16,6 +16,7 @@
       "@/*": ["src/*"],
       "@@/*": ["src/.umi/*"],
       "@ant-design/cssinjs": ["src/index.ts"]
-    }
+    },
+    "types": ["vitest/globals"]
   }
 }

@@ -1,32 +1,43 @@
-import useCacheToken from './hooks/useCacheToken';
+import extractStyle from './extractStyle';
+import useCacheToken, { getComputedToken } from './hooks/useCacheToken';
+import useCSSVarRegister from './hooks/useCSSVarRegister';
 import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
-import useStyleRegister, { extractStyle, extractStyleNode } from './hooks/useStyleRegister';
+import useStyleRegister, { extractStyleNode } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
 import type { Linter } from './linters';
 import {
   legacyNotSelectorLinter,
   logicalPropertiesLinter,
+  NaNLinter,
   parentSelectorLinter,
 } from './linters';
-import { createCache, StyleProvider } from './StyleContext';
-import type { DerivativeFunc, TokenType } from './theme';
-import { createTheme, Theme } from './theme';
+import type { StyleProviderProps } from './StyleContext';
+import StyleContext, { createCache, StyleProvider } from './StyleContext';
+import type { AbstractCalculator, DerivativeFunc, TokenType } from './theme';
+import { createTheme, genCalc, Theme } from './theme';
 import type { Transformer } from './transformers/interface';
+import autoPrefixTransformer from './transformers/autoPrefix';
 import legacyLogicalPropertiesTransformer from './transformers/legacyLogicalProperties';
 import px2remTransformer from './transformers/px2rem';
+import { supportLogicProps, supportWhere, unit } from './util';
+import { token2CSSVar } from './util/css-variables';
 
 export {
   Theme,
   createTheme,
   useStyleRegister,
+  useCSSVarRegister,
   useCacheToken,
   createCache,
   StyleProvider,
+  StyleContext,
   Keyframes,
   extractStyle,
   extractStyleNode,
+  getComputedToken,
 
   // Transformer
+  autoPrefixTransformer,
   legacyLogicalPropertiesTransformer,
   px2remTransformer,
 
@@ -34,7 +45,14 @@ export {
   logicalPropertiesLinter,
   legacyNotSelectorLinter,
   parentSelectorLinter,
+  NaNLinter,
+
+  // util
+  token2CSSVar,
+  unit,
+  genCalc,
 };
+
 export type {
   TokenType,
   CSSObject,
@@ -42,4 +60,10 @@ export type {
   DerivativeFunc,
   Transformer,
   Linter,
+  StyleProviderProps,
+  AbstractCalculator,
+};
+
+export const _experimental = {
+  supportModernCSS: () => supportWhere() && supportLogicProps(),
 };

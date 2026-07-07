@@ -16,10 +16,17 @@ if (
   process.env.NODE_ENV !== 'production' &&
   typeof module !== 'undefined' &&
   module &&
-  module.hot
+  (module as any).hot &&
+  typeof window !== 'undefined'
 ) {
-  const win = window as any;
-  if (typeof win.webpackHotUpdate === 'function') {
+  // Use `globalThis` first, and `window` for older browsers
+  // const win = globalThis as any;
+  const win =
+    typeof globalThis !== 'undefined'
+      ? globalThis
+      : ((typeof window !== 'undefined' ? window : null) as any);
+
+  if (win && typeof win.webpackHotUpdate === 'function') {
     const originWebpackHotUpdate = win.webpackHotUpdate;
 
     win.webpackHotUpdate = (...args: any[]) => {
