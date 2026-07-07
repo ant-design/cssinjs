@@ -2,7 +2,7 @@ import extractStyle from './extractStyle';
 import useCacheToken, { getComputedToken } from './hooks/useCacheToken';
 import useCSSVarRegister from './hooks/useCSSVarRegister';
 import type { CSSInterpolation, CSSObject } from './hooks/useStyleRegister';
-import useStyleRegister from './hooks/useStyleRegister';
+import useStyleRegister, { extractStyleNode } from './hooks/useStyleRegister';
 import Keyframes from './Keyframes';
 import type { Linter } from './linters';
 import {
@@ -33,6 +33,7 @@ export {
   StyleContext,
   Keyframes,
   extractStyle,
+  extractStyleNode,
   getComputedToken,
 
   // Transformer
