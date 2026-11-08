@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 import type { ReactElement, ReactNode } from 'react';
 import * as React from 'react';
 import { StrictMode } from 'react';
-import { describe, expect } from 'vitest';
+import { describe, expect, vi } from 'vitest';
 import type { CSSInterpolation, DerivativeFunc } from '../src';
 import {
   createCache,
@@ -979,5 +979,178 @@ describe('csssinjs', () => {
     const styleContent = styles[styles.length - 1];
 
     expect(styleContent.innerHTML).not.toContain('padding');
+  });
+
+  describe('useHMR', () => {
+    const META_KEY = '__CSSINJS_TEST_IMPORT_META__';
+    // Shimmed by the test-only `mock-import-meta` plugin in `vitest.config.ts`:
+    // Vitest runs ESM, where the CommonJS `module` object does not exist.
+    const MODULE_KEY = '__CSSINJS_TEST_COMMONJS_MODULE__';
+    const HOT_UPDATE_KEY = 'webpackHotUpdate';
+
+    const originalWebpackHotUpdate = (globalThis as any)[HOT_UPDATE_KEY];
+
+    function createHotContext() {
+      const listeners: Record<string, (() => void)[]> = {};
+
+      const hot = {
+        on: vi.fn((event: string, cb: () => void) => {
+          listeners[event] = [...(listeners[event] || []), cb];
+        }),
+      };
+
+      const fire = (event: string) => {
+        (listeners[event] || []).forEach((cb) => cb());
+      };
+
+      return { hot, fire };
+    }
+
+    /**
+     * Mimic the CommonJS `module` object webpack injects.
+     * `useHMR` only reads `module.hot` as a truthy gate to enter the webpack branch;
+     * the update itself is detected by hijacking `globalThis.webpackHotUpdate`,
+     * therefore `module.hot.accept` is never called.
+     */
+    function createWebpackModule() {
+      return { hot: {} };
+    }
+
+    async function loadUseHMR(
+      meta: Record<string, any>,
+      cjsModule: Record<string, any> = {},
+    ) {
+      (globalThis as any)[META_KEY] = meta;
+      (globalThis as any)[MODULE_KEY] = cjsModule;
+      vi.resetModules();
+
+      return (await import('../src/hooks/useHMR')).default;
+    }
+
+    afterEach(() => {
+      delete (globalThis as any)[META_KEY];
+      delete (globalThis as any)[MODULE_KEY];
+
+      if (originalWebpackHotUpdate === undefined) {
+        delete (globalThis as any)[HOT_UPDATE_KEY];
+      } else {
+        (globalThis as any)[HOT_UPDATE_KEY] = originalWebpackHotUpdate;
+      }
+
+      vi.useRealTimers();
+      vi.resetModules();
+    });
+
+    it('should be false when there is no HMR context', async () => {
+      const useHMR = await loadUseHMR({});
+
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should ignore a hot context which is not an object', async () => {
+      const useHMR = await loadUseHMR({ hot: 'vite' });
+
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should mark HMR on `vite:afterUpdate` and release it after 600ms', async () => {
+      vi.useFakeTimers();
+      const { hot, fire } = createHotContext();
+      const useHMR = await loadUseHMR({ hot });
+
+      expect(hot.on).toHaveBeenCalledWith(
+        'vite:afterUpdate',
+        expect.any(Function),
+      );
+      expect(useHMR()).toBe(false);
+
+      fire('vite:afterUpdate');
+      expect(useHMR()).toBe(true);
+
+      // Vite needs to wait for the pre-token update, flag keeps for 600ms
+      vi.advanceTimersByTime(599);
+      expect(useHMR()).toBe(true);
+
+      vi.advanceTimersByTime(1);
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should not be marked when no update has been fired yet', async () => {
+      vi.useFakeTimers();
+      const { hot } = createHotContext();
+      const useHMR = await loadUseHMR({ hot });
+
+      vi.advanceTimersByTime(1000);
+
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should hijack `webpackHotUpdate` and mark HMR for the current tick', async () => {
+      vi.useFakeTimers();
+
+      const originWebpackHotUpdate = vi.fn(() => 'origin-result');
+      (globalThis as any)[HOT_UPDATE_KEY] = originWebpackHotUpdate;
+
+      const useHMR = await loadUseHMR({}, createWebpackModule());
+
+      // The webpack branch must replace the global handler
+      expect((globalThis as any)[HOT_UPDATE_KEY]).not.toBe(
+        originWebpackHotUpdate,
+      );
+      expect(useHMR()).toBe(false);
+
+      const result = (globalThis as any)[HOT_UPDATE_KEY]('module-id', 1);
+      // Arguments and the return value are passed through
+      expect(originWebpackHotUpdate).toHaveBeenCalledWith('module-id', 1);
+      expect(result).toBe('origin-result');
+      expect(useHMR()).toBe(true);
+
+      // Webpack marks HMR only for the current tick
+      vi.advanceTimersByTime(1);
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should not hijack `webpackHotUpdate` when it is not a function', async () => {
+      (globalThis as any)[HOT_UPDATE_KEY] = 'not-a-function';
+
+      const useHMR = await loadUseHMR({}, createWebpackModule());
+
+      expect((globalThis as any)[HOT_UPDATE_KEY]).toBe('not-a-function');
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should prefer the webpack branch and skip the vite one', async () => {
+      vi.useFakeTimers();
+
+      const originWebpackHotUpdate = vi.fn();
+      (globalThis as any)[HOT_UPDATE_KEY] = originWebpackHotUpdate;
+
+      // Both contexts exist, `else if` should keep the webpack one only
+      const { hot, fire } = createHotContext();
+      const useHMR = await loadUseHMR({ hot }, createWebpackModule());
+
+      expect(hot.on).not.toHaveBeenCalled();
+
+      (globalThis as any)[HOT_UPDATE_KEY]();
+      expect(useHMR()).toBe(true);
+
+      // A vite event must not revive the flag since no listener is registered
+      fire('vite:afterUpdate');
+      vi.advanceTimersByTime(1);
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should ignore `module.hot` and still support vite', async () => {
+      vi.useFakeTimers();
+
+      const { hot, fire } = createHotContext();
+      const useHMR = await loadUseHMR({ hot }, { hot: undefined });
+
+      fire('vite:afterUpdate');
+      expect(useHMR()).toBe(true);
+
+      vi.advanceTimersByTime(600);
+      expect(useHMR()).toBe(false);
+    });
   });
 });

@@ -3,38 +3,42 @@ function useProdHMR() {
 }
 
 let webpackHMR = false;
+let viteHMR = false;
 
 function useDevHMR() {
-  return webpackHMR;
+  return webpackHMR || viteHMR;
 }
 
 export default process.env.NODE_ENV === 'production' ? useProdHMR : useDevHMR;
 
-// Webpack `module.hot.accept` do not support any deps update trigger
-// We have to hack handler to force mark as HRM
-if (
-  process.env.NODE_ENV !== 'production' &&
-  typeof module !== 'undefined' &&
-  module &&
-  (module as any).hot &&
-  typeof window !== 'undefined'
-) {
-  // Use `globalThis` first, and `window` for older browsers
-  // const win = globalThis as any;
-  const win =
-    typeof globalThis !== 'undefined'
-      ? globalThis
-      : ((typeof window !== 'undefined' ? window : null) as any);
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+  // Webpack `module.hot.accept` do not support any deps update trigger
+  // We have to hack handler to force mark as HRM
+  if (typeof module !== 'undefined' && module && (module as any).hot) {
+    // Use `globalThis` first, and `window` for older browsers
+    // const win = globalThis as any;
+    const win =
+      typeof globalThis !== 'undefined' ? globalThis : (window as any);
 
-  if (win && typeof win.webpackHotUpdate === 'function') {
-    const originWebpackHotUpdate = win.webpackHotUpdate;
+    if (win && typeof win.webpackHotUpdate === 'function') {
+      const originWebpackHotUpdate = win.webpackHotUpdate;
 
-    win.webpackHotUpdate = (...args: any[]) => {
-      webpackHMR = true;
+      win.webpackHotUpdate = (...args: any[]) => {
+        webpackHMR = true;
+        setTimeout(() => {
+          webpackHMR = false;
+        }, 0);
+        return originWebpackHotUpdate(...args);
+      };
+    }
+  } else if (typeof (import.meta as any).hot === 'object') {
+    // Vite needs to wait for the pre token update after receiving a hot update event and
+    // cannot immediately reset the 'viteHMR' flag.
+    (import.meta as any).hot.on('vite:afterUpdate', () => {
+      viteHMR = true;
       setTimeout(() => {
-        webpackHMR = false;
-      }, 0);
-      return originWebpackHotUpdate(...args);
-    };
+        viteHMR = false;
+      }, 600);
+    });
   }
 }
