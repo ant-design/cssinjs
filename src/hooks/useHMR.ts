@@ -34,9 +34,18 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   } else if (typeof (import.meta as any).hot === 'object') {
     // Vite needs to wait for the pre token update after receiving a hot update event and
     // cannot immediately reset the 'viteHMR' flag.
-    (import.meta as any).hot.on('vite:afterUpdate', () => {
+    let timerId: NodeJS.Timeout | null = null;
+    (import.meta as any).hot.on('vite:beforeUpdate', () => {
       viteHMR = true;
-      setTimeout(() => {
+    });
+
+    (import.meta as any).hot.on('vite:afterUpdate', () => {
+      if (timerId !== null) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
+
+      timerId = setTimeout(() => {
         viteHMR = false;
       }, 600);
     });

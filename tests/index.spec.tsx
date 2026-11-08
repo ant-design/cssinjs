@@ -1006,16 +1006,6 @@ describe('csssinjs', () => {
       return { hot, fire };
     }
 
-    /**
-     * Mimic the CommonJS `module` object webpack injects.
-     * `useHMR` only reads `module.hot` as a truthy gate to enter the webpack branch;
-     * the update itself is detected by hijacking `globalThis.webpackHotUpdate`,
-     * therefore `module.hot.accept` is never called.
-     */
-    function createWebpackModule() {
-      return { hot: {} };
-    }
-
     async function loadUseHMR(
       meta: Record<string, any>,
       cjsModule: Record<string, any> = {},
@@ -1053,21 +1043,30 @@ describe('csssinjs', () => {
       expect(useHMR()).toBe(false);
     });
 
-    it('should mark HMR on `vite:afterUpdate` and release it after 600ms', async () => {
+    it('should mark HMR on `vite:beforeUpdate` and release it 600ms after `vite:afterUpdate`', async () => {
       vi.useFakeTimers();
       const { hot, fire } = createHotContext();
       const useHMR = await loadUseHMR({ hot });
 
+      expect(hot.on).toHaveBeenCalledWith(
+        'vite:beforeUpdate',
+        expect.any(Function),
+      );
       expect(hot.on).toHaveBeenCalledWith(
         'vite:afterUpdate',
         expect.any(Function),
       );
       expect(useHMR()).toBe(false);
 
-      fire('vite:afterUpdate');
+      fire('vite:beforeUpdate');
+      expect(useHMR()).toBe(true);
+
+      // Without `vite:afterUpdate` there is no timer to release it
+      vi.advanceTimersByTime(1000);
       expect(useHMR()).toBe(true);
 
       // Vite needs to wait for the pre-token update, flag keeps for 600ms
+      fire('vite:afterUpdate');
       vi.advanceTimersByTime(599);
       expect(useHMR()).toBe(true);
 
@@ -1075,13 +1074,34 @@ describe('csssinjs', () => {
       expect(useHMR()).toBe(false);
     });
 
-    it('should not be marked when no update has been fired yet', async () => {
+    it('should stay false on `vite:afterUpdate` alone', async () => {
       vi.useFakeTimers();
-      const { hot } = createHotContext();
+      const { hot, fire } = createHotContext();
       const useHMR = await loadUseHMR({ hot });
 
-      vi.advanceTimersByTime(1000);
+      fire('vite:afterUpdate');
+      vi.advanceTimersByTime(600);
 
+      expect(useHMR()).toBe(false);
+    });
+
+    it('should reset the pending timer on another `vite:afterUpdate`', async () => {
+      vi.useFakeTimers();
+      const { hot, fire } = createHotContext();
+      const useHMR = await loadUseHMR({ hot });
+
+      fire('vite:beforeUpdate');
+      fire('vite:afterUpdate');
+      vi.advanceTimersByTime(400);
+
+      // Another update comes before the pending timer fires
+      fire('vite:afterUpdate');
+      // 800ms since the first `vite:afterUpdate`, already past its 600ms
+      vi.advanceTimersByTime(400);
+      expect(useHMR()).toBe(true);
+
+      // 600ms since the latest `vite:afterUpdate`
+      vi.advanceTimersByTime(200);
       expect(useHMR()).toBe(false);
     });
 
@@ -1091,7 +1111,7 @@ describe('csssinjs', () => {
       const originWebpackHotUpdate = vi.fn(() => 'origin-result');
       (globalThis as any)[HOT_UPDATE_KEY] = originWebpackHotUpdate;
 
-      const useHMR = await loadUseHMR({}, createWebpackModule());
+      const useHMR = await loadUseHMR({}, { hot: {} });
 
       // The webpack branch must replace the global handler
       expect((globalThis as any)[HOT_UPDATE_KEY]).not.toBe(
@@ -1113,7 +1133,7 @@ describe('csssinjs', () => {
     it('should not hijack `webpackHotUpdate` when it is not a function', async () => {
       (globalThis as any)[HOT_UPDATE_KEY] = 'not-a-function';
 
-      const useHMR = await loadUseHMR({}, createWebpackModule());
+      const useHMR = await loadUseHMR({}, { hot: {} });
 
       expect((globalThis as any)[HOT_UPDATE_KEY]).toBe('not-a-function');
       expect(useHMR()).toBe(false);
@@ -1127,14 +1147,15 @@ describe('csssinjs', () => {
 
       // Both contexts exist, `else if` should keep the webpack one only
       const { hot, fire } = createHotContext();
-      const useHMR = await loadUseHMR({ hot }, createWebpackModule());
+      const useHMR = await loadUseHMR({ hot }, { hot: {} });
 
       expect(hot.on).not.toHaveBeenCalled();
 
       (globalThis as any)[HOT_UPDATE_KEY]();
       expect(useHMR()).toBe(true);
 
-      // A vite event must not revive the flag since no listener is registered
+      // Vite events must not revive the flag since no listener is registered
+      fire('vite:beforeUpdate');
       fire('vite:afterUpdate');
       vi.advanceTimersByTime(1);
       expect(useHMR()).toBe(false);
@@ -1146,9 +1167,10 @@ describe('csssinjs', () => {
       const { hot, fire } = createHotContext();
       const useHMR = await loadUseHMR({ hot }, { hot: undefined });
 
-      fire('vite:afterUpdate');
+      fire('vite:beforeUpdate');
       expect(useHMR()).toBe(true);
 
+      fire('vite:afterUpdate');
       vi.advanceTimersByTime(600);
       expect(useHMR()).toBe(false);
     });
