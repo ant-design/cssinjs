@@ -36,9 +36,13 @@ const baseToken: DesignToken = {
 const theme = new Theme(derivative);
 
 const canUseDom = vi.hoisted(() => vi.fn(() => false));
-vi.mock('@rc-component/util/lib/Dom/canUseDom', () => {
+vi.mock('@rc-component/util', async () => {
+  const actual = await vi.importActual<typeof import('@rc-component/util')>(
+    '@rc-component/util',
+  );
   return {
-    default: canUseDom,
+    ...actual,
+    canUseDom,
   };
 });
 

@@ -1,4 +1,4 @@
-import { resetWarned } from '@rc-component/util/lib/warning';
+import { resetWarned } from '@rc-component/util';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import {
