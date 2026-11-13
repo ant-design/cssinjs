@@ -1,5 +1,5 @@
 import hash from '@emotion/hash';
-import { removeCSS, updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
+import { removeCSS, updateCSS } from '@rc-component/util';
 import type * as CSS from 'csstype';
 import * as React from 'react';
 // @ts-ignore

@@ -1,5 +1,5 @@
 import hash from '@emotion/hash';
-import { updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
+import { updateCSS } from '@rc-component/util';
 import { useContext } from 'react';
 import StyleContext, {
   ATTR_MARK,

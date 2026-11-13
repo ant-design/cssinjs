@@ -1,4 +1,4 @@
-import { warning } from '@rc-component/util/lib/warning';
+import { warning } from '@rc-component/util';
 import type { DependencyList } from 'react';
 import { useEffect } from 'react';
 
