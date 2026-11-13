@@ -1,4 +1,4 @@
-import { removeCSS, updateCSS } from '@rc-component/util/lib/Dom/dynamicCSS';
+import { removeCSS, updateCSS } from '@rc-component/util';
 import { useContext } from 'react';
 import StyleContext, {
   ATTR_MARK,
