@@ -8,6 +8,7 @@ import {
   createCache,
   createTheme,
   extractStyle,
+  px2remTransformer,
   StyleProvider,
   unit,
   useCacheToken,
@@ -672,5 +673,67 @@ describe('CSS Variables', () => {
 
     testCSSVarRegisterNonce('string', 'bamboo');
     testCSSVarRegisterNonce('function', () => 'bamboo');
+  });
+
+  // https://github.com/ant-design/ant-design/issues/51998
+  it('should apply transformers to css variables', () => {
+    const cache = createCache();
+
+    const Px2remBox = () => {
+      const [, hashId, realToken] = useCacheToken<DerivativeToken, DesignToken>(
+        theme,
+        [defaultDesignToken, { borderRadius: 32 }],
+        {
+          salt: '',
+          cssVar: {
+            prefix: 'rc',
+            key: 'px2rem-css-var',
+            unitless: {
+              lineHeight: true,
+            },
+          },
+        },
+      );
+
+      useCSSVarRegister(
+        {
+          path: ['Px2remBox'],
+          key: 'px2rem-css-var',
+          token: realToken,
+          prefix: 'rc-box',
+          hashId,
+        },
+        () => ({ boxPadding: 24, boxMargin: '8px 16px' }),
+      );
+
+      return <div />;
+    };
+
+    render(
+      <StyleProvider cache={cache} transformers={[px2remTransformer()]}>
+        <Px2remBox />
+      </StyleProvider>,
+    );
+
+    const styleText = Array.from(document.head.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+
+    // Global token
+    expect(styleText).toContain('--rc-border-radius:2rem;');
+    expect(styleText).toContain('--rc-border-width:1px;');
+    expect(styleText).toContain('--rc-line-height:1.5;');
+
+    // Component token
+    expect(styleText).toContain('--rc-box-box-padding:1.5rem;');
+    expect(styleText).toContain('--rc-box-box-margin:0.5rem 1rem;');
+
+    // SSR
+    const extracted = extractStyle(cache, {
+      types: ['cssVar', 'token'],
+      plain: true,
+    });
+    expect(extracted).toContain('--rc-border-radius:2rem;');
+    expect(extracted).toContain('--rc-box-box-padding:1.5rem;');
   });
 });

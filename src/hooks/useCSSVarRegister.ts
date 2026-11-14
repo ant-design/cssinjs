@@ -40,6 +40,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     cache: { instanceId },
     container,
     hashPriority,
+    transformers,
   } = useContext(StyleContext);
   const { _tokenKey: tokenKey } = token;
 
@@ -58,6 +59,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
         scope,
         hashPriority,
         hashCls: hashId,
+        transformers,
       });
       const styleId = uniqueHash(stylePath, cssVarsStr);
       return [mergedToken, cssVarsStr, styleId, key];
