@@ -574,3 +574,21 @@ export const extract: ExtractStyle<StyleCacheValue> = (
 
   return [order, styleId, keyStyleText];
 };
+
+export function extractStyleNode(cache: Cache) {
+  const styleKeys = Array.from(cache.cache.keys()).filter((key) =>
+    key.startsWith('style%')
+  );
+
+  return styleKeys.map((key) => {
+    const [styleStr, tokenKey, styleId]: [string, string, string] =
+      cache.cache.get(key)![1];
+    const props = {
+      [ATTR_TOKEN]: tokenKey,
+      [ATTR_MARK]: styleId,
+      dangerouslySetInnerHTML: { __html: styleStr },
+    };
+    return <style key={styleId} {...props} />;
+  });
+}
+
