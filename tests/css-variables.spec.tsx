@@ -274,6 +274,118 @@ describe('CSS Variables', () => {
     });
   });
 
+  it('should support preserve in useCSSVarRegister', () => {
+    const preservedStyle = {};
+
+    const PreserveBox = (props: { className?: string }) => {
+      const [token, hashId, cssVarKey, realToken] = useToken();
+
+      const [cssVarToken] = useCSSVarRegister(
+        {
+          path: ['PreserveBox'],
+          key: cssVarKey,
+          token: realToken,
+          prefix: 'rc-preserve',
+          unitless: {
+            lineHeight: true,
+          },
+          ignore: {
+            lineHeightBase: true,
+          },
+          // Keys in `preserve` keep the origin value instead of `var(--xxx)`
+          preserve: {
+            smallScreen: true,
+            boxWidth: true,
+          },
+        },
+        cssVarKey
+          ? () => ({
+              boxColor: '#5c21ff',
+              boxWidth: 8,
+              smallScreen: 800,
+            })
+          : () => ({}),
+      ) as [
+        { boxColor?: string; boxWidth?: number; smallScreen?: number },
+        string,
+        string,
+        string,
+      ];
+
+      Object.assign(preservedStyle, cssVarToken);
+
+      useStyleRegister(
+        {
+          theme,
+          token,
+          hashId,
+          path: ['PreserveBox'],
+        },
+        () => ({
+          '.preserve-box': {
+            color: cssVarToken.boxColor,
+            content: `"${cssVarToken.smallScreen}"`,
+          },
+        }),
+      );
+
+      return (
+        <div
+          className={clsx(
+            hashId,
+            cssVarKey ? cssVarKey : '',
+            'preserve-box',
+            props.className,
+          )}
+        />
+      );
+    };
+
+    render(
+      <StyleProvider cache={createCache()}>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'preserve',
+            },
+          }}
+        >
+          <PreserveBox className="target" />
+        </DesignTokenProvider>
+      </StyleProvider>,
+    );
+
+    // Token: preserved keys keep the raw value, others turn into CSS vars
+    expect(preservedStyle).toMatchObject({
+      boxColor: 'var(--rc-preserve-box-color)',
+      boxWidth: 8,
+      smallScreen: 800,
+    });
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    const cssVarStyle = styles.find((style) =>
+      style.textContent?.includes('--rc-preserve-box-color'),
+    );
+    expect(cssVarStyle).toBeDefined();
+    expect(cssVarStyle?.textContent).toContain(
+      '--rc-preserve-box-color:#5c21ff;',
+    );
+    // Preserved keys should not generate CSS variables
+    expect(cssVarStyle?.textContent).not.toContain('--rc-preserve-box-width');
+    expect(cssVarStyle?.textContent).not.toContain(
+      '--rc-preserve-small-screen',
+    );
+
+    const styleStyle = styles.find((style) =>
+      style.textContent?.includes('.preserve-box{'),
+    );
+    expect(styleStyle).toBeDefined();
+    expect(styleStyle?.textContent).toContain(
+      'color:var(--rc-preserve-box-color)',
+    );
+    expect(styleStyle?.textContent).toContain('content:"800"');
+  });
+
   it('could autoClear', () => {
     const { rerender } = render(
       <StyleProvider>
@@ -583,10 +695,7 @@ describe('CSS Variables', () => {
   });
 
   describe('nonce', () => {
-    function testCacheTokenNonce(
-      name: string,
-      nonce: string | (() => string),
-    ) {
+    function testCacheTokenNonce(name: string, nonce: string | (() => string)) {
       it(`useCacheToken - ${name}`, () => {
         const CacheTokenNonceBox = () => {
           useCacheToken<DerivativeToken, DesignToken>(
@@ -612,8 +721,8 @@ describe('CSS Variables', () => {
         );
 
         const styles = Array.from(document.head.querySelectorAll('style'));
-        const cacheTokenStyle = styles.find((style) =>
-          style.getAttribute(ATTR_TOKEN) === 'nonce-cache-token',
+        const cacheTokenStyle = styles.find(
+          (style) => style.getAttribute(ATTR_TOKEN) === 'nonce-cache-token',
         );
         expect(cacheTokenStyle).toBeDefined();
         expect(cacheTokenStyle!.nonce).toBe('bamboo');
