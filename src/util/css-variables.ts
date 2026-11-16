@@ -1,4 +1,5 @@
 import type { HashPriority } from '../StyleContext';
+import type { Transformer } from '../transformers/interface';
 import { where } from '../util';
 
 export const token2CSSVar = (token: string, prefix = '') => {
@@ -61,6 +62,7 @@ export const transformToken = <
     scope?: string | string[];
     hashCls?: string;
     hashPriority?: HashPriority;
+    transformers?: Transformer[];
   },
 ): [TokenWithCSSVar<V, T>, string] => {
   const {
@@ -70,6 +72,7 @@ export const transformToken = <
     unitless,
     ignore,
     preserve,
+    transformers = [],
   } = config || {};
   const cssVars: Record<string, string> = {};
   const result: TokenWithCSSVar<V, T> = {};
@@ -88,9 +91,17 @@ export const transformToken = <
       result[key as keyof T] = `var(${cssVar})`;
     }
   });
+
+  // Apply transformers (e.g. `px2remTransformer`) to the CSS variable values,
+  // the same way `useStyleRegister` does for normal style objects.
+  const mergedCSSVars = transformers.reduce(
+    (prev, trans) => (trans?.visit?.(prev) as Record<string, string>) || prev,
+    cssVars,
+  );
+
   return [
     result,
-    serializeCSSVar(cssVars, themeKey, {
+    serializeCSSVar(mergedCSSVars, themeKey, {
       scope: config?.scope,
       hashCls,
       hashPriority,

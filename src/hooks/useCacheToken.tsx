@@ -173,6 +173,7 @@ export default function useCacheToken<
     cache: { instanceId },
     container,
     hashPriority,
+    transformers,
   } = useContext(StyleContext);
   const {
     salt = '',
@@ -217,6 +218,7 @@ export default function useCacheToken<
           preserve: cssVar.preserve,
           hashPriority,
           hashCls: cssVar.hashed ? hashCls : undefined,
+          transformers,
         },
       ) as [any, string];
       tokenWithCssVar._hashId = hashId;
