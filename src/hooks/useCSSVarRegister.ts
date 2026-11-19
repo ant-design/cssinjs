@@ -30,13 +30,16 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
     ignore?: Record<string, boolean>;
     preserve?: Record<string, boolean>;
     scope?: string | string[];
+    /** @see serializeCSSVar options.scopeType */
+    scopeType?: 'self' | 'descendant';
     token: any;
     hashId?: string;
     nonce?: string | (() => string);
   },
   fn: () => T,
 ) => {
-  const { key, prefix, unitless, ignore, preserve, token, hashId, scope, nonce } = config;
+  const { key, prefix, unitless, ignore, preserve, token, hashId, scope, scopeType, nonce } =
+    config;
   const {
     cache: { instanceId },
     container,
@@ -45,7 +48,12 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
   const { _tokenKey: tokenKey } = token;
 
   const scopeKey = Array.isArray(scope) ? scope.join('@@') : scope;
-  const stylePath = [...config.path, key, scopeKey, tokenKey];
+  // Only extend the cache path for the new mode so existing registrations
+  // keep their exact style hash (data-css-hash) unchanged.
+  const stylePath =
+    scopeType === 'descendant'
+      ? [...config.path, key, scopeKey, 'descendant', tokenKey]
+      : [...config.path, key, scopeKey, tokenKey];
 
   const cache = useGlobalCache<CSSVarCacheValue<V, T>>(
     CSS_VAR_PREFIX,
@@ -58,6 +66,7 @@ const useCSSVarRegister = <V, T extends Record<string, V>>(
         ignore,
         preserve,
         scope,
+        scopeType,
         hashPriority,
         hashCls: hashId,
       });
