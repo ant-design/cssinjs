@@ -609,6 +609,93 @@ describe('CSS Variables', () => {
     );
   });
 
+  it('support descendant scope type', () => {
+    const cache = createCache();
+    const BoxWithDescendantScope = (props: { className?: string }) => {
+      const [token, hashId, cssVarKey, realToken] = useToken();
+
+      const getComponentToken = () => ({ boxColor: '#5c21ff' });
+
+      const [cssVarToken] = useCSSVarRegister(
+        {
+          path: ['Box'],
+          key: cssVarKey,
+          token: realToken,
+          prefix: 'rc-box',
+          unitless: {
+            lineHeight: true,
+          },
+          ignore: {
+            lineHeightBase: true,
+          },
+          scope: 'box',
+          scopeType: 'descendant',
+        },
+        cssVarKey ? getComponentToken : () => ({}),
+      );
+
+      useStyleRegister(
+        {
+          theme,
+          token,
+          hashId,
+          path: ['BoxDescendantScope'],
+        },
+        () => {
+          const mergedToken = {
+            ...token,
+            ...cssVarToken,
+            boxColor: cssVarToken?.boxColor || '#5c21ff',
+          } as DerivativeToken & { boxColor: string };
+
+          return {
+            '.box': {
+              lineHeight: mergedToken.lineHeight,
+              color: mergedToken.boxColor,
+              backgroundColor: mergedToken.primaryColor,
+            },
+          };
+        },
+      );
+
+      return (
+        <div
+          className={clsx(
+            hashId,
+            props.className,
+          )}
+        />
+      );
+    };
+
+    render(
+      <StyleProvider cache={cache}>
+        <DesignTokenProvider
+          theme={{
+            cssVar: {
+              key: 'apple',
+            },
+          }}
+        >
+          {/* Host node carries the cssVar key; the scope class only needs to be a descendant */}
+          <div className="apple">
+            <BoxWithDescendantScope className="target" />
+          </div>
+        </DesignTokenProvider>
+      </StyleProvider>,
+    );
+
+    const styles = Array.from(document.head.querySelectorAll('style'));
+    const cssVarStyle = styles.find((style) =>
+      style.textContent?.includes('--rc-box-box-color'),
+    );
+    expect(cssVarStyle).toBeDefined();
+    expect(cssVarStyle?.textContent).toContain('--rc-box-box-color:#5c21ff');
+    // Should generate: .apple .box { ... } instead of .apple.box
+    expect(cssVarStyle?.textContent).toMatch(/\.apple \.box\{/);
+    expect(cssVarStyle?.textContent).not.toMatch(/\.apple\.box\{/);
+  });
+
   it('should filter empty scopes', () => {
     const BoxWithEmptyScope = (props: { className?: string }) => {
       const [token, hashId, cssVarKey, realToken] = useToken();

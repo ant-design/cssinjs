@@ -14,11 +14,21 @@ export const serializeCSSVar = <T extends Record<string, any>>(
   hashId: string,
   options?: {
     scope?: string | string[];
+    /**
+     * How the scope class combines with the cssVar key class:
+     *
+     * - `self` (default): `.key.scope` — the scope class must sit on the same
+     *   node that carries the cssVar key class.
+     * - `descendant`: `.key .scope` — the scope class matches any descendant of
+     *   the cssVar key node. Useful when a single host (e.g. an App wrapper)
+     *   carries the cssVar key so component scopes don't need to repeat it.
+     */
+    scopeType?: 'self' | 'descendant';
     hashCls?: string;
     hashPriority?: HashPriority;
   },
 ) => {
-  const { hashCls, hashPriority = 'low', scope } = options || {};
+  const { hashCls, hashPriority = 'low', scope, scopeType = 'self' } = options || {};
   if (!Object.keys(cssVars).length) {
     return '';
   }
@@ -26,7 +36,11 @@ export const serializeCSSVar = <T extends Record<string, any>>(
   const baseSelector = `${where({ hashCls, hashPriority })}.${hashId}`;
   const scopes = [scope].flat().filter(Boolean);
   const selector = scopes.length
-    ? scopes.map((s) => `${baseSelector}.${s}`).join(', ')
+    ? scopes
+        .map((s) =>
+          scopeType === 'descendant' ? `${baseSelector} .${s}` : `${baseSelector}.${s}`,
+        )
+        .join(', ')
     : baseSelector;
 
   return `${selector}{${Object.entries(cssVars)
@@ -59,6 +73,7 @@ export const transformToken = <
       [key in keyof T]?: boolean;
     };
     scope?: string | string[];
+    scopeType?: 'self' | 'descendant';
     hashCls?: string;
     hashPriority?: HashPriority;
   },
@@ -92,6 +107,7 @@ export const transformToken = <
     result,
     serializeCSSVar(cssVars, themeKey, {
       scope: config?.scope,
+      scopeType: config?.scopeType,
       hashCls,
       hashPriority,
     }),
