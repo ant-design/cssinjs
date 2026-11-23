@@ -44,6 +44,28 @@ describe('Theme', () => {
         });
     });
 
+    it('keeps a longer chain when its prefix is cached and later evicted', () => {
+      const cache = new ThemeCache();
+      const createDerivative = () => (token: DesignToken) => token;
+      const prefix = [createDerivative()];
+      const chain = [...prefix, createDerivative()];
+      const prefixTheme = new Theme(prefix);
+      const chainTheme = new Theme(chain);
+
+      cache.set(chain, chainTheme);
+      cache.set(prefix, prefixTheme);
+      expect(cache.get(prefix)).toBe(prefixTheme);
+      expect(cache.get(chain)).toBe(chainTheme);
+
+      const limit = ThemeCache.MAX_CACHE_SIZE + ThemeCache.MAX_CACHE_OFFSET;
+      for (let i = 0; i < limit - 1; i += 1) {
+        const derivative = createDerivative();
+        cache.set([derivative], new Theme(derivative));
+      }
+      expect(cache.has(prefix)).toBe(false);
+      expect(cache.get(chain)).toBe(chainTheme);
+    });
+
     it('delete should delete all empty node', () => {
       const cache = new ThemeCache();
       const derivatives = Array(5)

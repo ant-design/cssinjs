@@ -100,7 +100,10 @@ export default class ThemeCache {
     let cache = this.cache;
     derivativeOption.forEach((derivative, index) => {
       if (index === derivativeOption.length - 1) {
-        cache.set(derivative, { value: [value, this.cacheCallTimes++] });
+        cache.set(derivative, {
+          ...cache.get(derivative),
+          value: [value, this.cacheCallTimes++],
+        });
       } else {
         const cacheValue = cache.get(derivative);
         if (!cacheValue) {
